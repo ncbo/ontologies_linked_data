@@ -23,20 +23,12 @@ class TestOntology < LinkedData::TestCase
   def test_ontology_lifecycle
     o = LinkedData::Models::Ontology.new({
         acronym: @acronym,
-        name: @name
       })
 
     # Create
     assert_equal false, o.exist?(reload=true)
     o.save
     assert_equal true, o.exist?(reload=true)
-
-    # Update
-    new_name = "New Name"
-    o.name = new_name
-    o.save
-    o1 = LinkedData::Models::Ontology.find(@acronym)
-    assert o1.name.eql?(new_name)
 
     # Delete
     o.delete
