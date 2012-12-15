@@ -8,7 +8,7 @@ module LinkedData
     end
     class MasterFileMissingException < Parser::ParserException
     end
-    class OWLAPIParserException < Parser::ParserException
+    class RDFFileNotGeneratedException < Parser::ParserException
     end
 
     class OWLAPICommand
@@ -61,7 +61,6 @@ module LinkedData
         command_call = "java -jar #{@owlapi_wrapper_jar_path} #{options}"
         Parser.logger.info("Java call [#{command_call}]")
         stdout,stderr,status = Open3.capture3(command_call)
-        binding
         if not status.success?
           Parser.logger.error("OWLAPI java error in parse")
           Parser.logger.error(stderr)
@@ -79,6 +78,7 @@ module LinkedData
           @file_triples_path = File.join([@output_repo, "owlapi.xrdf"])
           Parser.logger.info("Output size #{File.stat(@file_triples_path).size} in `#{@file_triples_path}`")
         end
+        return @file_triples_path
       end
 
       def file_triples_path
@@ -88,6 +88,12 @@ module LinkedData
       def parse
         setup_environment
         call_owlapi_java_command
+        if @file_triples_path.nil?
+          raise RDFFileNotGeneratedException, "Triple file nil"
+        elsif not File.exist?(@file_triples_path)
+          raise RDFFileNotGeneratedException, "Triple file not found in #{@file_triples_path}"
+        end
+        return @file_triples_path
       end
     end
   end
