@@ -6,3 +6,5 @@ Gemfile.lock
 .DS_Store
 test/data/ontology_files/parse
 test/data/ontology_files/repo
+
+test/data/ontology_files/catalog-v001.xml

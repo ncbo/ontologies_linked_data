@@ -58,7 +58,7 @@ module LinkedData
           raise ArgumentError, "Cannot call java OWLAPI command without options." 
         end
         options = options.join ' '
-        command_call = "java -jar #{@owlapi_wrapper_jar_path} #{options}"
+        command_call = "java -DentityExpansionLimit=1500000 -Xmx3072M -jar #{@owlapi_wrapper_jar_path} #{options}"
         Parser.logger.info("Java call [#{command_call}]")
         stdout,stderr,status = Open3.capture3(command_call)
         if not status.success?

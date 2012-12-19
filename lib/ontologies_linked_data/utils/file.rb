@@ -33,15 +33,16 @@ module LinkedData
           unless File.exist? file_path
             raise ArgumentError, "File path #{file_path} not found"
           end
-          unless File.exist? dst_folder
+          unless Dir.exist? dst_folder
             raise ArgumentError, "Folder path #{dst_folder} not found"
           end
+          extracted_files = []
           Zip::ZipFile.open(file_path) do |zipfile|
             zipfile.each do |file|
-              puts file
+              extracted_files << file.extract(File.join(dst_folder,file.name))
             end
           end
-          binding.pry
+          return extracted_files
       end
 
       def self.repeated_names_in_file_list(file_list)

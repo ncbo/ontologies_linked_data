@@ -39,7 +39,7 @@ class TestOWLApi < LinkedData::TestCase
 
   def test_command_KO_master
     output_repo =  "/var/log/xxxxx"
-    input_file = "test/data/ontology_files/fma_3.1_owl_file_v3.1.zip"
+    input_file = "test/data/ontology_files/radlex_owl_v3.0.1.zip"
     owlapi = LinkedData::Parser::OWLAPICommand.new(input_file,output_repo,nil)
     begin
       owlapi.parse

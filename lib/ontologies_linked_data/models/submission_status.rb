@@ -6,7 +6,7 @@ module LinkedData
               :inverse_of => { :with => :ontology_submission , 
               :attribute => :status }
 
-      def self.init(values = ["UPLOADED", "RDF", "INDEXED", "READY", "ERROR_RDF", "ERROR_INDEX"])
+      def self.init(values = ["UPLOADED", "RDF", "LABELS", "INDEXED", "READY", "ERROR_LABELS","ERROR_RDF", "ERROR_INDEX"])
         values.each do |code|
           of =  LinkedData::Models::SubmissionStatus.new( { :code => code } )
           if not of.exist?

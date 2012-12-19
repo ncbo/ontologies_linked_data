@@ -7,6 +7,8 @@ module LinkedData
     end
     class MkdirException < ParserException
     end
+    class OWLAPIParserException < ParserException
+    end
   end
 end
 require_relative "owlapi"

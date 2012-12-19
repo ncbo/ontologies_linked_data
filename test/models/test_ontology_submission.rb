@@ -1,80 +1,46 @@
-require_relative "../test_case"
+require_relative "./test_ontology_common"
 require "logger"
 
-class TestOntologySubmission < LinkedData::TestCase
+class TestOntologySubmission < LinkedData::TestOntologyCommon
   def setup
-    @acronym = "SNOMED-TST"
-    @name = "SNOMED-CT TEST"
-    @ontologyFile = "./test/data/ontology_files/BRO_v3.2.owl"
-    @id = 10
   end
 
   def teardown
-    l = LinkedData::Models::OntologySubmission.where(:acronym => @acronym, :submissionId => @id)
-    l.each do |o|
+    l = LinkedData::Models::OntologySubmission.all
+    if l.length > 50
+      raise ArgumentError, "Too many ontologies in triple store. TESTS WILL DELETE DATA"
+    end
+    l.each do |os|
+      os.load
       os.delete
       o = os.ontology
       o.load
       o.delete
     end
   end
-  
-  def submission_dependent_objects(format,acronym,user_name,status_code)
-    #ontology format
-    LinkedData::Models::OntologyFormat.init
-    owl = LinkedData::Models::OntologyFormat.where(:acronym => format)[0]
-    assert_instance_of LinkedData::Models::OntologyFormat, owl
-
-    #ontology
-    LinkedData::Models::OntologyFormat.init
-    ont = LinkedData::Models::Ontology.where(:acronym => acronym)
-    LinkedData::Models::OntologyFormat.init
-    assert(ont.length < 2)
-    if ont.length == 0
-      ont = LinkedData::Models::Ontology.new({:acronym => acronym})
-    else
-      ont = ont[0]
-    end
-    
-    #user test_linked_models
-    users = LinkedData::Models::User.where(:username => user_name)
-    assert(users.length < 2)
-    if users.length == 0
-      user = LinkedData::Models::User.new({:username => user_name})
-    else
-      user = users[0]
-    end
-
-        #user test_linked_models
-    status = LinkedData::Models::SubmissionStatus.where(:code => status_code)
-    assert(status.length < 2)
-    if status.length == 0
-      status = LinkedData::Models::SubmissionStatus.new({:code => status_code})
-    else
-      status = status[0]
-    end
-
-    #Submission Status
-    return owl, ont, user, status 
-  end
 
   def test_valid_ontology
 
-    owl, bogus, user, status =  submission_dependent_objects("OWL", "bogus", "test_linked_models", "UPLOADED")
+    acronym = "SNOMED-TST"
+    name = "SNOMED-CT TEST"
+    ontologyFile = "./test/data/ontology_files/BRO_v3.2.owl"
+    id = 10
+
+    owl, bogus, user, status =  submission_dependent_objects("OWL", acronym, "test_linked_models", "UPLOADED")
 
     os = LinkedData::Models::OntologySubmission.new
     assert (not os.valid?)
 
-    os.acronym = @acronym
-    os.submissionId = @id
-    os.name = @name
-    o = LinkedData::Models::Ontology.find(@acronym)
+    os.acronym = acronym
+    os.submissionId = id
+    os.name = name
+    o = LinkedData::Models::Ontology.find(acronym)
     if o.nil?
-      os.ontology = LinkedData::Models::Ontology.new(:acronym => @acronym)
+      os.ontology = LinkedData::Models::Ontology.new(:acronym => acronym)
     else
       os.ontology = o 
     end
-    uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository(@acronym, @id, @ontologyFile) 
+    uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository(acronym, id, ontologyFile) 
     os.uploadFilePath = uploadFilePath
     os.ontologyFormat = owl
     os.administeredBy = user
@@ -84,10 +50,16 @@ class TestOntologySubmission < LinkedData::TestCase
   end
   
   def test_sanity_check_single_file_submission
-    owl, bro, user, status =  submission_dependent_objects("OWL", "BRO", "test_linked_models", "UPLOADED")
 
-    ont_submision =  LinkedData::Models::OntologySubmission.new({:acronym => "BRO", :submissionId => 1, :name => "Biomedical Resource Ontology"})
-    uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository("BRO", 1, @ontologyFile) 
+    acronym = "BRO"
+    name = "Biomedical Resource Ontology"
+    ontologyFile = "./test/data/ontology_files/BRO_v3.2.owl"
+    id = 10
+
+    owl, bro, user, status =  submission_dependent_objects("OWL", acronym, "test_linked_models", "UPLOADED")
+
+    ont_submision =  LinkedData::Models::OntologySubmission.new({:acronym => acronym, :submissionId => id, :name => name})
+    uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository(acronym, id, ontologyFile) 
     ont_submision.uploadFilePath = uploadFilePath
     ont_submision.status = status
     assert (not ont_submision.valid?)
@@ -104,16 +76,22 @@ class TestOntologySubmission < LinkedData::TestCase
 
 
   def test_sanity_check_zip
-    
-    owl, fma, user, status =  submission_dependent_objects("OWL", "FMA", "test_linked_models", "UPLOADED")
 
-    ont_submision =  LinkedData::Models::OntologySubmission.new({:acronym => "FMA", :submissionId => 1, :name => "FMA Bla"})
-    ontologyFile = "./test/data/ontology_files/fma_3.1_owl_file_v3.1.zip"
-    uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository(@acronym, @id,ontologyFile) 
+    acronym = "RADTEST"
+    name = "RADTEST Bla"
+    ontologyFile = "./test/data/ontology_files/radlex_owl_v3.0.1.zip"
+    id = 10
+
+    teardown
+
+    owl, rad, user, status =  submission_dependent_objects("OWL", acronym, "test_linked_models", "UPLOADED")
+
+    ont_submision =  LinkedData::Models::OntologySubmission.new({:acronym => acronym, :submissionId => id, :name => name})
+    uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository(acronym, id, ontologyFile) 
     ont_submision.uploadFilePath = uploadFilePath
     ont_submision.ontologyFormat = owl
     ont_submision.administeredBy = user
-    ont_submision.ontology = fma
+    ont_submision.ontology = rad
     ont_submision.status = status
     assert (not ont_submision.valid?)
     assert_equal 1, ont_submision.errors.length
@@ -134,10 +112,14 @@ class TestOntologySubmission < LinkedData::TestCase
   end
 
   def test_duplicated_file_names
-    owl, dup, user, status =  submission_dependent_objects("OWL", "DUP", "test_linked_models", "UPLOADED")
-    ont_submision =  LinkedData::Models::OntologySubmission.new({ :acronym => "Bogus", :submissionId => 1, :name => "Bogus bla blu" })
+    acronym = "DUPTEST"
+    name = "DUPTEST Bla"
     ontologyFile = "./test/data/ontology_files/ont_dup_names.zip"
-    uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository("Bogus", 1, ontologyFile) 
+    id = 10
+
+    owl, dup, user, status =  submission_dependent_objects("OWL", acronym, "test_linked_models", "UPLOADED")
+    ont_submision =  LinkedData::Models::OntologySubmission.new({ :acronym => acronym, :submissionId => 1, :name => name })
+    uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository(acronym, id, ontologyFile) 
     ont_submision.ontologyFormat = owl
     ont_submision.administeredBy = user
     ont_submision.ontology = dup
@@ -148,7 +130,12 @@ class TestOntologySubmission < LinkedData::TestCase
   end
 
   def test_submission_parse
-    bro = LinkedData::Models::Ontology.find("BRO")
+    acronym = "BROTEST"
+    name = "BROTEST Bla"
+    ontologyFile = "./test/data/ontology_files/BRO_v3.2.owl"
+    id = 10
+
+    bro = LinkedData::Models::Ontology.find(acronym)
     if not bro.nil?
       sub = bro.submissions || []
       sub.each do |s|
@@ -156,12 +143,12 @@ class TestOntologySubmission < LinkedData::TestCase
         s.delete
       end
     end
-    ont_submision =  LinkedData::Models::OntologySubmission.new({ :acronym => "BRO", :submissionId => 1, :name => "Some Name" })
+    ont_submision =  LinkedData::Models::OntologySubmission.new({ :acronym => acronym, :submissionId => id, :name => name })
     assert (not ont_submision.valid?)
     assert_equal 5, ont_submision.errors.length
-    uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository("BRO", 1, @ontologyFile) 
+    uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository(acronym, id, ontologyFile) 
     ont_submision.uploadFilePath = uploadFilePath
-    owl, bro, user, status =  submission_dependent_objects("OWL", "BRO", "test_linked_models", "UPLOADED")
+    owl, bro, user, status =  submission_dependent_objects("OWL", acronym, "test_linked_models", "UPLOADED")
     ont_submision.ontologyFormat = owl
     ont_submision.administeredBy = user
     ont_submision.ontology = bro
@@ -169,15 +156,92 @@ class TestOntologySubmission < LinkedData::TestCase
     assert (ont_submision.valid?)
     ont_submision.save
     assert_equal true, ont_submision.exist?(reload=true)
-    assert_equal 1,  LinkedData::Models::OntologySubmission.all.length
     uploaded = LinkedData::Models::SubmissionStatus.find("UPLOADED")
     uploded_ontologies = uploaded.submissions
-    assert_equal 1, uploded_ontologies.length
-    uploaded_ont = uploded_ontologies[0]
-    if uploaded_ont.loaded?
-      uploaded_ont.load
+    uploaded_ont = nil
+    uploded_ontologies.each do |ont|
+      ont.load
+      if ont.acronym == acronym
+        uploaded_ont = ont
+      end
+    end
+    assert (not uploaded_ont.nil?)
+    if not uploaded_ont.ontology.loaded?
+      uploaded_ont.ontology.load
     end
     uploaded_ont.process_submission Logger.new(STDOUT)
   end
+
+  def test_submission_parse_zip
+
+    acronym = "RADTEST"
+    name = "RADTEST Bla"
+    ontologyFile = "./test/data/ontology_files/radlex_owl_v3.0.1.zip"
+    id = 10
+
+    bro = LinkedData::Models::Ontology.find(acronym)
+    if not bro.nil?
+      sub = bro.submissions || []
+      sub.each do |s|
+        s.load
+        s.delete
+      end
+    end
+
+    ont_submision =  LinkedData::Models::OntologySubmission.new({ :acronym => acronym, :submissionId => id, :name => name })
+    assert (not ont_submision.valid?)
+    assert_equal 5, ont_submision.errors.length
+    uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository(acronym, id,ontologyFile) 
+    ont_submision.uploadFilePath = uploadFilePath
+    owl, bro, user, status =  submission_dependent_objects("OWL", acronym, "test_linked_models", "UPLOADED")
+    ont_submision.ontologyFormat = owl
+    ont_submision.administeredBy = user
+    ont_submision.ontology = bro
+    ont_submision.status = status
+    assert (not ont_submision.valid?)
+    assert_equal 1, ont_submision.errors[:uploadFilePath][0][:options].length
+    ont_submision.masterFileName = ont_submision.errors[:uploadFilePath][0][:options][0].split("/")[-1]
+    assert (ont_submision.valid?)
+    ont_submision.save
+    assert_equal true, ont_submision.exist?(reload=true)
+    uploaded = LinkedData::Models::SubmissionStatus.find("UPLOADED")
+    uploded_ontologies = uploaded.submissions
+    uploaded_ont = nil
+    uploded_ontologies.each do |ont|
+      ont.load
+      if ont.acronym == acronym
+        uploaded_ont = ont
+      end
+    end
+    assert (not uploaded_ont.nil?)
+    if not uploaded_ont.ontology.loaded?
+      uploaded_ont.ontology.load
+    end
+    uploaded_ont.process_submission Logger.new(STDOUT)
+  end
+
+  def test_custom_property_generation
+    acr = "CUSTOMPROPTEST"
+    init_test_ontology_msotest acr
+
+    o = LinkedData::Models::Ontology.find(acr)
+    oss = o.submissions
+    assert_equal 1, oss.length
+    ont_sub = oss[0]
+    ont_sub.classes.each do |c|
+      assert (not c.prefLabel.nil?)
+      assert_instance_of String, c.prefLabel
+      if c.id.value.include? "class6"
+        assert_equal "rdfs label value", c.prefLabel
+      end
+      if c.id.value.include? "class3"
+        assert_equal "class3", c.prefLabel
+      end
+      if c.id.value.include? "class1"
+        assert_equal "class 1 literal", c.prefLabel
+      end
+    end
+  end
+
 end
 
