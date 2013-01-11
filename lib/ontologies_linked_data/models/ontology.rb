@@ -66,10 +66,10 @@ module LinkedData
         end
       end
 
-      def delete
+      def delete(in_update=false)
         submissions = @container.submissions rescue []
-        submissions.each {|s| s.delete unless s.nil?}
-        @container.delete
+        submissions.each {|s| s.delete(in_update) unless s.nil?}
+        @container.delete(in_update)
         nil
       end
 
