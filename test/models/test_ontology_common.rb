@@ -2,7 +2,7 @@ require_relative "../test_case"
 
 module LinkedData
   class TestOntologyCommon < LinkedData::TestCase
-    def submission_dependent_objects(format,acronym,user_name,status_code)
+    def submission_dependent_objects(format,acronym,user_name,status_code, name_ont)
       #ontology format
       LinkedData::Models::OntologyFormat.init
       owl = LinkedData::Models::OntologyFormat.where(:acronym => format)[0]
@@ -14,11 +14,11 @@ module LinkedData
       LinkedData::Models::OntologyFormat.init
       assert(ont.length < 2)
       if ont.length == 0
-        ont = LinkedData::Models::Ontology.new({:acronym => acronym})
+        ont = LinkedData::Models::Ontology.new({:acronym => acronym, :name => name_ont})
       else
         ont = ont[0]
       end
-      
+
       #user test_linked_models
       users = LinkedData::Models::User.where(:username => user_name)
       assert(users.length < 2)
@@ -39,7 +39,7 @@ module LinkedData
       end
 
       #Submission Status
-      return owl, ont, user, status 
+      return owl, ont, user, status
     end
 
 
@@ -54,13 +54,13 @@ module LinkedData
         end
         ont.delete
       end
-      ont_submision =  LinkedData::Models::OntologySubmission.new({ :acronym => acr, :submissionId => 1, :name => "Some Name" })
+      ont_submision =  LinkedData::Models::OntologySubmission.new({ :acronym => acr, :submissionId => 1 })
       assert (not ont_submision.valid?)
       assert_equal 5, ont_submision.errors.length
-      file_path = "./test/data/ontology_files/custom_properties.owl" 
-      uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository(acr, 1, file_path) 
+      file_path = "./test/data/ontology_files/custom_properties.owl"
+      uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository(acr, 1, file_path)
       ont_submision.uploadFilePath = uploadFilePath
-      owl, ont, user, status =  submission_dependent_objects("OWL", acr, "test_linked_models", "UPLOADED")
+      owl, ont, user, status =  submission_dependent_objects("OWL", acr, "test_linked_models", "UPLOADED", "some ont created by mso for testing")
       ont_submision.ontologyFormat = owl
       ont_submision.administeredBy = user
       ont_submision.ontology = ont
@@ -86,8 +86,8 @@ module LinkedData
         uploaded_ont.ontology.load
       end
       uploaded_ont.process_submission Logger.new(STDOUT)
-     
-      #test to see if custom properties were saved in the graph 
+
+      #test to see if custom properties were saved in the graph
       custom_props = [ "http://bioportal.bioontology.org/ontologies/msotes#myPrefLabel",
         "http://bioportal.bioontology.org/ontologies/msotes#myDefinition",
         "http://bioportal.bioontology.org/ontologies/msotes#mySynonymLabel",
