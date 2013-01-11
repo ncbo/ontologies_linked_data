@@ -5,11 +5,12 @@ class TestOntology < LinkedData::TestCase
   def setup
     @acronym = "SNOMED-TST"
     @name = "SNOMED-CT TEST"
+    teardown
+    _delete_objects
   end
 
   def teardown
-    o = LinkedData::Models::Ontology.find(@acronym)
-    o.delete unless o.nil?
+    _delete_objects
   end
 
   def _create_ontology_with_submissions
@@ -24,21 +25,12 @@ class TestOntology < LinkedData::TestCase
     o = LinkedData::Models::Ontology.new({
       acronym: @acronym,
       name: @name,
-      ontologyFormat: "OWL",
-      administeredBy: "tim",
-    })
-    o.save
-
-    os = LinkedData::Models::OntologySubmission.new({
-      acronym: @acronym,
-      ontology: o,
       ontologyFormat: of,
       administeredBy: u,
       pullLocation: RDF::IRI.new("http://example.com"),
       status: LinkedData::Models::SubmissionStatus.new(:code => "UPLOADED"),
-      submissionId: o.next_submission_id
     })
-    os.save
+    o.save
   end
 
   def _delete_objects
@@ -59,15 +51,36 @@ class TestOntology < LinkedData::TestCase
     o = LinkedData::Models::Ontology.new
     assert (not o.valid?)
 
+    u = LinkedData::Models::User.new(username: "tim")
+    u.save
+
+    of = LinkedData::Models::OntologyFormat.new(acronym: "OWL")
+    of.save
+
     o.acronym = @acronym
     o.name = @name
+    o.submissionId = o.next_submission_id
+    o.ontologyFormat = of
+    o.administeredBy = u
+    o.status = LinkedData::Models::SubmissionStatus.new(:code => "UPLOADED")
+    o.pullLocation = RDF::IRI.new("http://example.com")
     assert o.valid?
   end
 
   def test_ontology_lifecycle
+    u = LinkedData::Models::User.new(username: "tim")
+    u.save
+
+    of = LinkedData::Models::OntologyFormat.new(acronym: "OWL")
+    of.save
+
     o = LinkedData::Models::Ontology.new({
       acronym: @acronym,
-      name: @name
+      name: @name,
+      ontologyFormat: of,
+      administeredBy: u,
+      pullLocation: RDF::IRI.new("http://example.com"),
+      status: LinkedData::Models::SubmissionStatus.new(:code => "UPLOADED"),
     })
 
     # Create
