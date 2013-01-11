@@ -11,7 +11,7 @@ module LinkedData
                   :attribute => :ontology }
 
       def latest_submission
-        OntologySubmission.where(acronym: @acronym, submissionId: highest_submission_id())
+        OntologySubmission.where(acronym: acronym, submissionId: highest_submission_id())
       end
 
       def next_submission_id
@@ -19,8 +19,10 @@ module LinkedData
       end
 
       def highest_submission_id
+        # return 0 if acronym.nil?
+
         submissions = self.submissions rescue nil
-        submissions = OntologySubmission.where(acronym: @acronym) if submissions.nil?
+        submissions = OntologySubmission.where(acronym: acronym) if submissions.nil? && !acronym.nil?
 
         # This is the first!
         return 0 if submissions.nil? || submissions.empty?
