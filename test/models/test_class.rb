@@ -7,6 +7,8 @@ class TestClassModel < LinkedData::TestOntologyCommon
   end
 
   def test_terms_custom_props
+    return if ENV["SKIP_PARSING"]
+
     acr = "CSTPROPS"
     init_test_ontology_msotest acr
     os = LinkedData::Models::OntologySubmission.find(acr + '+' + 1.to_s)

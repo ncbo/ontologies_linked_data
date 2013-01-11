@@ -20,6 +20,7 @@ class TestOntologySubmission < LinkedData::TestOntologyCommon
   end
 
   def test_valid_ontology
+    return if ENV["SKIP_PARSING"]
 
     acronym = "SNOMED-TST"
     name = "SNOMED-CT TEST"
@@ -50,6 +51,7 @@ class TestOntologySubmission < LinkedData::TestOntologyCommon
   end
 
   def test_sanity_check_single_file_submission
+    return if ENV["SKIP_PARSING"]
 
     acronym = "BRO"
     name = "Biomedical Resource Ontology"
@@ -76,6 +78,7 @@ class TestOntologySubmission < LinkedData::TestOntologyCommon
 
 
   def test_sanity_check_zip
+    return if ENV["SKIP_PARSING"]
 
     acronym = "RADTEST"
     name = "RADTEST Bla"
@@ -112,6 +115,8 @@ class TestOntologySubmission < LinkedData::TestOntologyCommon
   end
 
   def test_duplicated_file_names
+    return if ENV["SKIP_PARSING"]
+
     acronym = "DUPTEST"
     name = "DUPTEST Bla"
     ontologyFile = "./test/data/ontology_files/ont_dup_names.zip"
@@ -130,6 +135,8 @@ class TestOntologySubmission < LinkedData::TestOntologyCommon
   end
 
   def test_submission_parse
+    return if ENV["SKIP_PARSING"]
+
     acronym = "BROTEST"
     name = "BROTEST Bla"
     ontologyFile = "./test/data/ontology_files/BRO_v3.2.owl"
@@ -173,6 +180,7 @@ class TestOntologySubmission < LinkedData::TestOntologyCommon
   end
 
   def test_submission_parse_zip
+    return if ENV["SKIP_PARSING"]
 
     acronym = "RADTEST"
     name = "RADTEST Bla"
@@ -227,6 +235,8 @@ class TestOntologySubmission < LinkedData::TestOntologyCommon
   end
 
   def test_custom_property_generation
+    return if ENV["SKIP_PARSING"]
+
     acr = "CUSTOMPROPTEST"
     init_test_ontology_msotest acr
 
