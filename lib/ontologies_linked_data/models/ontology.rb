@@ -66,8 +66,19 @@ module LinkedData
         end
       end
 
+      def save
+        safe_to_save = true
+        safe_to_save = @wrapped.each {|obj| break false unless obj.valid? }
+        unless safe_to_save
+          raise NotValidException.new("Object is not valid. It cannot be saved. Check errors.")
+        end
+        @wrapped.each {|obj| obj.save}
+      end
+
       def delete(in_update=false)
-        submissions = @container.submissions rescue []
+        submissions = @container.submissions rescue nil
+        submissions = OntologySubmission.where(acronym: @container.acronym) if submissions.nil?
+        puts "Deleting #{submissions.length} submissions" unless submissions.length == 0
         submissions.each {|s| s.delete(in_update) unless s.nil?}
         @container.delete(in_update)
         nil
