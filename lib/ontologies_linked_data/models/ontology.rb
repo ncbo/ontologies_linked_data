@@ -6,6 +6,20 @@ module LinkedData
     ##
     # This class is a wrapper around the OntologyContainer and OntologySubmission.
     # It allows you to work with a single object that will serialize and read from the two underlying ones.
+    #
+    #
+    # NOTE TO FUTURE SELF
+    #
+    # We didn't end up using this implementation, though it's close to working.
+    # The main reason it wasn't used is because creating links between other Goo objects
+    # and Ontology wouldn't work well. We could potentially hack the wrapped Ontology object
+    # to support some Goo functionality to make these links work, but it wouldn't be clear
+    # to other coders how or why this was happening.
+    #
+    # Instead, we'll be changing OntologySubmission to wrap some methods from OntologyContainer
+    # (which we'll rename Ontology again).
+    #
+    #
     class Ontology
 
       def initialize(attributes = {})
