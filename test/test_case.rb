@@ -22,7 +22,7 @@ module LinkedData
       else
         ont = ont[0]
       end
-      
+
       #user test_linked_models
       users = LinkedData::Models::User.where(:username => user_name)
       assert(users.length < 2)
@@ -43,7 +43,48 @@ module LinkedData
       end
 
       #Submission Status
-      return owl, ont, user, status 
+      return owl, ont, user, status
     end
+
+    def _create_ontology
+      @acronym ||= "SNOMED-TST"
+      @name ||= "SNOMED-CT TEST"
+
+      _delete_ontology_objects
+
+      u = LinkedData::Models::User.new(username: "tim")
+      u.save
+
+      of = LinkedData::Models::OntologyFormat.new(acronym: "OWL")
+      of.save
+
+      o = LinkedData::Models::Ontology.new({
+        acronym: @acronym,
+        name: @name,
+        ontologyFormat: of,
+        administeredBy: u,
+        pullLocation: RDF::IRI.new("http://example.com"),
+        status: LinkedData::Models::SubmissionStatus.new(:code => "UPLOADED"),
+      })
+      o.save
+      o
+    end
+
+    def _delete_ontology_objects
+      @acronym ||= "SNOMED-TST"
+
+      u = LinkedData::Models::User.find("tim")
+      u.delete unless u.nil?
+
+      of = LinkedData::Models::OntologyFormat.find("OWL")
+      of.delete unless of.nil?
+
+      ss = LinkedData::Models::SubmissionStatus.find("UPLOADED")
+      ss.delete unless ss.nil?
+
+      o = LinkedData::Models::Ontology.find(@acronym)
+      o.delete unless o.nil?
+    end
+
   end
 end

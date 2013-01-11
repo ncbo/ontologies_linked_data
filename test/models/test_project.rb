@@ -1,6 +1,11 @@
 require_relative "../test_case"
 
 class TestProject < LinkedData::TestCase
+
+  def teardown
+    _delete_ontology_objects
+  end
+
   def test_valid_project
     p = LinkedData::Models::Project.new
     assert (not p.valid?)
@@ -19,7 +24,7 @@ class TestProject < LinkedData::TestCase
 
     # Fix typing
     p.creator = LinkedData::Models::User.new(username: "paul")
-    p.ontologyUsed = [LinkedData::Models::Ontology.new(acronym: "SNOMED", name: "SNOMED CT")]
+    p.ontologyUsed = [_create_ontology]
     assert p.valid?
   end
 
@@ -30,7 +35,7 @@ class TestProject < LinkedData::TestCase
         :created => DateTime.parse("2012-10-04T07:00:00.000Z"),
         :homePage => "http://valid.uri.com",
         :description => "This is a test description",
-        :ontologyUsed => [LinkedData::Models::Ontology.new(acronym: "SNOMED", name: "SNOMED CT")]
+        :ontologyUsed => [_create_ontology]
       })
 
     assert_equal false, p.exist?(reload=true)

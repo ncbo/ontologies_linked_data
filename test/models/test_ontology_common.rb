@@ -10,11 +10,11 @@ module LinkedData
 
       #ontology
       LinkedData::Models::OntologyFormat.init
-      ont = LinkedData::Models::Ontology.where(:acronym => acronym)
+      ont = LinkedData::Models::OntologyContainer.where(:acronym => acronym)
       LinkedData::Models::OntologyFormat.init
       assert(ont.length < 2)
       if ont.length == 0
-        ont = LinkedData::Models::Ontology.new({:acronym => acronym, :name => name_ont})
+        ont = LinkedData::Models::OntologyContainer.new({:acronym => acronym, :name => name_ont})
       else
         ont = ont[0]
       end
@@ -45,7 +45,7 @@ module LinkedData
 
 
     def init_test_ontology_msotest(acr)
-      ont = LinkedData::Models::Ontology.find(acr)
+      ont = LinkedData::Models::OntologyContainer.find(acr)
       if not ont.nil?
         sub = ont.submissions || []
         sub.each do |s|
