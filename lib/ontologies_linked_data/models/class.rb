@@ -8,18 +8,19 @@ module LinkedData
 
       def initialize(id,graph,prefLabel = nil, synonymLabel = nil)
         @id = id
-        @prefLabel = prefLabel
-        @synonymLabel = synonymLabel
+
         @graph = graph
+        @attributes = { :prefLabel => prefLabel, :synonyms => synonymLabel }
+
       end
 
       def prefLabel
-        return (@prefLabel ? @prefLabel.value : nil)
+        return (@attributes[:prefLabel] ? @attributes[:prefLabel].value : nil)
       end
 
       def synonymLabel
-        @synonymLabel.select!{ |sy| sy != nil }
-        return (@synonymLabel ? (@synonymLabel.map { |sy| sy.value })  : [])
+        @attributes[:synonyms].select!{ |sy| sy != nil }
+        return (@attributes[:synonyms] ? (@attributes[:synonyms].map { |sy| sy.value })  : [])
       end
 
       def self.where(*args)
