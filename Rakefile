@@ -1,5 +1,4 @@
 require 'rake/testtask'
-require 'pry'
 
 Rake::TestTask.new do |t|
   t.libs = []
@@ -22,6 +21,20 @@ Rake::TestTask.new do |t|
   t.libs = []
   t.name = "test:serializer"
   t.test_files = FileList['test/serializer/test*.rb']
+end
+
+namespace :data do
+  desc "Create sample data"
+  task :create do
+    require_relative "test/data/generate_test_data"
+    GenerateTestData.create
+  end
+
+  desc "Remove sample data"
+  task :delete do
+    require_relative "test/data/generate_test_data"
+    GenerateTestData.delete
+  end
 end
 
 namespace :test do

@@ -2,31 +2,43 @@ module LinkedData
   module Models
     class OntologySubmission < LinkedData::Models::Base
       model :ontology_submission
-      attribute :acronym, :unique => true
+      attribute :acronym, :unique => true, :namespace => :omv
       attribute :submissionId, :unique => true, :instance_of =>  { :with => Fixnum }
 
-      #configurable properties
+      # Configurable properties for processing
       attribute :prefLabelProperty, :instance_of =>  { :with => RDF::IRI }, :single_value => true
       attribute :definitionProperty, :instance_of =>  { :with => RDF::IRI }, :single_value  => true
       attribute :synonymProperty, :instance_of =>  { :with => RDF::IRI }, :single_value  => true
       attribute :authorProperty, :instance_of =>  { :with => RDF::IRI }, :single_value  => true
       attribute :classType, :instance_of =>  { :with => RDF::IRI }, :single_value  => true
       attribute :hiearchyProperty, :instance_of =>  { :with => RDF::IRI }, :single_value  => true
-      attribute :status, :instance_of =>  { :with => :submission_status }, :single_value  => true, :not_nil => true
-      attribute :summaryOnly, :single_value  => true
+      attribute :obsoleteProperty, :single_value => true
+      attribute :obsoleteParent, :single_value => true
 
-      #internal values for parsing - not definitive
+      # Ontology metadata
+      attribute :hasOntologyLanguage, :namespace => :omv, :single_value => true, :not_nil => true, :instance_of => { :with => :ontology_format }
+      attribute :homepage, :single_value => true
+      attribute :publication, :single_value => true, :single_value => true
+      attribute :uri, :namespace => :omv, :single_value => true
+      attribute :naturalLanguage, :namespace => :omv, :single_value => true
+      attribute :documentation, :namespace => :omv, :single_value => true
+      attribute :version, :namespace => :omv, :single_value => true
+      attribute :creationDate, :namespace => :omv, :single_value => true
+      attribute :description, :namespace => :omv, :single_value => true
+      attribute :status, :namespace => :omv, :single_value => true
+
+      # Internal values for parsing - not definitive
       attribute :uploadFilePath,  :single_value =>true
       attribute :masterFileName,  :single_value =>true
+      attribute :summaryOnly, :single_value  => true
+      attribute :submissionStatus, :instance_of =>  { :with => :submission_status }, :single_value  => true, :not_nil => true
 
       # URI for pulling ontology
       attribute :pullLocation, :single_value => true, :instance_of =>  { :with => RDF::IRI }
 
-      #link to ontology
+      # Link to ontology
       attribute :ontology, :single_value => true, :not_nil => true, :instance_of => { :with => :ontology }
 
-      attribute :ontologyFormat, :single_value => true, :not_nil => true, :instance_of => { :with => :ontology_format }
-      attribute :administeredBy, :not_nil => true, :instance_of => { :with => :user }
 
       def self.copy_file_repository(acronym, submissionId, src, filename = nil)
         path_to_repo = File.join([$REPOSITORY_FOLDER, acronym, submissionId.to_s])

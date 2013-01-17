@@ -56,15 +56,15 @@ module LinkedData
       end
       ont_submision =  LinkedData::Models::OntologySubmission.new({ :acronym => acr, :submissionId => 1 })
       assert (not ont_submision.valid?)
-      assert_equal 5, ont_submision.errors.length
+      assert_equal 4, ont_submision.errors.length
       file_path = "./test/data/ontology_files/custom_properties.owl"
       uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository(acr, 1, file_path)
       ont_submision.uploadFilePath = uploadFilePath
       owl, ont, user, status =  submission_dependent_objects("OWL", acr, "test_linked_models", "UPLOADED", "some ont created by mso for testing")
-      ont_submision.ontologyFormat = owl
-      ont_submision.administeredBy = user
+      ont.administeredBy = user
+      ont_submision.hasOntologyLanguage = owl
       ont_submision.ontology = ont
-      ont_submision.status = status
+      ont_submision.submissionStatus = status
       ont_submision.prefLabelProperty = RDF::IRI.new("http://bioportal.bioontology.org/ontologies/msotes#myPrefLabel")
       ont_submision.synonymProperty = RDF::IRI.new("http://bioportal.bioontology.org/ontologies/msotes#mySynonymLabel")
       ont_submision.definitionProperty = RDF::IRI.new("http://bioportal.bioontology.org/ontologies/msotes#myDefinition")

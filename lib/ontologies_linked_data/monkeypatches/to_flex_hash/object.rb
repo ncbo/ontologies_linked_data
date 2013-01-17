@@ -21,8 +21,8 @@ class Object
     hash = {}
 
     # Look for table attribute or get all instance variables
-    if instance_variables.include?(:@table)
-      hash.replace(instance_variable_get("@table"))
+    if instance_variables.include?(:@attributes)
+      hash.replace(instance_variable_get("@attributes"))
     else
       instance_variables.each {|var| hash[var.to_s.delete("@").to_sym] = instance_variable_get(var) }
     end
@@ -54,12 +54,24 @@ class Object
     # Make sure we're not returning things to be excepted
     hash.delete_if {|k,v| except.include?(k) } unless except.empty?
 
-    # Symbolize keys
+    # Symbolize keys and convert linked objects to their ids
     hash.dup.each do |k,v|
       unless k.kind_of? Symbol
         hash[k.to_sym] = v
         hash.delete(k)
       end
+
+      # Convert IRIs
+      v = v.value if v.kind_of?(RDF::IRI)
+
+      # Convert linked objects to id
+      value = v.respond_to?(:resource_id) ? LinkedData::Utils::Namespaces.last_iri_fragment(v.resource_id.value) : v
+      # Convert arrays of linked objects
+      if v.kind_of?(Enumerable) && v.first.respond_to?(:resource_id)
+        value = v.map {|e| LinkedData::Utils::Namespaces.last_iri_fragment(e.resource_id.value) }
+      end
+
+      hash[k] = value
     end
 
     hash

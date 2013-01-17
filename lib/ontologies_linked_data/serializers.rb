@@ -1,7 +1,10 @@
 module LinkedData
   module Serializers
     def self.serialize(obj, type, options = {})
-      SERIALIZERS[type].serialize(obj, options)
+      # Only support JSON for now
+      JSON.serialize(obj, options)
+
+      # SERIALIZERS[type].serialize(obj, options)
     end
 
     class JSON

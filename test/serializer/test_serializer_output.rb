@@ -37,8 +37,8 @@ class TestSerializerOutput < Test::Unit::TestCase
 
   def test_json
     json = LinkedData::Serializers.serialize(PERSON, :json)
-    reference = '{"name":"Simon","age":21,"height":6}'
-    assert_equal reference, json
+    reference = {"name"=>"Simon","age"=>21,"height"=>6}
+    assert_equal reference, JSON.parse(json)
   end
 
   def test_json_with_options

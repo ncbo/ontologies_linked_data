@@ -2,8 +2,6 @@ require_relative "../config/default.rb"
 require_relative "../lib/ontologies_linked_data"
 require "test/unit"
 
-LinkedData.config
-
 module LinkedData
   class TestCase < Test::Unit::TestCase
     def submission_dependent_objects(format,acronym,user_name,status_code)
@@ -22,7 +20,7 @@ module LinkedData
       else
         ont = ont[0]
       end
-      
+
       #user test_linked_models
       users = LinkedData::Models::User.where(:username => user_name)
       assert(users.length < 2)
@@ -43,7 +41,7 @@ module LinkedData
       end
 
       #Submission Status
-      return owl, ont, user, status 
+      return owl, ont, user, status
     end
   end
 end
