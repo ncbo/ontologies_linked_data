@@ -187,7 +187,7 @@ module LinkedData
       end
 
       def classes
-        return Class.where(:ontology => self)
+        return Class.where(:submission => self)
       end
     end
   end
