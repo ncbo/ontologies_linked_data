@@ -187,9 +187,7 @@ module LinkedData
       end
 
       def classes
-        return Class.where(:graph => self.resource_id,
-                           :prefLabelProperty => self.prefLabelProperty,
-                           :classType => self.classType)
+        return Class.where(:ontology => self)
       end
     end
   end
