@@ -26,6 +26,9 @@ module LinkedData
       def self.rdfs_subPropertyOf
         RDFS + "subPropertyOf"
       end
+      def self.rdfs_subClassOf
+        RDFS + "subClassOf"
+      end
       def self.rdfs_label
         RDFS + "label"
       end
@@ -40,6 +43,9 @@ module LinkedData
       end
       def self.default_pref_label
         RDF::IRI.new(skos_prefLabel)
+      end
+      def self.default_hieararchy_property
+        RDF:IRI.new(rdfs_subClassOf)
       end
       def self.default_type_for_classes
         RDF::IRI.new(owl_class)
