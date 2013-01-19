@@ -2,21 +2,45 @@ module LinkedData
   module Models
     class Class
 
-      attr_accessor :id
-      attr_accessor :graph
-
+      attr_accessor :resource_id
       attr_accessor :submission
 
-      def initialize(id,graph, submission, prefLabel = nil, synonymLabel = nil)
-        @id = id
+      def initialize(id, submission, plabel = nil, synonyms = nil)
+        @resource_id = id
 
-        @graph = graph
-        @attributes = { :prefLabel => prefLabel, :synonyms => synonymLabel }
+        @attributes = {}
+
+        if !plabel.nil?
+          set_prefLabel plabel
+        end
+        @attributes[:synonyms] = synonyms
 
         #backreference to the submission that "owns" the term
         @submission = submission
-
       end
+
+      private
+
+      def set_prefLabel(label_input)
+        label = nil
+        if label_input.instance_of? Array
+          if label_input.length > 1
+            raise ArgumentError, "Class model only allows one label. TODO: internationalization"
+          end
+          if label_input.length == 1
+            label = label_input[0]
+          end
+        else
+          label = label_input
+        end
+        if label.instance_of? SparqlRd::Resultset::Literal
+          @attributes[:prefLabel] = label
+        else
+          raise ArgumentError, "Unknown type of prefLabel #{label.class.name}"
+        end
+      end
+
+      public
 
       def prefLabel
         return @attributes[:prefLabel]
@@ -46,7 +70,6 @@ eos
         rs = Goo.store.query(query)
         classes = []
         rs.each_solution do |sol|
-          binding.pry
         end
       end
 
@@ -72,10 +95,12 @@ eos
         rs = Goo.store.query(query)
         classes = []
         rs.each_solution do |sol|
-          if ((classes.length > 0) and (classes[-1].id.value == sol.get(:id).value))
+          if ((classes.length > 0) and (classes[-1].resource_id.value == sol.get(:id).value))
             classes[-1].synonymLabel << sol.get(:synonymLabel)
           else
-            classes << Class.new(sol.get(:id),graph, sol.get(:prefLabel), [sol.get(:synonymLabel)])
+            if sol.get(:prefLabel).instance_of? Array
+            end
+            classes << Class.new(sol.get(:id), submission, sol.get(:prefLabel), [sol.get(:synonymLabel)])
           end
         end
         return classes

@@ -165,18 +165,22 @@ module LinkedData
         classes = self.classes
         t1 = Time.now
         logger.info("Obtained #{classes.length} classes for #{self.resource_id.value} in #{t1 - t0} sec.")
-        classes.each do |c|
-          if c.prefLabel.nil?
-            rdfs_labels = c.synonymLabel
-            label = nil
-            if rdfs_labels.length > 0
-              label = rdfs_labels[0]
-            else
-              label = LinkedData::Utils::Namespaces.last_iri_fragment c.id.value
-            end
-            label_triples << LinkedData::Utils::Triples.label_for_class_triple(c.id,
-                                                   LinkedData::Utils::Namespaces.meta_prefLabel_iri,label)
+        classes.each do |cclass|
+          next if !cclass.prefLabel.nil?
+
+          #We do not have a label for this class. Lets generate one.
+          label = nil
+
+          if cclass.synonymLabel.length > 0
+            #Try to take one synonym and use it as pref label
+            label = cclass.synonymLabel[0].value
+          else
+            #if that does not work use the last fragment of IRI
+            label = LinkedData::Utils::Namespaces.last_iri_fragment cclass.resource_id.value
           end
+
+          label_triples << LinkedData::Utils::Triples.label_for_class_triple(cclass.resource_id,
+                                                 LinkedData::Utils::Namespaces.meta_prefLabel_iri,label)
           count_classes += 1
         end
         if (label_triples.length > 0)
