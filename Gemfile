@@ -5,6 +5,7 @@ gem 'rack-test'
 gem 'json'
 gem 'pry'
 gem 'rubyzip'
+gem 'simplecov', :require => false, :group => :test
 
 # NCBO gems (can be from a local dev path or from rubygems/git)
 gemfile_local = File.expand_path("../Gemfile.local", __FILE__)

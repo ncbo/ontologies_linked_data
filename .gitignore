@@ -1,10 +1,17 @@
-Gemfile.local
-Gemfile.lock
 *.swp
 *.gemtags
 *.tags*
 .DS_Store
+
+# Local configs
+Gemfile.local
+Gemfile.lock
+config/custom.rb
+
+# Code coverage reports
+coverage*
+
+# Test data
 test/data/ontology_files/parse
 test/data/ontology_files/repo
-
 test/data/ontology_files/catalog-v001.xml

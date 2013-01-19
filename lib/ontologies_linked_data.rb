@@ -1,5 +1,6 @@
 require "goo"
 
+require_relative "../config/default.rb"
 require_relative "ontologies_linked_data/serializer"
 require_relative "ontologies_linked_data/utils/file"
 require_relative "ontologies_linked_data/utils/triples"
@@ -22,7 +23,7 @@ begin
     end
   end
 rescue Exception => e
-  puts "Invalid triplestore configuration, moving on"
+  abort("EXITING: Cannot connect to triplestore")
 end
 
 # Require base model

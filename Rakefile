@@ -6,6 +6,14 @@ Rake::TestTask.new do |t|
 end
 
 Rake::TestTask.new do |t|
+  puts "Code coverage reports will be visible in the /coverage folder"
+  ENV["COVERAGE"] = "true"
+  t.libs = []
+  t.name = "test:coverage"
+  t.test_files = FileList['test/**/test*.rb']
+end
+
+Rake::TestTask.new do |t|
   t.libs = []
   t.name = "test:models"
   t.test_files = FileList['test/models/test*.rb']
@@ -21,6 +29,13 @@ Rake::TestTask.new do |t|
   t.libs = []
   t.name = "test:serializer"
   t.test_files = FileList['test/serializer/test*.rb']
+end
+
+desc "Run test coverage analysis"
+task :coverage do
+  puts "Code coverage reports will be visible in the /coverage folder"
+  ENV["COVERAGE"] = "true"
+  Rake::Task["test"].invoke
 end
 
 namespace :data do
