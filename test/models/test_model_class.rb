@@ -4,6 +4,9 @@ require "logger"
 class TestClassModel < LinkedData::TestOntologyCommon
 
   def teardown
+    #REMOVE
+    return
+
     @os = LinkedData::Models::OntologySubmission.find(@acr + '+' + 1.to_s)
     unless @os.nil?
       @os.ontology.load
@@ -13,6 +16,10 @@ class TestClassModel < LinkedData::TestOntologyCommon
   end
 
   def setup
+    #REMOVE
+    @os = LinkedData::Models::OntologySubmission.find(@acr + '+' + 1.to_s)
+    return
+
     @acr = "CSTPROPS"
     teardown
     init_test_ontology_msotest @acr
@@ -31,10 +38,9 @@ class TestClassModel < LinkedData::TestOntologyCommon
   def test_parents
     return if ENV["SKIP_PARSING"]
 
-    os_classes = @os.classes
-    os_classes.each do |c|
-#      binding.pry
-    end
+    #TODO come back to the find method
+    LinkedData::Models::Class.find("http://xxxxxxx", :submission @os)
+
   end
 
 end

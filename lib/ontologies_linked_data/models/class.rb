@@ -106,6 +106,16 @@ eos
         return classes
       end
 
+      def self.find(resouce_id,options)
+
+        #TODO notes
+        # fail if :submission is missing
+        # resource id has to parse into an IRI if it is not already
+        # nil if not found
+
+
+      end
+
     end
   end
 end
