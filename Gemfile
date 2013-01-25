@@ -3,6 +3,7 @@ source 'https://rubygems.org'
 gem 'rack'
 gem 'rack-test'
 gem 'json'
+gem 'json-schema'
 gem 'pry'
 gem 'rubyzip'
 gem 'simplecov', :require => false, :group => :test

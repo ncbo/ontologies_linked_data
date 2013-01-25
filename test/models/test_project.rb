@@ -1,4 +1,5 @@
 require_relative "../test_case"
+require 'json-schema'
 
 class TestProject < LinkedData::TestCase
 
@@ -21,7 +22,6 @@ class TestProject < LinkedData::TestCase
     @p.creator = @user
     # Created value has a default that is set during @p.save
     #@p.created = DateTime.new
-    #@p.homePage = URI.new("http://valid.uri.com")
     @p.homePage = "http://valid.uri.com"
     @p.description = "This is a test project"
     @p.ontologyUsed = [@ont]
@@ -151,5 +151,20 @@ class TestProject < LinkedData::TestCase
     assert_equal true, @p.exist?(reload=true)
     @p.delete
     assert_equal false, @p.exist?(reload=true)
+  end
+
+  def test_project_json
+    # TODO: Resolve how to get the project model serialized into json format.
+    assert true
+    return
+    # A placeholder to test the serialization of a project in json format
+    # Validate the json against a schema, body contains a list of projects
+    schema = JSON.parse(LinkedData::Models::Project::JSON_SCHEMA_STR)
+    @p.save unless @p.exist?(reload=true)
+    project_json = @p.to_json
+    assert(
+        JSON::Validator.validate(schema, project_json, :validate_schema => true),
+        JSON::Validator.fully_validate(schema, project_json, :validate_schema => true).to_s
+    )
   end
 end
