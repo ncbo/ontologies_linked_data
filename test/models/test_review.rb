@@ -21,7 +21,7 @@ class TestReview < LinkedData::TestCase
     assert r.valid?
   end
 
-  def test_review_save
+  def test_review_lifecycle
     r = LinkedData::Models::Review.new({
         :creator => LinkedData::Models::User.new(username: "paul"),
         :created => DateTime.parse("2012-10-04T07:00:00.000Z"),
@@ -34,5 +34,10 @@ class TestReview < LinkedData::TestCase
     assert_equal true, r.exist?(reload=true)
     r.delete
     assert_equal false, r.exist?(reload=true)
+  end
+
+  def test_review_default_datetime
+    r = LinkedData::Models::Review.new
+    assert r.created.instance_of? DateTime
   end
 end

@@ -9,7 +9,7 @@ class TestUser < LinkedData::TestCase
     assert u.valid?
   end
 
-  def test_user_save
+  def test_user_lifecycle
     u = LinkedData::Models::User.new({
         username: "test_user"
       })
@@ -19,5 +19,10 @@ class TestUser < LinkedData::TestCase
     assert_equal true, u.exist?(reload=true)
     u.delete
     assert_equal false, u.exist?(reload=true)
+  end
+
+  def test_user_default_datetime
+    u = LinkedData::Models::User.new
+    assert u.created.instance_of? DateTime
   end
 end

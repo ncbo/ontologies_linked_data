@@ -74,7 +74,6 @@ class GenerateTestData
       o.save if o.valid?
 
       os = LinkedData::Models::OntologySubmission.new({
-        acronym: acronym,
         ontology: o,
         hasOntologyLanguage: LinkedData::Models::OntologyFormat.find(ONT_FORMATS.shuffle.first.upcase),
         pullLocation: RDF::IRI.new("http://example.com"),

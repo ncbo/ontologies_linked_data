@@ -44,7 +44,7 @@ class TestGroup < LinkedData::TestCase
     g1.delete
   end
 
-  def test_group_save
+  def test_group_lifecycle
     g = LinkedData::Models::Group.new({
         :created => DateTime.parse("2012-10-04T07:00:00.000Z"),
         :name => "Test Group",
@@ -57,5 +57,10 @@ class TestGroup < LinkedData::TestCase
     assert_equal true, g.exist?(reload=true)
     g.delete
     assert_equal false, g.exist?(reload=true)
+  end
+
+  def test_group_default_datetime
+    g = LinkedData::Models::Group.new
+    assert g.created.instance_of? DateTime
   end
 end

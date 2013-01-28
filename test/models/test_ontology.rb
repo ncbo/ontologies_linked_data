@@ -3,14 +3,13 @@ require 'pry'
 
 class TestOntology < LinkedData::TestCase
   def setup
-    @acronym = "SNOMED-TST"
-    @name = "SNOMED-CT TEST"
+    @acronym = "ONT-FOR-TEST"
+    @name = "TestOntology TEST"
     _delete_objects
   end
 
   def teardown
-    o = LinkedData::Models::Ontology.find(@acronym)
-    o.delete unless o.nil?
+    _delete_objects
   end
 
   def _create_ontology_with_submissions
@@ -30,7 +29,6 @@ class TestOntology < LinkedData::TestCase
     o.save
 
     os = LinkedData::Models::OntologySubmission.new({
-      acronym: @acronym,
       ontology: o,
       hasOntologyLanguage: of,
       pullLocation: RDF::IRI.new("http://example.com"),

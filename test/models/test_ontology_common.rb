@@ -42,8 +42,6 @@ module LinkedData
       return owl, ont, user, status
     end
 
-
-
     def init_test_ontology_msotest(acr)
       ont = LinkedData::Models::Ontology.find(acr)
       if not ont.nil?
@@ -54,7 +52,7 @@ module LinkedData
         end
         ont.delete
       end
-      ont_submision =  LinkedData::Models::OntologySubmission.new({ :acronym => acr, :submissionId => 1 })
+      ont_submision =  LinkedData::Models::OntologySubmission.new({ :submissionId => 1 })
       assert (not ont_submision.valid?)
       assert_equal 4, ont_submision.errors.length
       file_path = "./test/data/ontology_files/custom_properties.owl"
@@ -76,8 +74,9 @@ module LinkedData
       uploded_ontologies = uploaded.submissions
       uploaded_ont = nil
       uploded_ontologies.each do |ont|
-        ont.load
-        if ont.acronym == acr
+        ont.load unless ont.loaded?
+        ont.ontology.load unless ont.ontology.loaded?
+        if ont.ontology.acronym == acr
           uploaded_ont = ont
         end
       end
