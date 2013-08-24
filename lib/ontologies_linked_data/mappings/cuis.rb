@@ -6,7 +6,7 @@ module LinkedData
         @record = Struct.new(:acronym,:term_id,:cui)
 
         f = Goo::Filter.new(:cui).bound
-        paging = LinkedData::Models::Class.where.filter(f).include(:prefLabel,:cui)
+        paging = LinkedData::Models::Class.where.filter(f).include(:cui)
         dumper = lambda { |c,ont| [[ont.acronym, c.id.to_s, c.cui]]}
         line_parser = lambda { |line| record_from_line(line) }
         is_mapping = lambda { |ra,rb| return ra.cui == rb.cui }
