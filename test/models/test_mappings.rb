@@ -8,6 +8,20 @@ class TestMapping < LinkedData::TestOntologyCommon
       puts "KB with too many mappings to run test. Is this pointing to a TEST KB?"
       raise Exception, "KB with too many mappings to run test. Is this pointing to a TEST KB?"
     end
+
+    @@redis = Redis.new(:host => LinkedData.settings.redis_host, 
+                        :port => LinkedData.settings.redis_port)
+    db_size = @@redis.dbsize
+    if db_size > 2000
+      puts "   This test cannot be run. You are probably pointing to the wrong redis backend. "
+      return
+    end
+
+    mappings = @@redis.keys.select { |x| x["mappings:"] }
+    if mappings.length > 0
+      @@redis.del(mappings)
+    end
+
     LinkedData::Models::MappingProcess.all do |m|
       m.delete
     end
@@ -219,7 +233,6 @@ class TestMapping < LinkedData::TestOntologyCommon
     end
     term_mapping_count = LinkedData::Models::TermMapping.where.all.length
     assert term_mapping_count == 10
-
 
     #testing for same process
     $MAPPING_RELOAD_LABELS = true
