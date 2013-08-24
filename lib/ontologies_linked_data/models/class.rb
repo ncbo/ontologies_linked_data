@@ -13,7 +13,7 @@ module LinkedData
 
       attribute :submission, :collection => lambda { |s| s.resource_id }, :namespace => :metadata
 
-      attribute :label, namespace: :rdfs, enforce: [:list], alias: true
+      attribute :label, namespace: :rdfs, enforce: [:list]
       attribute :prefLabel, namespace: :skos, enforce: [:existence], alias: true
       attribute :synonym, namespace: :skos, enforce: [:list], property: :altLabel, alias: true
       attribute :definition, namespace: :skos, enforce: [:list], alias: true

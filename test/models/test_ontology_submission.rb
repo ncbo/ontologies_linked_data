@@ -505,7 +505,7 @@ class TestOntologySubmission < LinkedData::TestOntologyCommon
     assert metrics.individuals == 80
     assert metrics.classesWithOneChild == 14
     #cause it has not the subproperty added
-    assert metrics.classesWithNoDefinition == 474
+    assert metrics.classesWithNoDefinition == 478
     assert metrics.classesWithMoreThan25Children == 2
     assert metrics.maxChildCount == 65
     assert metrics.averageChildCount == 5
