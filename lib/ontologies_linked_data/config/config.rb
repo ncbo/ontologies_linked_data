@@ -17,19 +17,23 @@ module LinkedData
     yield @settings, overide_connect_goo if block_given?
 
     # Set defaults
-    @settings.goo_port            ||= 9000
-    @settings.goo_host            ||= "localhost"
-    @settings.search_server_url   ||= "http://localhost:8983/solr"
-    @settings.repository_folder   ||= "./test/data/ontology_files/repo"
-    @settings.rest_url_prefix     ||= "http://data.bioontology.org/"
-    @settings.enable_security     ||= false
-    @settings.enable_http_cache   ||= false
-    @settings.redis_host          ||= "localhost"
-    @settings.redis_port          ||= 6379
-    @settings.ui_host             ||= "bioportal.bioontology.org"
-    @settings.replace_url_prefix  ||= false
-    @settings.id_url_prefix       ||= "http://data.bioontology.org/"
-    @settings.queries_debug       ||= false
+    @settings.goo_port               ||= 9000
+    @settings.goo_host               ||= "localhost"
+    @settings.search_server_url      ||= "http://localhost:8983/solr"
+    @settings.repository_folder      ||= "./test/data/ontology_files/repo"
+    @settings.rest_url_prefix        ||= "http://data.bioontology.org/"
+    @settings.enable_security        ||= false
+    @settings.redis_host             ||= "localhost"
+    @settings.redis_port             ||= 6379
+    @settings.ui_host                ||= "bioportal.bioontology.org"
+    @settings.replace_url_prefix     ||= false
+    @settings.id_url_prefix          ||= "http://data.bioontology.org/"
+    @settings.queries_debug          ||= false
+
+    # Caching
+    @settings.enable_http_cache      ||= false
+    @settings.http_cache_redis_host  ||= "localhost"
+    @settings.http_cache_redis_port  ||= 6379
 
     # PURL server config parameters
     @settings.enable_purl            ||= false
