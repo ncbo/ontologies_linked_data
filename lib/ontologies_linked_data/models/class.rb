@@ -164,7 +164,7 @@ module LinkedData
             #too many load a page
             self.in(submission)
                 .models(single_load)
-                .include(:children).all
+                .include(children: [:prefLabel]).all
             page_children = LinkedData::Models::Class
                                      .where(parents: cls)
                                      .include(ld)
@@ -180,7 +180,7 @@ module LinkedData
         if single_load.length > 0
           self.in(submission)
                 .models(single_load)
-                .include(:children).all
+                .include(children: [:prefLabel]).all
         end
       end
 
