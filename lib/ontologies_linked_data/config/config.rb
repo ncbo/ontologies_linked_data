@@ -23,17 +23,31 @@ module LinkedData
     @settings.repository_folder      ||= "./test/data/ontology_files/repo"
     @settings.rest_url_prefix        ||= "http://data.bioontology.org/"
     @settings.enable_security        ||= false
-    @settings.redis_host             ||= "localhost"
-    @settings.redis_port             ||= 6379
+
+    ### these params should be not ussed any more 
+    # removed so that dependencies shout
+    #
+    # @settings.redis_host             ||= "localhost"
+    # @settings.redis_port             ||= 6379
+    # ###
+
     @settings.ui_host                ||= "bioportal.bioontology.org"
     @settings.replace_url_prefix     ||= false
     @settings.id_url_prefix          ||= "http://data.bioontology.org/"
     @settings.queries_debug          ||= false
 
-    # Caching
+    # Caching http
     @settings.enable_http_cache      ||= false
     @settings.http_cache_redis_host  ||= "localhost"
     @settings.http_cache_redis_port  ||= 6379
+
+    #Caching goo
+    @settings.goo_cache_redis_host  ||= "localhost"
+    @settings.goo_cache_redis_port  ||= 6379
+
+    #Caching mappings
+    @settings.mappings_cache_redis_host  ||= "localhost"
+    @settings.mappings_cache_redis_port  ||= 6379
 
     # PURL server config parameters
     @settings.enable_purl            ||= false
@@ -60,7 +74,10 @@ module LinkedData
 
     puts ">> Using rdf store #{@settings.goo_host}:#{@settings.goo_port}"
     puts ">> Using search server at #{@settings.search_server_url}"
-    puts ">> Using Redis instance at #{@settings.redis_host}:#{@settings.redis_port}"
+    puts ">> Using HTTP  Redis instance at #{@settings.http_redis_host}:#{@settings.http_redis_port}"
+    puts ">> Using Mappings Redis instance at #{@settings.mappings_redis_host}:#{@settings.mappings_redis_port}"
+    puts ">> Using Goo Redis instance at #{@settings.goo_redis_host}:#{@settings.goo_redis_port}"
+
 
     connect_goo unless overide_connect_goo
   end
@@ -80,7 +97,8 @@ module LinkedData
                                 options: { rules: :NONE })
 
         conf.add_search_backend(:main, service: @settings.search_server_url)
-        conf.add_redis_backend(host: @settings.redis_host)
+        conf.add_redis_backend(host: @settings.goo_cache_redis_host, 
+                               port: @settings.goo_cache_redis_port)
       end
     rescue Exception => e
       abort("EXITING: Cannot connect to triplestore and/or search server:\n  #{e}\n#{e.backtrace.join("\n")}")

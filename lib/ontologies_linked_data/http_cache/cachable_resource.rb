@@ -12,7 +12,8 @@ module LinkedData::HTTPCache
   end
 
   def self.redis
-    @redis ||= Redis.new(host: LinkedData.settings.http_cache_redis_host, port: LinkedData.settings.http_cache_redis_port)
+    @redis ||= Redis.new(host: LinkedData.settings.http_cache_redis_host, 
+                         port: LinkedData.settings.http_cache_redis_port)
     @redis
   end
 

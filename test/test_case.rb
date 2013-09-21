@@ -17,13 +17,23 @@ MiniTest::Unit.autorun
 
 # Check to make sure you want to run if not pointed at localhost
 safe_host = Regexp.new(/localhost|ncbo-dev*|ncbo-stg-app-22*/)
-unless LinkedData.settings.goo_host.match(safe_host) && LinkedData.settings.search_server_url.match(safe_host) && LinkedData.settings.redis_host.match(safe_host)
+def safe_redis_hosts?
+  return [LinkedData.settings.mappings_cache_redis_host,
+   LinkedData.settings.http_cache_redis_host,
+   LinkedData.settings.mappings_cache_redis_host,
+   LinkedData.settings.goo_cache_redis_host].select { |x|
+    x.match(safe_host)
+  }.length == 4
+end
+unless LinkedData.settings.goo_host.match(safe_host) && LinkedData.settings.search_server_url.match(safe_host) && safe_redis_hosts?
   print "\n\n================================== WARNING ==================================\n"
   print "** TESTS CAN BE DESTRUCTIVE -- YOU ARE POINTING TO A POTENTIAL PRODUCTION/STAGE SERVER **\n"
   print "Servers:\n"
   print "triplestore -- #{LinkedData.settings.goo_host}\n"
   print "search -- #{LinkedData.settings.search_server_url}\n"
-  print "redis -- #{LinkedData.settings.redis_host}\n"
+  print "redis http -- #{LinkedData.settings.http_redis_host}:#{LinkedData.settings.http_redis_port}\n"
+  print "redis mappings -- #{LinkedData.settings.mappings_redis_host}:#{LinkedData.settings.mappings_redis_port}\n"
+  print "redis goo -- #{LinkedData.settings.goo_redis_host}:#{LinkedData.settings.goo_redis_port}\n"
   print "Type 'y' to continue: "
   $stdout.flush
   confirm = $stdin.gets

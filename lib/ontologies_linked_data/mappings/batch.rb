@@ -7,8 +7,8 @@ module LinkedData
       def self.redis_cache
         unless @redis
           @redis = Redis.new(
-              :host => LinkedData.settings.redis_host, 
-              :port => LinkedData.settings.redis_port,
+              :host => LinkedData.settings.mappings_cache_redis_host, 
+              :port => LinkedData.settings.mappings_cache_redis_port,
               :timeout => 1200)
         end
         return @redis
