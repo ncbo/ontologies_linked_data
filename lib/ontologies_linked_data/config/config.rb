@@ -69,6 +69,12 @@ module LinkedData
     @settings.smtp_auth_type         ||= :plain # :plain, :login, :cram_md5
     @settings.smtp_domain            ||= "localhost.localhost"
 
+    unless @settings.redis_host.nil?
+      puts "Error: 'redis_host' is not a valid conf parameter."
+      puts "        Redis databases were split into multiple hosts (09/22/13)."
+      raise Exception, "redis_host is not a valid conf parameter."
+    end
+
     # Check to make sure url prefix has trailing slash
     @settings.rest_url_prefix = @settings.rest_url_prefix + "/" unless @settings.rest_url_prefix[-1].eql?("/")
 
