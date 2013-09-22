@@ -38,16 +38,16 @@ module LinkedData
 
     # Caching http
     @settings.enable_http_cache      ||= false
-    @settings.http_cache_redis_host  ||= "localhost"
-    @settings.http_cache_redis_port  ||= 6379
+    @settings.http_redis_host  ||= "localhost"
+    @settings.http_redis_port  ||= 6379
 
     #Caching goo
-    @settings.goo_cache_redis_host  ||= "localhost"
-    @settings.goo_cache_redis_port  ||= 6379
+    @settings.goo_redis_host  ||= "localhost"
+    @settings.goo_redis_port  ||= 6379
 
     #Caching mappings
-    @settings.mappings_cache_redis_host  ||= "localhost"
-    @settings.mappings_cache_redis_port  ||= 6379
+    @settings.mappings_redis_host  ||= "localhost"
+    @settings.mappings_redis_port  ||= 6379
 
     # PURL server config parameters
     @settings.enable_purl            ||= false
@@ -75,11 +75,11 @@ module LinkedData
     puts "(LD) >> Using rdf store #{@settings.goo_host}:#{@settings.goo_port}"
     puts "(LD) >> Using search server at #{@settings.search_server_url}"
     puts "(LD) >> Using HTTP Redis instance at "+
-            "#{@settings.http_cache_redis_host}:#{@settings.http_cache_redis_port}"
+            "#{@settings.http_redis_host}:#{@settings.http_redis_port}"
     puts "(LD) >> Using Mappings Redis instance at "+
-            "#{@settings.mappings_cache_redis_host}:#{@settings.mappings_cache_redis_port}"
+            "#{@settings.mappings_redis_host}:#{@settings.mappings_redis_port}"
     puts "(LD) >> Using Goo Redis instance at "+
-            "#{@settings.goo_cache_redis_host}:#{@settings.goo_cache_redis_port}"
+            "#{@settings.goo_redis_host}:#{@settings.goo_redis_port}"
 
     connect_goo unless overide_connect_goo
   end
@@ -99,8 +99,8 @@ module LinkedData
                                 options: { rules: :NONE })
 
         conf.add_search_backend(:main, service: @settings.search_server_url)
-        conf.add_redis_backend(host: @settings.goo_cache_redis_host, 
-                               port: @settings.goo_cache_redis_port)
+        conf.add_redis_backend(host: @settings.goo_redis_host,
+                               port: @settings.goo_redis_port)
       end
     rescue Exception => e
       abort("EXITING: Cannot connect to triplestore and/or search server:\n  #{e}\n#{e.backtrace.join("\n")}")
