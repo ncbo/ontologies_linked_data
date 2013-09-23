@@ -16,16 +16,16 @@ require 'minitest/unit'
 MiniTest::Unit.autorun
 
 # Check to make sure you want to run if not pointed at localhost
-safe_host = Regexp.new(/localhost|ncbo-dev*|ncbo-stg-app-22*/)
-def safe_redis_hosts?
-  return [LinkedData.settings.mappings_cache_redis_host,
-   LinkedData.settings.http_cache_redis_host,
-   LinkedData.settings.mappings_cache_redis_host,
-   LinkedData.settings.goo_cache_redis_host].select { |x|
-    x.match(safe_host)
-  }.length == 4
+safe_hosts = Regexp.new(/localhost|ncbo-dev*|ncbo-stg-app-22*/)
+def safe_redis_hosts?(sh)
+  return [LinkedData.settings.http_redis_host,
+   LinkedData.settings.goo_redis_host].select { |x|
+    x.match(sh)
+  }.length == 2
 end
-unless LinkedData.settings.goo_host.match(safe_host) && LinkedData.settings.search_server_url.match(safe_host) && safe_redis_hosts?
+unless LinkedData.settings.goo_host.match(safe_hosts) &&
+        LinkedData.settings.search_server_url.match(safe_hosts) &&
+        safe_redis_hosts?(safe_hosts)
   print "\n\n================================== WARNING ==================================\n"
   print "** TESTS CAN BE DESTRUCTIVE -- YOU ARE POINTING TO A POTENTIAL PRODUCTION/STAGE SERVER **\n"
   print "Servers:\n"
