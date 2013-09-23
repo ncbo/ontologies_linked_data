@@ -39,11 +39,13 @@ module Mappings
   end
 
   def self.connect_mapping_process(mapping_id,process,batch_update_file=nil)
-    mapping = LinkedData::Models::Mapping.find(mapping_id).include(:process).first
-    unless mapping
-      raise ArgumentError, "Mapping id #{mapping_id.to_ntriples} not found"
+    if batch_update_file.nil?
+      mapping = LinkedData::Models::Mapping.find(mapping_id).include(:process).first
+      unless mapping
+        raise ArgumentError, "Mapping id #{mapping_id.to_ntriples} not found"
+      end
+      return if mapping.process.select { |p| p.id.tos == process.id.to_s }.length > 0
     end
-    return if mapping.process.select { |p| p.id.tos == process.id.to_s }.length > 0
     if batch_update_file.nil?
       mapping = LinkedData::Models::Mapping.find(mapping_id)
                                               .include(:process)
