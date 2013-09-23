@@ -45,10 +45,6 @@ module LinkedData
     @settings.goo_redis_host  ||= "localhost"
     @settings.goo_redis_port  ||= 6379
 
-    #Caching mappings
-    @settings.mappings_redis_host  ||= "localhost"
-    @settings.mappings_redis_port  ||= 6379
-
     # PURL server config parameters
     @settings.enable_purl            ||= false
     @settings.purl_host              ||= "purl.bioontology.org"
@@ -82,8 +78,6 @@ module LinkedData
     puts "(LD) >> Using search server at #{@settings.search_server_url}"
     puts "(LD) >> Using HTTP Redis instance at "+
             "#{@settings.http_redis_host}:#{@settings.http_redis_port}"
-    puts "(LD) >> Using Mappings Redis instance at "+
-            "#{@settings.mappings_redis_host}:#{@settings.mappings_redis_port}"
     puts "(LD) >> Using Goo Redis instance at "+
             "#{@settings.goo_redis_host}:#{@settings.goo_redis_port}"
 

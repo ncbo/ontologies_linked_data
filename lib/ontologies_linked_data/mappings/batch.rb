@@ -3,18 +3,6 @@ require 'csv'
 
 module LinkedData
   module Mappings
-    module Batch
-      def self.redis_cache
-        unless @redis
-          @redis = Redis.new(
-              :host => LinkedData.settings.mappings_cache_redis_host, 
-              :port => LinkedData.settings.mappings_cache_redis_port,
-              :timeout => 1200)
-        end
-        return @redis
-      end
-     end
-
     class BatchProcess
       def initialize(process_name,paging,dumper,
                      line_parser,ok_mapping,skip_mapping,
