@@ -32,7 +32,6 @@ unless LinkedData.settings.goo_host.match(safe_hosts) &&
   print "triplestore -- #{LinkedData.settings.goo_host}\n"
   print "search -- #{LinkedData.settings.search_server_url}\n"
   print "redis http -- #{LinkedData.settings.http_redis_host}:#{LinkedData.settings.http_redis_port}\n"
-  print "redis mappings -- #{LinkedData.settings.mappings_redis_host}:#{LinkedData.settings.mappings_redis_port}\n"
   print "redis goo -- #{LinkedData.settings.goo_redis_host}:#{LinkedData.settings.goo_redis_port}\n"
   print "Type 'y' to continue: "
   $stdout.flush

@@ -39,7 +39,7 @@ module Mappings
   end
 
   def self.connect_mapping_process(mapping_id,process,batch_update_file=nil)
-    mapping = LinkedData::Models::Mapping.find(id_mapping).include(:process).first
+    mapping = LinkedData::Models::Mapping.find(mapping_id).include(:process).first
     unless mapping
       raise ArgumentError, "Mapping id #{mapping_id.to_ntriples} not found"
     end
