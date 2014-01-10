@@ -149,8 +149,10 @@ eos
 
     LinkedData::Models::Class.where.in(sub).include(:prefLabel, :notation).each do |cls|
       assert_instance_of String,cls.prefLabel
-      assert_instance_of String,cls.notation
-      assert cls.notation[-6..-1] == cls.id.to_s[-6..-1]
+      if cls.id.to_s["TAO"]
+        assert_instance_of String,cls.notation
+        assert cls.notation[-6..-1] == cls.id.to_s[-6..-1]
+      end
     end
 
   end
@@ -484,14 +486,15 @@ eos
     ont_submision =  LinkedData::Models::OntologySubmission.new({ :submissionId => id,})
     uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository(acronym, id,ontologyFile)
     ont_submision.uploadFilePath = uploadFilePath
-    owl, sbo, user, contact = submission_dependent_objects("OBO", acronym, "test_linked_models", name)
+    owl, sbo,user , contact = submission_dependent_objects("OBO", acronym, "test_linked_models", name)
+    assert user != nil
     ont_submision.released = DateTime.now - 4
     ont_submision.hasOntologyLanguage = owl
     ont_submision.contact = [contact]
     ont_submision.ontology = sbo
     assert (ont_submision.valid?)
     ont_submision.save
-    assert_equal true, ont_submision.exist?(reload=true)
+    assert_equal true, ont_submision.exist?(true)
 
     sub = LinkedData::Models::OntologySubmission.where(ontology: [ acronym: acronym ], submissionId: id).all
     sub = sub[0]
