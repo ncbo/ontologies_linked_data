@@ -1,7 +1,7 @@
 module LinkedData
   module Models
     class OntologyFormat < LinkedData::Models::Base
-      VALUES = ["OBO", "OWL", "UMLS", "PROTEGE"]
+      VALUES = ["OBO", "OWL", "UMLS", "PROTEGE", "SKOS"]
 
 
       model :ontology_format, name_with: :acronym
@@ -17,6 +17,26 @@ module LinkedData
       end      
       def umls?
         return id.to_s.end_with? "UMLS"
+      end
+      def skos?
+        return id.to_s.end_with? "SKOS"
+      end
+
+      def tree_property
+        if obo?
+          return Goo.vocabulary(:metadata)[:treeView]
+        end
+        if skos?
+          return RDF::SKOS[:broader]
+        end
+        return RDF::RDFS[:subClassOf]
+      end
+
+      def class_type
+        if skos?
+          return RDF::SKOS[:Concept]
+        end
+        return RDF::OWL[:Class]
       end
     end
   end

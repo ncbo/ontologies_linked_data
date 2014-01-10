@@ -62,6 +62,9 @@ module LinkedData
       if (ontologyFile && ontologyFile.end_with?("obo"))
         ontology_type = "OBO"
       end
+      if (ontologyFile && ontologyFile["skos"])
+        ontology_type = "SKOS"
+      end
       owl, ont, user, contact = submission_dependent_objects(ontology_type, acronym, "test_linked_models", name)
       ont_submission.contact = [contact]
       ont_submission.released = DateTime.now - 4

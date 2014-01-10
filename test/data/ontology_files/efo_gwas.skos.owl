@@ -1,0 +1,4283 @@
+<?xml version="1.0"?>
+
+
+<!DOCTYPE rdf:RDF [
+    <!ENTITY efo "http://www.ebi.ac.uk/efo/" >
+    <!ENTITY CL "http://purl.org/obo/owl/CL#" >
+    <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
+    <!ENTITY skos2 "http://www.ebi.ac.uk/efo/skos/" >
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
+    <!ENTITY snap "http://www.ifomis.org/bfo/1.1/snap#" >
+    <!ENTITY skos "http://www.w3.org/2004/02/skos/core#" >
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+]>
+
+
+<rdf:RDF xmlns="&efo;skos/gwas#"
+     xml:base="&efo;skos/gwas"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:skos2="&efo;skos/"
+     xmlns:efo="http://www.ebi.ac.uk/efo/"
+     xmlns:snap="http://www.ifomis.org/bfo/1.1/snap#"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+     xmlns:CL="http://purl.org/obo/owl/CL#">
+    <owl:Ontology rdf:about="&efo;skos/gwas">
+        <owl:imports rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+    </owl:Ontology>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://www.w3.org/2004/02/skos/core#broader -->
+
+    <owl:ObjectProperty rdf:about="&skos;broader"/>
+    
+
+
+    <!-- http://www.w3.org/2004/02/skos/core#hasTopConcept -->
+
+    <owl:ObjectProperty rdf:about="&skos;hasTopConcept"/>
+    
+
+
+    <!-- http://www.w3.org/2004/02/skos/core#inScheme -->
+
+    <owl:ObjectProperty rdf:about="&skos;inScheme"/>
+    
+
+
+    <!-- http://www.w3.org/2004/02/skos/core#narrower -->
+
+    <owl:ObjectProperty rdf:about="&skos;narrower"/>
+    
+
+
+    <!-- http://www.w3.org/2004/02/skos/core#topConceptOf -->
+
+    <owl:ObjectProperty rdf:about="&skos;topConceptOf"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://www.w3.org/2004/02/skos/core#Concept -->
+
+    <owl:Class rdf:about="&skos;Concept"/>
+    
+
+
+    <!-- http://www.w3.org/2004/02/skos/core#ConceptScheme -->
+
+    <owl:Class rdf:about="&skos;ConceptScheme"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Individuals
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.org/obo/owl/CL#CL_0000081 -->
+
+    <skos:Concept rdf:about="&CL;CL_0000081">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&CL;CL_0000988"/>
+        <skos:broader rdf:resource="&efo;EFO_0000324"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002534"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://purl.org/obo/owl/CL#CL_0000084 -->
+
+    <skos:Concept rdf:about="&CL;CL_0000084">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&CL;CL_0000542"/>
+        <skos:narrower rdf:resource="&CL;CL_0000815"/>
+        <skos:narrower rdf:resource="&CL;CL_0002419"/>
+        <skos:broader rdf:resource="&efo;EFO_0000324"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://purl.org/obo/owl/CL#CL_0000094 -->
+
+    <skos:Concept rdf:about="&CL;CL_0000094">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&CL;CL_0000766"/>
+        <skos:narrower rdf:resource="&CL;CL_0000767"/>
+        <skos:narrower rdf:resource="&CL;CL_0000771"/>
+        <skos:narrower rdf:resource="&CL;CL_0000775"/>
+        <skos:broader rdf:resource="&efo;EFO_0000324"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://purl.org/obo/owl/CL#CL_0000233 -->
+
+    <skos:Concept rdf:about="&CL;CL_0000233">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&CL;CL_0000763"/>
+        <skos:broader rdf:resource="&efo;EFO_0002534"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://purl.org/obo/owl/CL#CL_0000542 -->
+
+    <skos:Concept rdf:about="&CL;CL_0000542">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&CL;CL_0000084"/>
+        <skos:broader rdf:resource="&CL;CL_0000738"/>
+        <skos:broader rdf:resource="&efo;EFO_0000324"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://purl.org/obo/owl/CL#CL_0000576 -->
+
+    <skos:Concept rdf:about="&CL;CL_0000576">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&CL;CL_0000766"/>
+        <skos:broader rdf:resource="&efo;EFO_0000324"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://purl.org/obo/owl/CL#CL_0000738 -->
+
+    <skos:Concept rdf:about="&CL;CL_0000738">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&CL;CL_0000542"/>
+        <skos:narrower rdf:resource="&CL;CL_0000766"/>
+        <skos:broader rdf:resource="&CL;CL_0000988"/>
+        <skos:broader rdf:resource="&efo;EFO_0000324"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://purl.org/obo/owl/CL#CL_0000763 -->
+
+    <skos:Concept rdf:about="&CL;CL_0000763">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&CL;CL_0000233"/>
+        <skos:broader rdf:resource="&CL;CL_0000988"/>
+        <skos:broader rdf:resource="&efo;EFO_0000324"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://purl.org/obo/owl/CL#CL_0000766 -->
+
+    <skos:Concept rdf:about="&CL;CL_0000766">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&CL;CL_0000094"/>
+        <skos:narrower rdf:resource="&CL;CL_0000576"/>
+        <skos:broader rdf:resource="&CL;CL_0000738"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://purl.org/obo/owl/CL#CL_0000767 -->
+
+    <skos:Concept rdf:about="&CL;CL_0000767">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&CL;CL_0000094"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://purl.org/obo/owl/CL#CL_0000771 -->
+
+    <skos:Concept rdf:about="&CL;CL_0000771">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&CL;CL_0000094"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://purl.org/obo/owl/CL#CL_0000775 -->
+
+    <skos:Concept rdf:about="&CL;CL_0000775">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&CL;CL_0000094"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://purl.org/obo/owl/CL#CL_0000815 -->
+
+    <skos:Concept rdf:about="&CL;CL_0000815">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&CL;CL_0000084"/>
+        <skos:broader rdf:resource="&CL;CL_0002419"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004219"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://purl.org/obo/owl/CL#CL_0000988 -->
+
+    <skos:Concept rdf:about="&CL;CL_0000988">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&CL;CL_0000081"/>
+        <skos:narrower rdf:resource="&CL;CL_0000738"/>
+        <skos:narrower rdf:resource="&CL;CL_0000763"/>
+        <skos:broader rdf:resource="&efo;EFO_0000324"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://purl.org/obo/owl/CL#CL_0002419 -->
+
+    <skos:Concept rdf:about="&CL;CL_0002419">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&CL;CL_0000084"/>
+        <skos:narrower rdf:resource="&CL;CL_0000815"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:16113 -->
+
+    <skos:Concept rdf:about="http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:16113">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:37577"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:17234 -->
+
+    <skos:Concept rdf:about="http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:17234">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:37577"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:18145 -->
+
+    <skos:Concept rdf:about="http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:18145">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:23888"/>
+        <skos:broader rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:37577"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:23888 -->
+
+    <skos:Concept rdf:about="http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:23888">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:18145"/>
+        <skos:broader rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:37577"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:27300 -->
+
+    <skos:Concept rdf:about="http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:27300">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:37577"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:5931 -->
+
+    <skos:Concept rdf:about="http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:5931">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:37577"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:18059 -->
+
+    <skos:Concept rdf:about="http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:18059">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:37577"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:37577 -->
+
+    <skos:Concept rdf:about="http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:37577">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:16113"/>
+        <skos:narrower rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:17234"/>
+        <skos:narrower rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:18145"/>
+        <skos:narrower rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:23888"/>
+        <skos:narrower rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:27300"/>
+        <skos:narrower rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do;?chebiId=CHEBI:5931"/>
+        <skos:narrower rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:18059"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003836"/>
+        <skos:topConceptOf rdf:resource="&efo;skos/EFO_GWAS_view"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:47775 -->
+
+    <skos:Concept rdf:about="http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:47775">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003836"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000095 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000095">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000096"/>
+        <skos:broader rdf:resource="&efo;EFO_0000565"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000096 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000096">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000095"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000403"/>
+        <skos:broader rdf:resource="&efo;EFO_0001642"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000180 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000180">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000764"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000182 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000182">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000313"/>
+        <skos:broader rdf:resource="&efo;EFO_0001421"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000183 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000183">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000574"/>
+        <skos:broader rdf:resource="&efo;EFO_0001642"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000195 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000195">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000589"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000220 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000220">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000565"/>
+        <skos:broader rdf:resource="&efo;EFO_0002425"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000228 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000228">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000313"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000365"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000673"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000249 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000249">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000252 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000252">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000302"/>
+        <skos:broader rdf:resource="&efo;EFO_0000909"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000253 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000253">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:broader rdf:resource="&efo;EFO_0003782"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000265 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000265">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000814"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002524"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000270 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000270">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000684"/>
+        <skos:broader rdf:resource="&efo;EFO_0003818"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000274 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000274">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003785"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000275 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000275">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003777"/>
+        <skos:broader rdf:resource="&efo;EFO_0004269"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000277 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000277">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000787"/>
+        <skos:broader rdf:resource="&efo;EFO_0001955"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000279 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000279">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000512"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000282 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000282">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000289 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000289">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000677"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000292 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000292">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000313"/>
+        <skos:broader rdf:resource="&efo;EFO_0003863"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000302 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000302">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000252"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000530"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000904"/>
+        <skos:broader rdf:resource="&efo;EFO_0000908"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000909"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000912"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000917"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001920"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000305 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000305">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000313"/>
+        <skos:broader rdf:resource="&efo;EFO_0003869"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000311 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000311">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000313"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000326"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001642"/>
+        <skos:topConceptOf rdf:resource="&efo;skos/EFO_GWAS_view"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000313 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000313">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000182"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000228"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000292"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000305"/>
+        <skos:broader rdf:resource="&efo;EFO_0000311"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000756"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001071"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001075"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001663"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002618"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002890"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002916"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004193"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000318 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000318">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000319"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000407"/>
+        <skos:broader rdf:resource="&efo;EFO_0003777"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000319 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000319">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000318"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000537"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000612"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000712"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000713"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001645"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001666"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003144"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003763"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003777"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003780"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003781"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003914"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004264"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004269"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000324 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000324">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&CL;CL_0000081"/>
+        <skos:narrower rdf:resource="&CL;CL_0000084"/>
+        <skos:narrower rdf:resource="&CL;CL_0000094"/>
+        <skos:narrower rdf:resource="&CL;CL_0000542"/>
+        <skos:narrower rdf:resource="&CL;CL_0000576"/>
+        <skos:narrower rdf:resource="&CL;CL_0000738"/>
+        <skos:narrower rdf:resource="&CL;CL_0000763"/>
+        <skos:narrower rdf:resource="&CL;CL_0000988"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+        <skos:topConceptOf rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000326 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000326">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000311"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003098"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000341 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000341">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000684"/>
+        <skos:broader rdf:resource="&efo;EFO_0003818"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000365 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000365">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000228"/>
+        <skos:broader rdf:resource="&efo;EFO_0000405"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000367 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000367">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000540"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000377 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000377">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000787"/>
+        <skos:broader rdf:resource="&efo;EFO_0000827"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000384 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000384">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003767"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000390 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000390">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000405"/>
+        <skos:broader rdf:resource="&efo;EFO_0000508"/>
+        <skos:broader rdf:resource="&efo;EFO_0000512"/>
+        <skos:broader rdf:resource="&efo;EFO_0001379"/>
+        <skos:broader rdf:resource="&efo;EFO_0003818"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000400 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000400">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000589"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001359"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001360"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000401 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000401">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000589"/>
+        <skos:broader rdf:resource="&efo;EFO_0003086"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000403 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000403">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000096"/>
+        <skos:broader rdf:resource="&efo;EFO_0000574"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000405 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000405">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000365"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000390"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001060"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002916"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003767"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003819"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003832"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003934"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004217"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004232"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004268"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000407 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000407">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000318"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002628"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000408 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000408">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000319"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000405"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000508"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000512"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000524"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000540"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000544"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000589"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000616"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000618"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000677"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000684"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000701"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001379"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001421"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002460"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002461"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002970"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003086"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003839"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003915"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003966"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004233"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004234"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004246"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004251"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004272"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004285"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+        <skos:broader rdf:resource="&snap;Disposition"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000464 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000464">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000684"/>
+        <skos:broader rdf:resource="&efo;EFO_0003818"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000474 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000474">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004263"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000483 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000483">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000508 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000508">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000390"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000697"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000512 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000512">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000279"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000390"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000545"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000660"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001065"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003859"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003893"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000514 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000514">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000516 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000516">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001058"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004190"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000524 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000524">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000649"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003819"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003908"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003946"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000530 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000530">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000302"/>
+        <skos:broader rdf:resource="&efo;EFO_0000909"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000537 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000537">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000319"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000540 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000540">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000367"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000676"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000685"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000690"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000706"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000717"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002690"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003778"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003780"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003785"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004237"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000544 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000544">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000763"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000771"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001067"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000545 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000545">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000512"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004248"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000565 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000565">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000095"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000220"/>
+        <skos:broader rdf:resource="&efo;EFO_0001642"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004289"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000571 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000571">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001071"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000574 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000574">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000183"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000403"/>
+        <skos:broader rdf:resource="&efo;EFO_0001642"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000589 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000589">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000195"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000400"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000401"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001069"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003770"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004211"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000612 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000612">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000319"/>
+        <skos:broader rdf:resource="&efo;EFO_0003777"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000614 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000614">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000616 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000616">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000311"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000514"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000621"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000731"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002422"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003769"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003833"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003853"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003860"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003863"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003869"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003897"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004198"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004243"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004252"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004284"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004288"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000618 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000618">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000249"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000253"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000326"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000474"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000614"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000621"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000677"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001058"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002508"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002512"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003096"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003756"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003763"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003782"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003821"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003833"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003885"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004226"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004270"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004280"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000621 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000621">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000625 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000625">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0002422"/>
+        <skos:broader rdf:resource="&efo;EFO_0004198"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000635 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000635">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+        <skos:topConceptOf rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000649 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000649">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000524"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000651 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000651">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003784"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003924"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003949"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000660 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000660">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000512"/>
+        <skos:broader rdf:resource="&efo;EFO_0001379"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000673 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000673">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000228"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000676 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000676">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000540"/>
+        <skos:broader rdf:resource="&efo;EFO_0000701"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000677 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000677">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000289"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000692"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003761"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003888"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003890"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004215"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004216"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004242"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004247"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004257"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004262"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000681 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000681">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0002890"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000684 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000684">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000270"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000341"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000464"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000768"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003818"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003853"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000685 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000685">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000540"/>
+        <skos:broader rdf:resource="&efo;EFO_0002461"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002609"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000690 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000690">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000540"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000692 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000692">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000677"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000697 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000697">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000508"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000701 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000701">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000676"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000717"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003109"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003958"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004198"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004208"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004212"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004276"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000702 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000702">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001071"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000706 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000706">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000540"/>
+        <skos:broader rdf:resource="&efo;EFO_0002461"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003898"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000712 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000712">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000319"/>
+        <skos:broader rdf:resource="&efo;EFO_0003763"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000713 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000713">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000319"/>
+        <skos:broader rdf:resource="&efo;EFO_0003763"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000717 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000717">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000540"/>
+        <skos:broader rdf:resource="&efo;EFO_0000701"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000729 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000729">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003767"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000731 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000731">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:broader rdf:resource="&efo;EFO_0003859"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000756 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000756">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000313"/>
+        <skos:broader rdf:resource="&efo;EFO_0004198"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000763 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000763">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000544"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000764"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004196"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004227"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000764 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000764">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000180"/>
+        <skos:broader rdf:resource="&efo;EFO_0000763"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000765"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000765 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000765">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000764"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000768 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000768">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000684"/>
+        <skos:broader rdf:resource="&efo;EFO_0003818"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000771 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000771">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000544"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000774"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001054"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004249"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000774 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000774">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000771"/>
+        <skos:broader rdf:resource="&efo;EFO_0003818"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000787 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000787">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000277"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000377"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000791"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000792"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000799"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000802"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000805"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000807"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000808"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000832"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000958"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004245"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004258"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000791 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000791">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000787"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000817"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001955"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000792 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000792">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000787"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000826"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000827"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000799 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000799">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000787"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000876"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000802 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000802">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000787"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000908"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000805 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000805">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000787"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000826"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000827"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000807 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000807">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000787"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000958"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000808 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000808">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000787"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000968"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001929"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000814 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000814">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000265"/>
+        <skos:broader rdf:resource="&efo;EFO_0000817"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000818"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004231"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000816 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000816">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000817"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004271"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000817 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000817">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000791"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000814"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000816"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000818 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000818">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000814"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000826 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000826">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000792"/>
+        <skos:broader rdf:resource="&efo;EFO_0000805"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004221"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000827 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000827">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000377"/>
+        <skos:broader rdf:resource="&efo;EFO_0000792"/>
+        <skos:broader rdf:resource="&efo;EFO_0000805"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000832"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000832 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000832">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000787"/>
+        <skos:broader rdf:resource="&efo;EFO_0000827"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001974"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000876 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000876">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000799"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001411"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000904 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000904">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000302"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000907"/>
+        <skos:broader rdf:resource="&efo;EFO_0000909"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000907 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000907">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000904"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000908 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000908">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000302"/>
+        <skos:broader rdf:resource="&efo;EFO_0000802"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000909 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000909">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000252"/>
+        <skos:broader rdf:resource="&efo;EFO_0000302"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000530"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000904"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000912"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000912 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000912">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000302"/>
+        <skos:broader rdf:resource="&efo;EFO_0000909"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000917"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000917 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000917">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000302"/>
+        <skos:broader rdf:resource="&efo;EFO_0000912"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001920"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000958 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000958">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000787"/>
+        <skos:broader rdf:resource="&efo;EFO_0000807"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0000968 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0000968">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000808"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001929"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001054 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001054">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000771"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001058 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001058">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000516"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001059"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001365"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004213"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004238"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001059 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001059">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001058"/>
+        <skos:broader rdf:resource="&efo;EFO_0003966"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001060 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001060">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000405"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001065 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001065">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000512"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001067 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001067">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000544"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001068"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001068 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001068">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001067"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001069 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001069">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000589"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001073"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003762"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001071 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001071">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000313"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000571"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000702"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003060"/>
+        <skos:broader rdf:resource="&efo;EFO_0003818"/>
+        <skos:broader rdf:resource="&efo;EFO_0003853"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001073 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001073">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001069"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001075 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001075">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000313"/>
+        <skos:broader rdf:resource="&efo;EFO_0003893"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001359 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001359">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000400"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001360 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001360">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000400"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001365 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001365">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001058"/>
+        <skos:broader rdf:resource="&efo;EFO_0003966"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001379 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001379">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000390"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000660"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003769"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004266"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004283"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001411 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001411">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000876"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003065"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001421 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001421">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000182"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001422"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003934"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004228"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004267"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001422 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001422">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001421"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001444 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001444">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003892"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003912"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003923"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003926"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+        <skos:topConceptOf rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001642 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001642">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000096"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000183"/>
+        <skos:broader rdf:resource="&efo;EFO_0000311"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000565"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000574"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002425"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002427"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001645 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001645">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000319"/>
+        <skos:broader rdf:resource="&efo;EFO_0003777"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004224"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004225"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001663 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001663">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000313"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001666 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001666">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000319"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004214"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004282"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001920 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001920">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000302"/>
+        <skos:broader rdf:resource="&efo;EFO_0000917"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001929 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001929">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000808"/>
+        <skos:broader rdf:resource="&efo;EFO_0000968"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001955 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001955">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000277"/>
+        <skos:broader rdf:resource="&efo;EFO_0000791"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0001974 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0001974">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000832"/>
+        <skos:broader rdf:resource="&efo;EFO_0004258"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002422 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002422">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000625"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002425 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002425">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000220"/>
+        <skos:broader rdf:resource="&efo;EFO_0001642"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002427 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002427">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001642"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002428"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002428 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002428">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0002427"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002460 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002460">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002503"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002461 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002461">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000685"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000706"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002506"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003882"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004260"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004273"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004274"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002503 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002503">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0002460"/>
+        <skos:broader rdf:resource="&efo;EFO_0003777"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002506 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002506">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0002461"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002508 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002508">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002512 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002512">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002524 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002524">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000265"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002534 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002534">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&CL;CL_0000081"/>
+        <skos:narrower rdf:resource="&CL;CL_0000233"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002609 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002609">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000685"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002614 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002614">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003765"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002618 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002618">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000313"/>
+        <skos:broader rdf:resource="&efo;EFO_0003860"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002628 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002628">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000407"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002686 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002686">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003785"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002690 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002690">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000540"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002890 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002890">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000313"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000681"/>
+        <skos:broader rdf:resource="&efo;EFO_0003865"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002916 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002916">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000313"/>
+        <skos:broader rdf:resource="&efo;EFO_0000405"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0002970 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0002970">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003899"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003047 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003047">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0004196"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004220"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003060 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003060">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001071"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003065 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003065">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001411"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003086 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003086">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000401"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003845"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003865"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003884"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004194"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004236"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004253"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004254"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004255"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003095 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003095">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003934"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003096 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003096">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003098 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003098">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000326"/>
+        <skos:broader rdf:resource="&efo;EFO_0003851"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003108 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003108">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003765"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003109 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003109">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000701"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004191"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004192"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003144 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003144">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000319"/>
+        <skos:broader rdf:resource="&efo;EFO_0003777"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003756 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003756">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003757"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003758"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003757 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003757">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003756"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003758 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003758">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003756"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003761 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003761">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000677"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003762 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003762">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001069"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003763 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003763">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000319"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000712"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000713"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003870"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004250"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004277"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003765 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003765">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002614"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003108"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003838"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003843"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003889"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003922"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003930"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004290"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003767 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003767">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000384"/>
+        <skos:broader rdf:resource="&efo;EFO_0000405"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000729"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003768 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003768">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003890"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003769 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003769">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:broader rdf:resource="&efo;EFO_0001379"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003841"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003770 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003770">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000589"/>
+        <skos:broader rdf:resource="&efo;EFO_0003839"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003777 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003777">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000275"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000318"/>
+        <skos:broader rdf:resource="&efo;EFO_0000319"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000612"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001645"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002503"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003144"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004278"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003778 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003778">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000540"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003780 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003780">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000319"/>
+        <skos:broader rdf:resource="&efo;EFO_0000540"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003781 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003781">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000319"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003782 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003782">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000253"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003784 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003784">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000651"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003963"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004279"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003785 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003785">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000274"/>
+        <skos:broader rdf:resource="&efo;EFO_0000540"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002686"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003818 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003818">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000270"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000341"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000390"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000464"/>
+        <skos:broader rdf:resource="&efo;EFO_0000684"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000768"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000774"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001071"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004244"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003819 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003819">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000405"/>
+        <skos:broader rdf:resource="&efo;EFO_0000524"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003821 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003821">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003829 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003829">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003890"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003832 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003832">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000405"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004210"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003833 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003833">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003851"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003836 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003836">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:37577"/>
+        <skos:narrower rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:47775"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004195"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003838 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003838">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003765"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003839 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003839">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003770"/>
+        <skos:broader rdf:resource="&efo;EFO_0003966"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003841 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003841">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003769"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003843 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003843">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003765"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003845 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003845">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003086"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003851 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003851">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003098"/>
+        <skos:broader rdf:resource="&efo;EFO_0003833"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003853 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003853">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:broader rdf:resource="&efo;EFO_0000684"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001071"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003859 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003859">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000512"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000731"/>
+        <skos:broader rdf:resource="&efo;EFO_0003863"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004230"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003860 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003860">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002618"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003863 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003863">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000292"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003859"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003865"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003893"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004281"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003865 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003865">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0002890"/>
+        <skos:broader rdf:resource="&efo;EFO_0003086"/>
+        <skos:broader rdf:resource="&efo;EFO_0003863"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003869 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003869">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000305"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003870 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003870">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003763"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003875 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003875">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0004264"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004265"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003882 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003882">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0002461"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003884 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003884">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003086"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003885 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003885">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004256"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003888 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003888">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000677"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003889 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003889">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003765"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003890 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003890">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000677"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003768"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003829"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004218"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004240"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003892 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003892">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001444"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003893 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003893">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000512"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001075"/>
+        <skos:broader rdf:resource="&efo;EFO_0003863"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003897 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003897">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003898 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003898">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000706"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003899 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003899">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0002970"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004229"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003904 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003904">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003936"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003905 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003905">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0004264"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003908 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003908">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000524"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003927"/>
+        <skos:broader rdf:resource="&efo;EFO_0003966"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004222"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003912 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003912">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001444"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003914 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003914">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000319"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003915 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003915">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003959"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004209"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004241"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003922 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003922">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003765"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003923 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003923">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001444"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003924 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003924">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000651"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003925 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003925">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003936"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003926 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003926">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001444"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003927 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003927">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003908"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004207"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003930 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003930">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003765"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003934 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003934">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000405"/>
+        <skos:broader rdf:resource="&efo;EFO_0001421"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003095"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003936 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003936">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003904"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003925"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003937"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003937 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003937">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003936"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003946 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003946">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000524"/>
+        <skos:broader rdf:resource="&efo;EFO_0003966"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003947 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003947">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003949 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003949">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000651"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003958 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003958">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000701"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003959 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003959">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003915"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003963 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003963">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003784"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0003966 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0003966">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001059"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001365"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003839"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003908"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003946"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004223"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004235"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004190 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004190">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000516"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004191 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004191">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003109"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004192 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004192">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003109"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004193 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004193">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000313"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004194 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004194">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003086"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004195 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004195">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003836"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004196 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004196">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000763"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003047"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004197"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004197 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004197">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0004196"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004239"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004198 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004198">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000625"/>
+        <skos:broader rdf:resource="&efo;EFO_0000701"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000756"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004199"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004199 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004199">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0004198"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004207 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004207">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003927"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004208 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004208">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000701"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004209 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004209">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003915"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004210 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004210">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003832"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004211 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004211">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000589"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004212 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004212">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000701"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004213 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004213">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001058"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004214 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004214">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001666"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004215 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004215">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000677"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004216 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004216">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000677"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004217 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004217">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000405"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004218 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004218">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003890"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004219 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004219">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&CL;CL_0000815"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004220 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004220">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003047"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004221 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004221">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000826"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004222 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004222">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003908"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004223 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004223">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003966"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004224 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004224">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001645"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004225 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004225">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001645"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004226 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004226">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004227 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004227">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000763"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004228 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004228">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001421"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004229 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004229">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003899"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004230 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004230">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003859"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004231 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004231">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000814"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004232 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004232">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000405"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004233 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004233">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004234 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004234">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004235 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004235">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003966"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004236 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004236">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003086"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004237 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004237">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000540"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004238 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004238">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001058"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004239 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004239">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0004197"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004240 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004240">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003890"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004241 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004241">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003915"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004242 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004242">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000677"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004243 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004243">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004244 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004244">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003818"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004245 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004245">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000787"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004246 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004246">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004247 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004247">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000677"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004248 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004248">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000545"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004249 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004249">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000771"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004250 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004250">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003763"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004251 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004251">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004252 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004252">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004253 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004253">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003086"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004254 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004254">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003086"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004255 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004255">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003086"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004256 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004256">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003885"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004257 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004257">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000677"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004258 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004258">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000787"/>
+        <skos:narrower rdf:resource="&efo;EFO_0001974"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004260 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004260">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0002461"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004261"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004261 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004261">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0004260"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004262 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004262">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000677"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004263 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004263">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000474"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004264 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004264">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000319"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003875"/>
+        <skos:narrower rdf:resource="&efo;EFO_0003905"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004286"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004265 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004265">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003875"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004266 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004266">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001379"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004267 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004267">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001421"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004268 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004268">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000405"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004269 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004269">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000275"/>
+        <skos:broader rdf:resource="&efo;EFO_0000319"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004275"/>
+        <skos:narrower rdf:resource="&efo;EFO_0004287"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004270 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004270">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004271 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004271">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000816"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004272 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004272">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004273 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004273">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0002461"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004274 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004274">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0002461"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004275 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004275">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0004269"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004276 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004276">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000701"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004277 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004277">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003763"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004278 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004278">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003777"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004279 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004279">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003784"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004280 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004280">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000618"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004281 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004281">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003863"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004282 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004282">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001666"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004283 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004283">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0001379"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004284 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004284">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004285 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004285">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000408"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004286 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004286">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0004264"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004287 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004287">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0004269"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004288 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004288">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000616"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004289 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004289">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0000565"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/EFO_0004290 -->
+
+    <skos:Concept rdf:about="&efo;EFO_0004290">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:broader rdf:resource="&efo;EFO_0003765"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+    
+
+
+    <!-- http://www.ebi.ac.uk/efo/skos/EFO_GWAS_view -->
+
+    <skos:ConceptScheme rdf:about="&efo;skos/EFO_GWAS_view">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:hasTopConcept rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:37577"/>
+        <skos:hasTopConcept rdf:resource="&efo;EFO_0000311"/>
+        <skos:hasTopConcept rdf:resource="&efo;EFO_0000324"/>
+        <skos:hasTopConcept rdf:resource="&efo;EFO_0000635"/>
+        <skos:hasTopConcept rdf:resource="&efo;EFO_0001444"/>
+        <skos:hasTopConcept rdf:resource="&snap;Disposition"/>
+    </skos:ConceptScheme>
+    
+
+
+    <!-- http://www.ifomis.org/bfo/1.1/snap#Disposition -->
+
+    <skos:Concept rdf:about="&snap;Disposition">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:narrower rdf:resource="&efo;EFO_0000408"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+        <skos:topConceptOf rdf:resource="&efo;skos/EFO_GWAS_view"/>
+    </skos:Concept>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 3.2.3.1824) http://owlapi.sourceforge.net -->
+

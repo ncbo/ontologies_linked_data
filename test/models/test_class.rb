@@ -208,10 +208,10 @@ class TestClassModel < LinkedData::TestOntologyCommon
     #just one path with children
     if !LinkedData::Models::Ontology.find("BROTEST123").first
       submission_parse("BROTEST123", "SOME BROTEST Bla", "./test/data/ontology_files/BRO_v3.2.owl", 123,
-                       process_rdf: true, index_search: true,
+                       process_rdf: true, index_search: false,
                        run_metrics: false, reasoning: true)
     end
-    os = LinkedData::Models::Ontology.find("BROTEST123").first.latest_submission(status: [:rdf, :indexed])
+    os = LinkedData::Models::Ontology.find("BROTEST123").first.latest_submission(status: [:rdf])
     statistical_Text_Analysis = "http://bioontology.org/ontologies/BiomedicalResourceOntology.owl#Statistical_Text_Analysis"
     assert os
     cls = LinkedData::Models::Class.find(RDF::URI.new(statistical_Text_Analysis)).in(os).first
@@ -247,10 +247,10 @@ class TestClassModel < LinkedData::TestOntologyCommon
   def test_include_ancestors
     if !LinkedData::Models::Ontology.find("BROTEST123").first
       submission_parse("BROTEST123", "SOME BROTEST Bla", "./test/data/ontology_files/BRO_v3.2.owl", 123,
-                       process_rdf: true, index_search: true,
+                       process_rdf: true, index_search: false,
                        run_metrics: false, reasoning: true)
     end
-    os = LinkedData::Models::Ontology.find("BROTEST123").first.latest_submission(status: [:rdf, :indexed])
+    os = LinkedData::Models::Ontology.find("BROTEST123").first.latest_submission(status: [:rdf])
     statistical_Text_Analysis = "http://bioontology.org/ontologies/BiomedicalResourceOntology.owl#Statistical_Text_Analysis"
     cls = LinkedData::Models::Class.find(RDF::URI.new(statistical_Text_Analysis)).in(os)
                                       .include(:prefLabel,ancestors: [:prefLabel]).first
@@ -265,10 +265,10 @@ class TestClassModel < LinkedData::TestOntologyCommon
   def test_bro_paths_to_root
     if !LinkedData::Models::Ontology.find("BROTEST123").first
       submission_parse("BROTEST123", "SOME BROTEST Bla", "./test/data/ontology_files/BRO_v3.2.owl", 123,
-                       process_rdf: true, index_search: true,
+                       process_rdf: true, index_search: false,
                        run_metrics: false, reasoning: true)
     end
-    os = LinkedData::Models::Ontology.find("BROTEST123").first.latest_submission(status: [:rdf, :indexed])
+    os = LinkedData::Models::Ontology.find("BROTEST123").first.latest_submission(status: [:rdf])
     statistical_Text_Analysis = "http://bioontology.org/ontologies/BiomedicalResourceOntology.owl#Statistical_Text_Analysis"
     cls = LinkedData::Models::Class.find(RDF::URI.new(statistical_Text_Analysis)).in(os).first
 

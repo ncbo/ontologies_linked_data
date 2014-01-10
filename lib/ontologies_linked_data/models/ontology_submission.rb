@@ -763,10 +763,37 @@ eos
       end
 
       def roots(extra_include=nil,aggregate_children=false)
-        owlThing = Goo.vocabulary(:owl)["Thing"]
-        classes = LinkedData::Models::Class.where(parents: owlThing).in(self)
-                                           .disable_rules
-                                           .all
+
+        unless self.loaded_attributes.include?(:hasOntologyLanguage)
+          self.bring(:hasOntologyLanguage)
+        end
+        isSkos = false
+        if self.hasOntologyLanguage
+          isSkos = self.hasOntologyLanguage.skos?
+        end
+
+        classes = []
+        if !isSkos
+          owlThing = Goo.vocabulary(:owl)["Thing"]
+          classes = LinkedData::Models::Class.where(parents: owlThing).in(self)
+                                             .disable_rules
+                                             .all
+        else
+          root_skos = <<eos
+SELECT DISTINCT ?root WHERE {
+GRAPH #{self.id.to_ntriples} { 
+  ?x #{RDF::SKOS[:hasTopConcept].to_ntriples} ?root .
+}}
+eos
+          #needs to get cached
+          class_ids = []
+          Goo.sparql_query_client.query(root_skos, { :graphs => [self.id] }).each_solution do |s|
+            class_ids << s[:root]
+          end
+          class_ids.each do |id|
+            classes << LinkedData::Models::Class.find(id).in(self).disable_rules.first
+          end
+        end
         roots = []
         where = LinkedData::Models::Class.in(self)
                      .models(classes)
