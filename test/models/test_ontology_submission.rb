@@ -210,9 +210,8 @@ eos
     assert bm.children.first.id == RDF::URI.new("http://purl.obolibrary.org/obo/GO_0043931")
     assert bm.parents.first.id == RDF::URI.new("http://purl.obolibrary.org/obo/GO_0060348")
     roots = sub.roots
-    assert roots.length == 4
+    assert roots.length == 3
     assert roots.map { |x| x.id.to_s }.sort == ["http://purl.obolibrary.org/obo/PATO_0000001",
-      "http://purl.obolibrary.org/obo/PATO_0001300",
       "http://purl.obolibrary.org/obo/CARO_0000000",
       "http://purl.obolibrary.org/obo/GO_0008150"].sort 
   end
