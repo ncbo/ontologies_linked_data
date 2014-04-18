@@ -282,6 +282,8 @@ class Object
   end
 
   def embed_goo_objects(hash, attribute, value, options, &block)
+    modified = false
+
     sample_object = value.is_a?(Enumerable) && !value.is_a?(Hash) ? value.first : value
 
     # Use the same options if the object to serialize is the same as the one containing it
@@ -292,7 +294,7 @@ class Object
 
     # Don't process if we're recursing and this attribute is forbidden in nested elements
     disallow_nested = !do_not_serialize_nested(options).empty?
-    return hash, false if disallow_nested
+    return hash, modified if disallow_nested
 
     embedded = sample_class.ancestors.include?(LinkedData::Hypermedia::Resource) && sample_class.hypermedia_settings[:embed].include?(attribute)
     if embedded
@@ -307,7 +309,7 @@ class Object
         values = value.to_flex_hash(options, &block)
       end
       hash[attribute] = values
-      return hash, true
+      modified = true
     end
     return hash, false
   end
@@ -316,6 +318,7 @@ class Object
     # If we're using a struct here, we should get it's class
     sample_class = self.is_a?(Struct) && self.respond_to?(:klass) ? self.klass : self.class
 
+    modified = false
     if sample_class.ancestors.include?(LinkedData::Hypermedia::Resource) &&
       if !sample_class.hypermedia_settings[:embed_values].empty? && sample_class.hypermedia_settings[:embed_values].first.key?(attribute)
         attributes_to_embed = sample_class.hypermedia_settings[:embed_values].first[attribute]
@@ -329,10 +332,10 @@ class Object
           embedded_values = embedded_values.first
         end
         hash[attribute] = embedded_values
-        return hash, true
+        modified = true
       end
     end
-    return hash, false
+    return hash, modified
   end
 
   def add_goo_values(goo_object, embedded_values, attributes_to_embed, options, &block)
