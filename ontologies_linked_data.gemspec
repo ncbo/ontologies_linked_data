@@ -16,17 +16,21 @@ Gem::Specification.new do |gem|
   gem.version       = LinkedData::VERSION
 
   gem.add_dependency("goo")
-  gem.add_dependency("json")
   gem.add_dependency("multi_json")
-  gem.add_dependency("oj")
   gem.add_dependency("bcrypt")
   gem.add_dependency("rack")
   gem.add_dependency("rack-test")
   gem.add_dependency("rubyzip")
-  gem.add_dependency("libxml-ruby")
   gem.add_dependency("activesupport")
   gem.add_dependency("rsolr")
   gem.add_dependency("pony")
+
+  # Check ext/mkrf_conf.rb for platform-specific gems
+  gem.extensions = "ext/ruby_platform_conf.rb"
+  # gem.add_dependency("libxml-ruby")
+  # gem.add_dependency("libxml-jruby")
+  # gem.add_dependency("oj")
+  # gem.add_dependency("gson")
 
   gem.add_development_dependency("email_spec")
 

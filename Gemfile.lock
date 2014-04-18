@@ -35,6 +35,7 @@ GEM
       tzinfo (~> 0.3.37)
     addressable (2.3.5)
     bcrypt (3.1.7)
+    bcrypt (3.1.7-java)
     builder (3.2.2)
     coderay (1.1.0)
     cube-ruby (0.0.3)
@@ -42,10 +43,16 @@ GEM
     email_spec (1.5.0)
       launchy (~> 2.1)
       mail (~> 2.2)
+    ffi (1.9.3-java)
+    gson (0.6.1-java)
     i18n (0.6.9)
     json_pure (1.8.1)
     launchy (2.4.2)
       addressable (~> 2.3)
+    launchy (2.4.2-java)
+      addressable (~> 2.3)
+      spoon (~> 0.0.1)
+    libxml-jruby (1.0.0)
     libxml-ruby (2.7.0)
     macaddr (1.7.1)
       systemu (~> 2.6.2)
@@ -65,10 +72,15 @@ GEM
       coderay (~> 1.0)
       method_source (~> 0.8)
       slop (~> 3.4)
+    pry (0.9.12.6-java)
+      coderay (~> 1.0)
+      method_source (~> 0.8)
+      slop (~> 3.4)
+      spoon (~> 0.0)
     rack (1.5.2)
     rack-test (0.6.2)
       rack (>= 1.0)
-    rake (10.3.0)
+    rake (10.3.1)
     rdf (1.0.8)
       addressable (>= 2.2)
     redis (3.0.7)
@@ -83,8 +95,11 @@ GEM
       simplecov-html (~> 0.8.0)
     simplecov-html (0.8.0)
     slop (3.5.0)
+    spoon (0.0.4)
+      ffi
     systemu (2.6.4)
     thread_safe (0.3.3)
+    thread_safe (0.3.3-java)
     treetop (1.4.15)
       polyglot
       polyglot (>= 0.3.1)
@@ -93,6 +108,7 @@ GEM
       macaddr (~> 1.0)
 
 PLATFORMS
+  java
   ruby
 
 DEPENDENCIES
@@ -102,6 +118,8 @@ DEPENDENCIES
   cube-ruby
   email_spec
   goo!
+  gson
+  libxml-jruby
   libxml-ruby (~> 2.0)
   minitest (~> 4.0)
   multi_json (~> 1.0)
