@@ -43,6 +43,25 @@ module LinkedData
                                         .include(:children,:definition)
                                         .page(1,size_page)
       submission.ontology.bring(:flat) if submission.ontology.bring?(:flat)
+
+      roots = submission.roots
+      
+      depths = []
+      roots.each do |root|
+        rdfsSC = Goo.namespaces[:rdfs][:subClassOf]
+        ok = true
+        n=1
+        while ok
+          ok = hierarchy_depth?(submission.id.to_s,root.id.to_s,n,rdfsSC)
+          if ok
+            n += 1
+          end
+        end
+        n -= 1
+        depths << n
+      end
+      max_dept = depths.max
+      binding.pry
       is_flat = submission.ontology.flat
       cls_metrics = {}
       cls_metrics[:classes] = 0
@@ -133,6 +152,33 @@ module LinkedData
       props = count_owl_type(submission.id,"DatatypeProperty")
       props += count_owl_type(submission.id,"ObjectProperty")
       return props
+    end
+
+    def self.hierarchy_depth?(graph,root,n,treeProp)
+      sTemplate = "children <#{treeProp.to_s}> parent"
+      hops = []
+      n.times do |i|
+        hop = sTemplate.sub("children","?x#{i}")
+        if i == 0
+          hop = hop.sub("parent", "<#{root.to_s}>")
+        else
+          hop = hop.sub("parent", "?x#{i-1}")
+        end
+        hops << hop
+      end
+      joins = hops.join(".\n")
+      query = <<eof
+SELECT ?x0 WHERE {
+  GRAPH <#{graph.to_s}> {
+    #{joins}
+  } } LIMIT 1
+eof
+      puts query
+      rs = Goo.sparql_query_client.query(query)
+      rs.each do |sol|
+        return true
+      end
+      return false
     end
 
     def self.count_owl_type(graph,name)

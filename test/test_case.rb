@@ -209,6 +209,7 @@ module LinkedData
     end
 
     def self.backend_4s_delete
+      binding.pry
       if TestCase.count_pattern("?s ?p ?o") < 400000
         Goo.sparql_update_client.update("DELETE {?s ?p ?o } WHERE { ?s ?p ?o }")
         LinkedData::Models::SubmissionStatus.init_enum
