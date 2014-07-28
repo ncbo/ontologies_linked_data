@@ -19,6 +19,7 @@ module LinkedData
         triples << triple(Goo.vocabulary(:skos)[:altLabel], subPropertyOf, Goo.vocabulary(:rdfs)[:label])
         triples << triple(Goo.vocabulary(:rdfs)[:comment], subPropertyOf, Goo.vocabulary(:skos)[:definition])
 
+
         unless ont_sub.prefLabelProperty.nil?
           unless ont_sub.prefLabelProperty == Goo.vocabulary(:rdfs)[:label]
             triples << triple(ont_sub.prefLabelProperty, subPropertyOf, Goo.vocabulary(:metadata_def)[:prefLabel])
@@ -45,7 +46,10 @@ module LinkedData
           triples << triple(Goo.vocabulary(:obo_purl)[:synonym], subPropertyOf, Goo.vocabulary(:skos)[:altLabel])
 
           #obo defs
-          triples << triple(Goo.vocabulary(:obo_purl)[:def], subPropertyOf, Goo.vocabulary(:skos)[:definition])
+          triples << triple(RDF::URI.new("http://purl.obolibrary.org/obo/IAO_0000115"),
+                            subPropertyOf, Goo.vocabulary(:skos)[:definition])
+          triples << triple(RDF::URI.new("http://purl.obolibrary.org/obo/def"),
+                            subPropertyOf, Goo.vocabulary(:skos)[:definition])
         end
         return (triples.join "\n")
       end
