@@ -46,7 +46,7 @@ module LinkedData
           triples << triple(Goo.vocabulary(:obo_purl)[:synonym], subPropertyOf, Goo.vocabulary(:skos)[:altLabel])
 
           #obo defs
-          triples << triple(RDF::URI.new("http://purl.obolibrary.org/obo/IAO_0000115"),
+          triples << triple(obo_definition_standard(),
                             subPropertyOf, Goo.vocabulary(:skos)[:definition])
           triples << triple(RDF::URI.new("http://purl.obolibrary.org/obo/def"),
                             subPropertyOf, Goo.vocabulary(:skos)[:definition])
@@ -68,6 +68,9 @@ module LinkedData
 
       def self.obo_in_owl_obsolete_uri
         return RDF::URI.new "http://www.geneontology.org/formats/oboInOwl#ObsoleteClass"
+      end
+      def self.obo_definition_standard
+        return RDF::URI.new("http://purl.obolibrary.org/obo/IAO_0000115")
       end
     end
   end

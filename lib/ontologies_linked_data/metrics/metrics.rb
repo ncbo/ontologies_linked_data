@@ -38,17 +38,13 @@ module LinkedData
 
     def self.class_metrics(submission,logger)
       t00 = Time.now
-      size_page = 2500
-      paging = LinkedData::Models::Class.in(submission)
-                                        .include(:children,:definition)
-                                        .page(1,size_page)
       submission.ontology.bring(:flat) if submission.ontology.bring?(:flat)
 
       roots = submission.roots
       
       depths = []
+      rdfsSC = Goo.namespaces[:rdfs][:subClassOf]
       roots.each do |root|
-        rdfsSC = Goo.namespaces[:rdfs][:subClassOf]
         ok = true
         n=1
         while ok
@@ -60,8 +56,7 @@ module LinkedData
         n -= 1
         depths << n
       end
-      max_dept = depths.max
-      binding.pry
+      max_depth = depths.max
       is_flat = submission.ontology.flat
       cls_metrics = {}
       cls_metrics[:classes] = 0
@@ -70,61 +65,58 @@ module LinkedData
       cls_metrics[:classesWithOneChild] = 0
       cls_metrics[:classesWithMoreThan25Children] = 0
       cls_metrics[:classesWithNoDefinition] = 0
-      cls_metrics[:maxDepth] = 0
-      page = 1
+      cls_metrics[:maxDepth] = max_depth
+      definitionP = [Goo.namespaces[:skos][:definition],
+                     LinkedData::Utils::Triples.obo_definition_standard(), 
+                     Goo.namespaces[:rdfs][:comment] ]
+      submission.bring(:definitionProperty)
+      unless submission.definitionProperty.nil?
+        definitionP << submission.definitionProperty
+      end
+      t0 = Time.now
+      groupby_children = query_groupby_classes(submission.id,rdfsSC)
+      logger.info("Metrics groupby_children retrieved #{groupby_children.length}" +
+                  " in #{Time.now - t0} sec.")
+      logger.flush
       children_counts = []
-      classes_children = {}
-      begin
-        t0 = Time.now
-        page_classes = paging.page(page).all
-        logger.info("Metrics Classes Page #{page} of #{page_classes.total_pages}"+
-                    " classes retrieved in #{Time.now - t0} sec.")
-        logger.flush
-        page_classes.each do |cls|
-          cls_metrics[:classes] += 1
-          #TODO: investigate
-          #for some weird reason NIFSTD brings false:FalseClass here
-          unless cls.definition.is_a?(Array) && cls.definition.length > 0
-            cls_metrics[:classesWithNoDefinition] += 1
-          end
-          unless is_flat
-            if cls.children.length > 24
-              cls_metrics[:classesWithMoreThan25Children] += 1
-            end
-            if cls.children.length == 1
-              cls_metrics[:classesWithOneChild] += 1
-            end
-            if cls.children.length > 0
-              children_counts << cls.children.length
-              classes_children[cls.id.to_s] = cls.children.map { |x| x.id.to_s}
-            end
-          end
+      groupby_children.each do |cls,count|
+        unless cls.start_with?("http")
+          next
         end
-        page = page_classes.next? ? page + 1 : nil
-      end while(!page.nil?)
-      unless is_flat
-        roots_depth = [0]
-        visited = Set.new
-        roots = submission.roots
-        if roots.length > 0
-          roots = roots.map { |x| x.id.to_s }
-          roots.each do |root|
-            next if classes_children[root].nil?
-            roots_depth << recursive_depth(root,classes_children,1,visited)
-            visited << root
+        unless is_flat
+          if count > 24
+            cls_metrics[:classesWithMoreThan25Children] += 1
           end
-        end
-        cls_metrics[:maxDepth]=roots_depth.max
-        if children_counts.length > 0
-          cls_metrics[:maxChildCount] = children_counts.max
-          sum = 0
-          children_counts.each do |x|
-            sum += x
+          if count == 1
+            cls_metrics[:classesWithOneChild] += 1
           end
-          cls_metrics[:averageChildCount]  = (sum.to_f / children_counts.length).to_i
+          if count > 0
+            children_counts << count
+          end
+          if count > cls_metrics[:maxChildCount]
+            cls_metrics[:maxChildCount] = count
+          end
         end
       end
+      t0 = Time.now
+      count_classes = query_count_classes(submission.id)
+      cls_metrics[:classes] = count_classes
+      logger.info("Metrics count_classes retrieved #{count_classes}"+
+                  " in #{Time.now - t0} sec.")
+      logger.flush
+      t0 = Time.now
+      withDef =  query_count_definitions(submission.id,definitionP)
+      logger.info("Metrics count cls with def #{withDef}" +
+                  " in #{Time.now - t0} sec.")
+      logger.flush
+      cls_metrics[:classesWithNoDefinition] = cls_metrics[:classes] - withDef
+      sum = 0
+      children_counts.each do |c|
+        sum += c
+      end
+      cls_metrics[:averageChildCount]  = (sum.to_f / children_counts.length).to_i
       logger.info("Class metrics finished in #{Time.now - t00} sec.")
+      logger.flush
       return cls_metrics
     end
 
@@ -173,12 +165,62 @@ SELECT ?x0 WHERE {
     #{joins}
   } } LIMIT 1
 eof
-      puts query
       rs = Goo.sparql_query_client.query(query)
       rs.each do |sol|
         return true
       end
       return false
+    end
+    
+    def self.query_count_definitions(subId,defProps)
+      propFilter = defProps.map { |x| "?p = <#{x.to_s}>" }
+      propFilter = propFilter.join " || "
+      query = <<-eos
+SELECT (count(?s) as ?c) WHERE { 
+    GRAPH <#{subId.to_s}> {
+          ?s a <#{Goo.namespaces[:owl][:Class]}> .
+            ?s ?p ?o .
+          FILTER ( properties )
+          FILTER ( !isBlank(?s) )
+}}
+eos
+      query = query.sub("properties", propFilter)
+      rs = Goo.sparql_query_client.query(query)
+      rs.each do |sol|
+        return sol[:c].object
+      end
+      return 0
+    end
+
+    def self.query_groupby_classes(subId,treeProp)
+      query = <<-eos
+SELECT ?o (count(?s) as ?c) WHERE { 
+    GRAPH <#{subId.to_s}> {
+          ?s <#{treeProp.to_s}> ?o } }
+GROUP BY ?o
+eos
+      rs = Goo.sparql_query_client.query(query)
+      groupby_counts = {}
+      rs.each do |sol|
+        groupby_counts[sol[:o].to_s] = sol[:c].object
+      end
+      return groupby_counts
+    end
+
+    def self.query_count_classes(subId)
+      query = <<-eos
+SELECT (count(?s) as ?c) WHERE {
+    GRAPH <#{subId.to_s}> {
+      ?s a <#{Goo.namespaces[:owl][:Class]}> .
+      FILTER(!isBlank(?s))
+    }
+}
+eos
+      rs = Goo.sparql_query_client.query(query)
+      rs.each do |sol|
+        return sol[:c].object
+      end
+      return 0
     end
 
     def self.count_owl_type(graph,name)
