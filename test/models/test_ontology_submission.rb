@@ -217,11 +217,6 @@ eos
   end
 
   def test_submission_parse
-      submission_parse("DRONTEST","DRONTEST",
-       "/Users/manuelso/Downloads/dron-full.owl", 11,
-                       process_rdf: true, index_search: true,
-                       run_metrics: true , reasoning: true)
-      binding.pry
     #This one has some nasty looking IRIS with slashes in the anchor
     unless ENV["BP_SKIP_HEAVY_TESTS"] == "1"
       submission_parse("MCCLTEST", "MCCLS TEST",
