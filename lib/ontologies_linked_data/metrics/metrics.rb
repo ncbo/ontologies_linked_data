@@ -40,24 +40,31 @@ module LinkedData
       t00 = Time.now
       submission.ontology.bring(:flat) if submission.ontology.bring?(:flat)
 
+      is_flat = submission.ontology.flat
       roots = submission.roots
       
-      depths = []
-      rdfsSC = Goo.namespaces[:rdfs][:subClassOf]
-      roots.each do |root|
-        ok = true
-        n=1
-        while ok
-          ok = hierarchy_depth?(submission.id.to_s,root.id.to_s,n,rdfsSC)
-          if ok
-            n += 1
+      max_depth = 0
+      unless is_flat
+        depths = []
+        rdfsSC = Goo.namespaces[:rdfs][:subClassOf]
+        roots.each do |root|
+          ok = true
+          n=1
+          while ok
+            ok = hierarchy_depth?(submission.id.to_s,root.id.to_s,n,rdfsSC)
+            if ok
+              n += 1
+            end
+            if n > 40
+              #safe guard
+              ok = false
+            end
           end
+          n -= 1
+          depths << n
         end
-        n -= 1
-        depths << n
+        max_depth = depths.max
       end
-      max_depth = depths.max
-      is_flat = submission.ontology.flat
       cls_metrics = {}
       cls_metrics[:classes] = 0
       cls_metrics[:averageChildCount] = 0
@@ -114,7 +121,9 @@ module LinkedData
       children_counts.each do |c|
         sum += c
       end
-      cls_metrics[:averageChildCount]  = (sum.to_f / children_counts.length).to_i
+      if children_counts.length > 0
+        cls_metrics[:averageChildCount]  = (sum.to_f / children_counts.length.to_f).to_i
+      end
       logger.info("Class metrics finished in #{Time.now - t00} sec.")
       logger.flush
       return cls_metrics
@@ -182,6 +191,7 @@ SELECT (count(?s) as ?c) WHERE {
             ?s ?p ?o .
           FILTER ( properties )
           FILTER ( !isBlank(?s) )
+          FILTER (?s != <#{Goo.namespaces[:owl][:Thing]}>)
 }}
 eos
       query = query.sub("properties", propFilter)
@@ -196,7 +206,9 @@ eos
       query = <<-eos
 SELECT ?o (count(?s) as ?c) WHERE { 
     GRAPH <#{subId.to_s}> {
-          ?s <#{treeProp.to_s}> ?o } }
+          ?s <#{treeProp.to_s}> ?o .
+    FILTER (?s != <#{Goo.namespaces[:owl][:Thing]}>)
+    }}
 GROUP BY ?o
 eos
       rs = Goo.sparql_query_client.query(query)
@@ -213,6 +225,7 @@ SELECT (count(?s) as ?c) WHERE {
     GRAPH <#{subId.to_s}> {
       ?s a <#{Goo.namespaces[:owl][:Class]}> .
       FILTER(!isBlank(?s))
+      FILTER (?s != <#{Goo.namespaces[:owl][:Thing]}>)
     }
 }
 eos
@@ -229,6 +242,7 @@ eos
 SELECT (COUNT(?s) as ?count) WHERE {
   GRAPH #{graph.to_ntriples} {
     ?s a #{owl_type.to_ntriples}
+    FILTER (?s != <#{Goo.namespaces[:owl][:Thing]}>)
   } }
 eof
       rs = Goo.sparql_query_client.query(query)

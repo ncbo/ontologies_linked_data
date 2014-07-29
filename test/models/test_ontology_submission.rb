@@ -783,11 +783,11 @@ eos
     assert metrics.properties == 78
     assert metrics.individuals == 27
     assert metrics.classesWithOneChild == 11
-    assert metrics.classesWithNoDefinition == 137
+    assert metrics.classesWithNoDefinition == 133
     assert metrics.classesWithMoreThan25Children == 0
-    assert metrics.maxChildCount == 10
-    assert metrics.averageChildCount == 2
-    assert metrics.maxDepth == 5
+    assert metrics.maxChildCount == 19
+    assert metrics.averageChildCount == 3
+    assert metrics.maxDepth == 4
 
     submission_parse("BROTEST-METRICS", "BRO testing metrics",
                      "./test/data/ontology_files/BRO_v3.2.owl", 33,
@@ -816,7 +816,7 @@ eos
     assert_equal 2, metrics.classesWithMoreThan25Children
     assert_equal 65, metrics.maxChildCount
     assert_equal 5, metrics.averageChildCount
-    assert_equal 8, metrics.maxDepth
+    assert_equal 7, metrics.maxDepth
 
     submission_parse("BROTEST-ISFLAT", "BRO testing metrics flat",
                      "./test/data/ontology_files/BRO_v3.2.owl", 33,
