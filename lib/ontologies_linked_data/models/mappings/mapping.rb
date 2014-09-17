@@ -60,5 +60,18 @@ module LinkedData
         "-#{UUID.new.generate}")
           end
     end
+
+    class MappingCount < LinkedData::Models::Base
+      model :mapping_count, name_with: lambda { |x| mapping_count_id(x) }
+      attribute :ontologies, enforce: [:existence, :list]
+      attribute :count, enforce: [:existence, :integer]
+      attribute :pair_count, enforce: [:existence, :boolean]
+      def self.mapping_count_id(x)
+        acrs = x.ontologies.sort.join("-")
+        return RDF::URI.new(
+          "#{(Goo.id_prefix)}mappingcount/#{CGI.escape(acrs)}"
+        )
+      end
+    end
   end
 end

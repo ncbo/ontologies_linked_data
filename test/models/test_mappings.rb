@@ -16,6 +16,7 @@ class TestMapping < LinkedData::TestOntologyCommon
   end
 
   def self.ontologies_parse()
+    return
     helper = LinkedData::TestOntologyCommon.new(self)
     helper.submission_parse(ONT_ACR1,
                      "MappingOntTest1",
@@ -37,6 +38,38 @@ class TestMapping < LinkedData::TestOntologyCommon
                      "./test/data/ontology_files/fake_for_mappings.owl", 44,
                      process_rdf: true, index_search: false,
                      run_metrics: false, reasoning: true)
+  end
+
+  def test_mapping_count_models
+    LinkedData::Models::MappingCount.where.all do |x|
+      x.delete
+    end
+    m = LinkedData::Models::MappingCount.new
+    assert !m.valid?
+    m.ontologies = ["BRO"]
+    m.pair_count = false
+    m.count = 123
+    assert m.valid?
+    m.save
+    assert LinkedData::Models::MappingCount.where(ontologies: "BRO").all.count == 1
+    m = LinkedData::Models::MappingCount.new
+    assert !m.valid?
+    m.ontologies = ["BRO","FMA"]
+    m.count = 321
+    m.pair_count = true
+    assert m.valid?
+    m.save
+    assert LinkedData::Models::MappingCount.where(ontologies: "BRO").all.count == 2
+    result = LinkedData::Models::MappingCount.where(ontologies: "BRO")
+                                      .and(ontologies: "FMA").include(:count).all
+    assert result.length == 1
+    assert result.first.count == 321
+    result = LinkedData::Models::MappingCount.where(ontologies: "BRO")
+                                                .and(pair_count: true)
+                                                .include(:count)
+                                                .all
+    assert result.length == 1
+    assert result.first.count == 321
   end
 
   def validate_mapping(map)

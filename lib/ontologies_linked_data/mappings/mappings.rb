@@ -148,6 +148,24 @@ eos
   end
 
   def self.mappings_ontologies(sub1,sub2,page,size,classId=nil,reload_cache=false)
+    persistent_count = 0
+    pcount = LinkedData::Models::MappingCount.where(
+        ontologies: [sub1.ontology.acronym]
+    ).and(pair_count: false)
+    if not sub2.nil?
+      pcount = pcount.and(ontologies: [sub2.ontology.acronym])
+    end
+    pcount = pcount.all
+    if pcount.length == 0
+      persistent_count = 0
+    else
+      persistent_count = pcount.first
+    end
+    if persistent_count == 0
+        p = Goo::Base::Page.new(page,size,nil,[])
+        p.aggregate = 0
+        return p
+    end
     mappings = []
     union_template = <<-eos
 {
@@ -263,16 +281,7 @@ eos
       return mappings
     end
     page = Goo::Base::Page.new(page,size,nil,mappings)
-    counts = mapping_ontologies_count(sub1,sub2)
-    if counts.instance_of?(Hash)
-      total = 0
-      counts.each do |k,v|
-        total = total + v
-      end
-      page.aggregate = total
-    else
-      page.aggregate = counts
-    end
+    page.aggregate = persistent_count
     return page
   end
 
