@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 gem 'rake', '~> 10.0'
-gem 'rack', '~> 1.0'
+gem 'rack', '~> 1.6'
 gem 'rack-test', '~> 0.6'
 gem 'activesupport', '~> 4.0'
 gem 'rubyzip', '~> 1.0'
