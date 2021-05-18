@@ -82,7 +82,7 @@ GEM
     faraday-excon (1.1.0)
     faraday-net_http (1.0.1)
     faraday-net_http_persistent (1.1.0)
-    ffi (1.9.21)
+    ffi (1.9.24)
     hashie (4.1.0)
     htmlentities (4.3.4)
     http-accept (1.7.0)
@@ -196,7 +196,7 @@ DEPENDENCIES
   bcrypt (~> 3.0)
   cube-ruby
   email_spec
-  ffi (< 1.9.22)
+  ffi (< 1.9.25)
   goo!
   libxml-ruby (~> 2.0)
   minitest (~> 4.0)
