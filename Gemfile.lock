@@ -140,7 +140,7 @@ GEM
     rack-test (0.8.3)
       rack (>= 1.0, < 3)
     rainbow (3.0.0)
-    rake (10.5.0)
+    rake (12.3.3)
     rdf (1.0.8)
       addressable (>= 2.2)
     redis (4.3.1)
@@ -217,7 +217,7 @@ DEPENDENCIES
   pry
   rack (~> 1.0)
   rack-test (~> 0.6)
-  rake (~> 10.0)
+  rake (~> 12.3)
   rest-client
   rsolr (~> 1.0)
   rubocop
