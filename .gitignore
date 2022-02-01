@@ -31,3 +31,7 @@ create_permissions.log
 
 # jEnv
 .java-version
+
+# solr configsets, these are generated with a script
+test/solr/configsets/term_search
+test/solr/configsets/property_search

@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  ont-ld:
+    volumes:
+      - .:/srv/ontoportal/ontologies_linked_data
+      #- .:/srv/ontoportal/ontologies_linked_data:ro
+      #    tmpfs: /tmp1
+    build: .
+    #command: "bundle exec rake test TESTOPTS='-v' TEST='./test/parser/test_owl_api_command.rb'"
+    command: "bundle exec rake test TESTOPTS='-v'"
+    depends_on:
+      - solr
+      - redis
+      - 4store
+
+  redis:
+    image: redis
+
+  4store:
+    image: bde2020/4store
+    ports:
+        - "9000:9000"
+    command: >
+      bash -c "4s-backend-setup --segments 4 ontoportal_kb
+      && 4s-backend ontoportal_kb
+      && 4s-httpd -D -s-1 -p 9000 ontoportal_kb"
+
+  solr:
+    image: solr:8.8
+    volumes:
+      - ./test/solr/configsets:/configsets:ro
+    ports:
+      - "8983:8983"
+    command: >
+      bash -c "precreate-core term_search_core1 /configsets/term_search
+      && precreate-core prop_search_core1 /configsets/property_search
+      && solr-foreground"
+
+#  mgrep:
+#    image: ontoportal/mgrep-ncbo:0.1
