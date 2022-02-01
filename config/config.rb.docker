@@ -1,0 +1,35 @@
+###
+# This file is designed for running unit tests in docker
+#
+# All the defaults are set in
+# https://github.com/ncbo/ontologies_linked_data/blob/master/lib/ontologies_linked_data/config/config.rb
+###
+
+GOO_BACKEND_NAME = ENV.include?('GOO_BACKEND_NAME') ? ENV['GOO_BACKEND_NAME'] : '4store'
+
+# goo backend configuration for 4store or AG (AlegroGraph)
+GOO_PORT        = GOO_BACKEND_NAME.include?('AG') ? 10035                                 : 9000
+GOO_PATH_QUERY  = GOO_BACKEND_NAME.include?('AG') ? '/repositories/ontoportal'            : '/sparql/'
+GOO_PATH_DATA   = GOO_BACKEND_NAME.include?('AG') ? '/repositories/ontoportal/statements' : '/data/'
+GOO_PATH_UPDATE = GOO_BACKEND_NAME.include?('AG') ? '/repositories/ontoportal/statements' : '/update/'
+
+LinkedData.config do |config|
+    config.goo_backend_name              = GOO_BACKEND_NAME
+    config.goo_host                      = GOO_BACKEND_NAME
+    config.goo_port                      = GOO_PORT
+
+    config.goo_backend_name              = GOO_BACKEND_NAME
+    config.goo_path_query                = GOO_PATH_QUERY
+    config.goo_path_data                 = GOO_PATH_DATA
+    config.goo_path_update               = GOO_PATH_UPDATE
+
+    config.goo_redis_host                = 'redis'
+    config.goo_redis_port                = 6379
+    config.http_redis_host               = 'redis'
+    config.http_redis_port               = 6379
+    config.ontology_analytics_redis_host = 'redis'
+    config.ontology_analytics_redis_port = 6379
+    config.search_server_url             = 'http://solr:8983/solr/term_search_core1'
+    config.property_search_server_url    = 'http://solr:8983/solr/prop_search_core1'
+    # config.queries_debug     = false
+end
