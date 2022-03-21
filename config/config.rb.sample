@@ -6,7 +6,7 @@ LinkedData.config do |config|
   config.repository_folder = "./test/data/ontology_files/repo"
   config.rest_url_prefix   = "http://data.bioontology.org/"
   config.enable_security   = false
-
+  config.java_max_heap_size         = '10240M'
   #PURL server config parameters
   config.enable_purl            = false
   config.purl_host              = "purl.bioontology.org"

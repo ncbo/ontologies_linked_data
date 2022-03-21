@@ -1,17 +1,16 @@
 # Start simplecov if this is a coverage task
-if ENV["COVERAGE"].eql?("true")
+if ENV['COVERAGE'].eql?('true')
   require 'simplecov'
   SimpleCov.start do
-    add_filter "/test/"
-    add_filter "app.rb"
-    add_filter "init.rb"
-    add_filter "/config/"
+    add_filter '/test/'
+    add_filter 'app.rb'
+    add_filter 'init.rb'
+    add_filter '/config/'
   end
 end
 
-require_relative "test_log_file"
-require_relative "../lib/ontologies_linked_data"
-
+require_relative 'test_log_file'
+require_relative '../lib/ontologies_linked_data'
 
 if ENV['OVERRIDE_CONNECT_GOO'] == 'true'
   SOLR_HOST = ENV.include?('SOLR_HOST') ? ENV['SOLR_HOST'] : 'localhost'
@@ -31,12 +30,12 @@ if ENV['OVERRIDE_CONNECT_GOO'] == 'true'
   end
 end
 
-require_relative "../config/config.rb"
+require_relative '../config/config'
 require 'minitest/unit'
 MiniTest::Unit.autorun
 
 # Check to make sure you want to run if not pointed at localhost
-safe_hosts = Regexp.new(/localhost|4store|redis|solr|ncbo-dev*|ncbo-unittest*/)
+safe_hosts = Regexp.new(/localhost|-ut|ncbo-dev*|ncbo-unittest*/)
 def safe_redis_hosts?(sh)
   return [LinkedData.settings.http_redis_host,
    LinkedData.settings.goo_redis_host].select { |x|
@@ -44,11 +43,11 @@ def safe_redis_hosts?(sh)
   }.length == 2
 end
 unless LinkedData.settings.goo_host.match(safe_hosts) &&
-        LinkedData.settings.search_server_url.match(safe_hosts) &&
-        safe_redis_hosts?(safe_hosts)
-  print "\n\n================================== WARNING ==================================\n"
-  print "** TESTS CAN BE DESTRUCTIVE -- YOU ARE POINTING TO A POTENTIAL PRODUCTION/STAGE SERVER **\n"
-  print "Servers:\n"
+       LinkedData.settings.search_server_url.match(safe_hosts) &&
+       safe_redis_hosts?(safe_hosts)
+  print '\n\n================================== WARNING ==================================\n'
+  print '** TESTS CAN BE DESTRUCTIVE -- YOU ARE POINTING TO A POTENTIAL PRODUCTION/STAGE SERVER **\n'
+  print 'Servers:\n'
   print "triplestore -- #{LinkedData.settings.goo_host}\n"
   print "search -- #{LinkedData.settings.search_server_url}\n"
   print "redis http -- #{LinkedData.settings.http_redis_host}:#{LinkedData.settings.http_redis_port}\n"
@@ -56,10 +55,8 @@ unless LinkedData.settings.goo_host.match(safe_hosts) &&
   print "Type 'y' to continue: "
   $stdout.flush
   confirm = $stdin.gets
-  if !(confirm.strip == 'y')
-    abort("Canceling tests...\n\n")
-  end
-  print "Running tests..."
+  abort('Canceling tests...\n\n') unless confirm.strip == 'y'
+  print 'Running tests...'
   $stdout.flush
 end
 
@@ -74,28 +71,24 @@ module LinkedData
     end
 
     def _run_suites(suites, type)
-      begin
-        TestCase.backend_4s_delete
-        before_suites
-        super(suites, type)
-      ensure
-        TestCase.backend_4s_delete
-        after_suites
-      end
+      TestCase.backend_4s_delete
+      before_suites
+      super(suites, type)
+    ensure
+      TestCase.backend_4s_delete
+      after_suites
     end
 
     def _run_suite(suite, type)
-      begin
-        suite.before_suite if suite.respond_to?(:before_suite)
-        super(suite, type)
-      rescue Exception => e
-        puts e.message
-        puts e.backtrace.join("\n\t")
-        puts "Traced from:"
-        raise e
-      ensure
-        suite.after_suite if suite.respond_to?(:after_suite)
-      end
+      suite.before_suite if suite.respond_to?(:before_suite)
+      super(suite, type)
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace.join("\n\t")
+      puts 'Traced from:'
+      raise e
+    ensure
+      suite.after_suite if suite.respond_to?(:after_suite)
     end
   end
 
@@ -107,33 +100,33 @@ module LinkedData
     Thread.abort_on_exception = true
 
     def submission_dependent_objects(format, acronym, user_name)
-      #ontology format
-      owl = LinkedData::Models::OntologyFormat.where(:acronym => format).first
+      # ontology format
+      owl = LinkedData::Models::OntologyFormat.where(acronym: format).first
       assert_instance_of LinkedData::Models::OntologyFormat, owl
 
-      #ontology
-      users = LinkedData::Models::User.where(:username => user_name).all
+      # ontology
+      users = LinkedData::Models::User.where(username: user_name).all
       user = users.first
 
       if user.nil?
-        user = LinkedData::Models::User.new({:username => user_name})
-        user.email = "a@example.org"
-        user.passwordHash = "XXXXX"
+        user = LinkedData::Models::User.new({username: user_name})
+        user.email = 'a@example.org'
+        user.passwordHash = 'XXXXX'
         user.save
       end
 
-      ont = LinkedData::Models::Ontology.where(:acronym => acronym).all
+      ont = LinkedData::Models::Ontology.where(acronym: acronym).all
       ont = ont.first
 
       if ont.nil?
-        ont = LinkedData::Models::Ontology.new({:acronym => acronym})
+        ont = LinkedData::Models::Ontology.new({acronym: acronym})
         ont.name = "some name for #{acronym}"
         ont.administeredBy = [user]
         ont.save
       end
       contact = LinkedData::Models::Contact.new
-      contact.email = "xxx@example.org"
-      contact.name  = "some name"
+      contact.email = 'xxx@example.org'
+      contact.name  = 'some name'
       contact.save
       return owl, ont, user, contact
     end
@@ -152,7 +145,7 @@ module LinkedData
     ##
     # Retrieve ontology dependent objects
     def ontology_objects
-      LinkedData::SampleData::Ontology.ontology_objects()
+      LinkedData::SampleData::Ontology.ontology_objects
     end
 
     ##
@@ -164,7 +157,7 @@ module LinkedData
     def delete_goo_models(gooModelArray)
       gooModelArray.each do |m|
         m.delete
-        assert_equal(false, m.exist?(reload=true), "Failed to delete a goo model.")
+        assert_equal(false, m.exist?(reload=true), 'Failed to delete a goo model.')
       end
     end
 
@@ -176,7 +169,7 @@ module LinkedData
       # TODO: if the input argument is an instance, use the .class.new methods?
       m = model.is_a?(Class) ? model.new : model
       assert_equal(false, m.valid?, "#{m} .valid? returned true, it was expected to be invalid.")
-      m.creator = "test name" # string is not valid
+      m.creator = 'test name' # string is not valid
       assert_equal(false, m.valid?, "#{m} .valid? returned true, it was expected to be invalid.")
       assert_equal(false, m.errors[:creator].nil?) # We expect there to be errors on creator
       assert_instance_of(LinkedData::Models::User, user, "#{user} is not an instance of LinkedData::Models::User")
@@ -190,38 +183,38 @@ module LinkedData
     # @note This method name cannot begin with 'test_' or it will be called as a test
     # @param [LinkedData::Models::Base] m a valid model instance with a 'created' attribute (without a value).
     def model_created_test(m)
-      assert_equal(true, m.kind_of?(LinkedData::Models::Base), "Expected kind_of?(LinkedData::Models::Base).")
+      assert_equal(true, m.is_a?(LinkedData::Models::Base), 'Expected is_a?(LinkedData::Models::Base).')
       assert_equal(true, m.valid?, "Expected valid model: #{m.errors}")
       m.save if m.valid?
       # The default value is auto-generated (during save), it should be OK.
       assert_instance_of(DateTime, m.created, "The 'created' attribute is not a DateTime instance.")
-      assert_equal(true, m.errors[:created].nil?, "#{m.errors}")
+      assert_equal(true, m.errors[:created].nil?, m.errors.to_s)
 
       begin
-        m.created = "this string should fail"
+        m.created = 'this string shuld fail'
       rescue Exception => e
         # in ruby 2.3+, this generates a runtime exception, so we need to handle it
         assert_equal ArgumentError, e.class
-        assert_equal "invalid date", e.message
+        assert_equal 'invalid date', e.message
       end
 
       # The value should be an XSD date time.
       m.created = DateTime.now
       assert m.valid?
       assert_instance_of(DateTime, m.created)
-      assert_equal(true, m.errors[:created].nil?, "#{m.errors}")
+      assert_equal(true, m.errors[:created].nil?, m.errors.to_s)
     end
 
     # Test the save and delete methods on a GOO model
     # @param [LinkedData::Models::Base] m a valid model instance that can be saved and deleted
     def model_lifecycle_test(m)
-      assert_equal(true, m.kind_of?(LinkedData::Models::Base), "Expected kind_of?(LinkedData::Models::Base).")
+      assert_equal(true, m.is_a?(LinkedData::Models::Base), 'Expected is_a?(LinkedData::Models::Base).')
       assert_equal(true, m.valid?, "Expected valid model: #{m.errors}")
-      assert_equal(false, m.exist?(reload=true), "Given model is already saved, expected one that is not.")
+      assert_equal(false, m.exist?(reload=true), 'Given model is already saved, expected one that is not.')
       m.save
-      assert_equal(true, m.exist?(reload=true), "Failed to save model.")
+      assert_equal(true, m.exist?(reload=true), 'Failed to save model.')
       m.delete
-      assert_equal(false, m.exist?(reload=true), "Failed to delete model.")
+      assert_equal(false, m.exist?(reload=true), 'Failed to delete model.')
     end
 
     def self.count_pattern(pattern)
@@ -234,16 +227,15 @@ module LinkedData
     end
 
     def self.backend_4s_delete
-      if TestCase.count_pattern("?s ?p ?o") < 400000
-        Goo.sparql_update_client.update("DELETE {?s ?p ?o } WHERE { ?s ?p ?o }")
-        LinkedData::Models::SubmissionStatus.init_enum
-        LinkedData::Models::OntologyType.init_enum
-        LinkedData::Models::OntologyFormat.init_enum
-        LinkedData::Models::Users::Role.init_enum
-        LinkedData::Models::Users::NotificationType.init_enum
-      else
-        raise Exception, "Too many triples in KB, does not seem right to run tests"
-      end
+      raise StandardError, 'Too many triples in KB, does not seem right to run tests' unless
+            count_pattern('?s ?p ?o') < 400000
+
+      Goo.sparql_update_client.update('DELETE {?s ?p ?o } WHERE { ?s ?p ?o }')
+      LinkedData::Models::SubmissionStatus.init_enum
+      LinkedData::Models::OntologyType.init_enum
+      LinkedData::Models::OntologyFormat.init_enum
+      LinkedData::Models::Users::Role.init_enum
+      LinkedData::Models::Users::NotificationType.init_enum
     end
   end
 end
