@@ -34,7 +34,7 @@ group :development do
 end
 
 # NCBO gems (can be from a local dev path or from rubygems/git)
-gem 'goo', github: 'ncbo/goo', branch: 'master'
+gem 'goo', github: 'ontoportal-lirmm/goo', branch: 'pl/add-mainlang-defaults-refactored'
 gem 'sparql-client', github: 'ncbo/sparql-client', branch: 'master'
 
 # ResourceIndex dependencies (managed per-platform)
