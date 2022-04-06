@@ -5,7 +5,7 @@ services:
     build: .
     volumes:
       #- bundle:/bundle
-      - .:/srv/ontoportal/ontologies_linked_data
+      # - .:/srv/ontoportal/ontologies_linked_data
     environment:
       #- BUNDLE_PATH=/bundle
       - COVERAGE=true
