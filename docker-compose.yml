@@ -1,9 +1,14 @@
-version: '3'
+version: '3.8'
 
 services:
-  ld-unit-test:
-    build: ../.
+  test:
+    build: .
+    volumes:
+      #- bundle:/bundle
+      - .:/srv/ontoportal/ontologies_linked_data
     environment:
+      #- BUNDLE_PATH=/bundle
+      - COVERAGE=true
       - OVERRIDE_CONNECT_GOO=true
       - GOO_BACKEND_NAME=4store
       - GOO_PORT=9000
@@ -13,12 +18,14 @@ services:
       - GOO_PATH_UPDATE=/update/
       - REDIS_HOST=redis-ut
       - REDIS_PORT=6379
-      - SOLR_HOST=ld-solr-ut
+      - SOLR_HOST=solr-ut
     command: "rake test TESTOPTS='-v'"
     depends_on:
-      - ld-solr-ut
+      - solr-ut
       - redis-ut
       - 4store-ut
+    # profiles:
+      # - test
 
   redis-ut:
     image: redis
@@ -30,13 +37,15 @@ services:
       && 4s-backend ontoportal_kb
       && 4s-httpd -D -s-1 -p 9000 ontoportal_kb"
 
-  ld-solr-ut:
+  solr-ut:
     image: solr:8
     volumes:
-      - ./solr/configsets:/configsets:ro
+      - ./test/solr/configsets:/configsets:ro
     #ports:
     #  - "8983:8983"
     command: >
       bash -c "precreate-core term_search_core1 /configsets/term_search
       && precreate-core prop_search_core1 /configsets/property_search
       && solr-foreground"
+#volumes:
+#  bundle:
