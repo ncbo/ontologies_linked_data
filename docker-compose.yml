@@ -3,7 +3,7 @@ version: '3.8'
 services:
   test:
     build: .
-    volumes:
+    #volumes:
       #- bundle:/bundle
       # - .:/srv/ontoportal/ontologies_linked_data
     environment:
