@@ -26,16 +26,13 @@ class TestOWLApi < LinkedData::TestCase
   def test_command_KO_output
     return if ENV["SKIP_PARSING"]
 
-    output_repo =  "/var/log/xxxxx"
+    # raise error when creatting a directory on a read only file system
+    output_repo = "/sys/cant_create_such_dir_on_a_read_only_file_system"
     input_file = "test/data/ontology_files/"
-    owlapi = LinkedData::Parser::OWLAPICommand.new(input_file,output_repo)
-    begin
-      owlapi.parse
-      assert(false)
-    rescue LinkedData::Parser::ParserException => e
-      assert(e.kind_of? LinkedData::Parser::MkdirException)
-    end
+    owlapi = LinkedData::Parser::OWLAPICommand.new(input_file, output_repo)
+    assert_raises(LinkedData::Parser::MkdirException) { owlapi.parse }
   end
+
   def test_command_KO_input
     return if ENV["SKIP_PARSING"]
 
