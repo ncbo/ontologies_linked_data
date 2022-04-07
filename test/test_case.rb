@@ -190,13 +190,14 @@ module LinkedData
       assert_instance_of(DateTime, m.created, "The 'created' attribute is not a DateTime instance.")
       assert_equal(true, m.errors[:created].nil?, m.errors.to_s)
 
-      begin
-        m.created = 'this string shuld fail'
-      rescue Exception => e
-        # in ruby 2.3+, this generates a runtime exception, so we need to handle it
-        assert_equal ArgumentError, e.class
-        assert_equal 'invalid date', e.message
-      end
+      # Ruby 2.7 introduced new error type - Date::Error which gets raised here
+      # this ruby version test case can be simplified once we drop ruby 2.6 support
+      e = if RUBY_VERSION.to_f < 2.7
+            assert_raises(ArgumentError) { m.created = "this string should fail" }
+          else
+            assert_raises(Date::Error) { m.created = "this string should fail" }
+          end
+      assert_equal "invalid date", e.message
 
       # The value should be an XSD date time.
       m.created = DateTime.now
