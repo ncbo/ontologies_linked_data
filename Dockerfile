@@ -1,17 +1,23 @@
-FROM ruby:2.6
+ARG RUBY_VERSION
+ARG DISTRO_NAME=bullseye
 
-RUN apt-get update -yqq && apt-get install -yqq --no-install-recommends openjdk-11-jre-headless raptor2-utils wait-for-it
-# The Gemfile Caching Trick
+FROM ruby:$RUBY_VERSION-$DISTRO_NAME
+
+RUN apt-get update -yqq && apt-get install -yqq --no-install-recommends \
+  openjdk-11-jre-headless \
+  raptor2-utils \
+  wait-for-it \
+  && rm -rf /var/lib/apt/lists/*
+
 RUN mkdir -p /srv/ontoportal/ontologies_linked_data
-COPY Gemfile* *.gemspec /srv/ontoportal/ontologies_linked_data/
+RUN mkdir -p /srv/ontoportal/bundle
+COPY Gemfile* /srv/ontoportal/ontologies_linked_data/
+
 WORKDIR /srv/ontoportal/ontologies_linked_data
-RUN gem install bundler -v "$(grep -A 1 "BUNDLED WITH" Gemfile.lock | tail -n 1)"
+
+RUN gem update --system
+RUN gem install bundler
+ENV BUNDLE_PATH=/srv/ontoportal/bundle
 RUN bundle install
 
 COPY . /srv/ontoportal/ontologies_linked_data
-
-# unit tests have to run with unprivileged user
-# otherwise TestOWLApi#test_command_KO_output test fails
-RUN adduser --disabled-password ontoportal
-RUN chown -R ontoportal  /srv/ontoportal/ontologies_linked_data
-USER ontoportal

@@ -1,0 +1,65 @@
+x-app: &app
+    build:
+      context: .
+      args:
+        RUBY_VERSION: '2.6'
+    # Increase the version number in the image tag every time Dockerfile or its arguments is changed
+    image: ontologies_ld-dev:0.0.1
+    environment:
+      - BUNDLE_PATH=/srv/ontoportal/bundle
+      - COVERAGE=true
+      - OVERRIDE_CONNECT_GOO=true
+      - GOO_BACKEND_NAME=4store
+      - GOO_PORT=9000
+      - GOO_HOST=4store-ut
+      - GOO_PATH_QUERY=/sparql/
+      - GOO_PATH_DATA=/data/
+      - GOO_PATH_UPDATE=/update/
+      - REDIS_HOST=redis-ut
+      - REDIS_PORT=6379
+      - SOLR_HOST=solr-ut
+    volumes:
+      - bundle:/srv/ontoportal/bundle
+      - .:/srv/ontoportal/ontologies_linked_data
+    depends_on:
+      - solr-ut
+      - redis-ut
+      - 4store-ut
+
+services:
+  test:
+    <<: *app
+    command: "rake test TESTOPTS='-v'"
+    profiles:
+      - test
+
+  dev:
+    <<: *app
+    stdin_open: true
+    tty: true
+    command: "/bin/bash"
+    profiles:
+      - dev
+
+  redis-ut:
+    image: redis
+
+  4store-ut:
+    image: bde2020/4store
+    command: >
+      bash -c "4s-backend-setup --segments 4 ontoportal_kb
+      && 4s-backend ontoportal_kb
+      && 4s-httpd -D -s-1 -p 9000 ontoportal_kb"
+
+  solr-ut:
+    image: solr:8
+    volumes:
+      - ./test/solr/configsets:/configsets:ro
+    #ports:
+    #  - "8983:8983"
+    command: >
+      bash -c "precreate-core term_search_core1 /configsets/term_search
+      && precreate-core prop_search_core1 /configsets/property_search
+      && solr-foreground"
+volumes:
+  bundle:

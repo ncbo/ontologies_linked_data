@@ -10,14 +10,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up solr configsets
-      working-directory: ./test
-      run: solr/generate_ncbo_configsets.sh
+      run: ./test/solr/generate_ncbo_configsets.sh
     - name: create config.rb file
       run: cp config/config.rb.sample config/config.rb
     - name: Build docker-compose
-      working-directory: ./test
       run: docker-compose build
     - name: Run unit tests
-      working-directory: ./test
-      run: docker-compose run ld-unit-test wait-for-it ld-solr-ut:8983 -- bundle exec rake test TESTOPTS='-v'
+      run: docker-compose run test wait-for-it solr-ut:8983 -- bundle exec rake test TESTOPTS='-v'
 
