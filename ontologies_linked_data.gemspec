@@ -28,7 +28,6 @@ Gem::Specification.new do |gem|
   gem.add_dependency("rsolr")
   gem.add_dependency("pony")
   gem.add_dependency("omni_logger")
-  gem.add_dependency("ncbo_resource_index")
 
   gem.add_development_dependency("email_spec")
 

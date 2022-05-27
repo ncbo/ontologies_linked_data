@@ -3,7 +3,6 @@ require "cgi"
 require "multi_json"
 require "ontologies_linked_data/models/notes/note"
 require "ontologies_linked_data/mappings/mappings"
-require "ncbo_resource_index"
 
 module LinkedData
   module Models
@@ -11,7 +10,6 @@ module LinkedData
     end
 
     class Class < LinkedData::Models::Base
-      include ResourceIndex::Class
 
       model :class, name_with: :id, collection: :submission,
             namespace: :owl, :schemaless => :true,

@@ -1,4 +1,4 @@
-name: Ruby Unit Tests with 4store backend
+name: Ruby Unit Tests with AllegroGraph backend
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
     - name: create config.rb file
       run: cp config/config.rb.sample config/config.rb
     - name: Build docker-compose
-      run: docker-compose --profile 4store build
+      run: docker-compose --profile agraph build
     - name: Run unit tests
-      run: docker-compose run ruby wait-for-it solr-ut:8983 -- bundle exec rake test TESTOPTS='-v'
+      run: docker-compose run ruby-agraph wait-for-it solr-ut:8983 -- bundle exec rake test TESTOPTS='-v'
 

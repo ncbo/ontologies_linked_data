@@ -5,41 +5,59 @@ x-app: &app
         RUBY_VERSION: '2.7'
     # Increase the version number in the image tag every time Dockerfile or its arguments is changed
     image: ontologies_ld-dev:0.0.2
-    environment:
-      - BUNDLE_PATH=/srv/ontoportal/bundle
-      - COVERAGE=true
-      - OVERRIDE_CONNECT_GOO=true
-      - GOO_BACKEND_NAME=4store
-      - GOO_PORT=9000
-      - GOO_HOST=4store-ut
-      - GOO_PATH_QUERY=/sparql/
-      - GOO_PATH_DATA=/data/
-      - GOO_PATH_UPDATE=/update/
-      - REDIS_HOST=redis-ut
-      - REDIS_PORT=6379
-      - SOLR_HOST=solr-ut
+    environment: &env
+      BUNDLE_PATH: /srv/ontoportal/bundle
+      COVERAGE: 'true'
+      OVERRIDE_CONNECT_GOO: 'true'
+      REDIS_HOST: 'redis-ut'
+      REDIS_PORT: 6379
+      SOLR_HOST: 'solr-ut'
+    stdin_open: true
+    tty: true
+    command: "/bin/bash"
     volumes:
       - bundle:/srv/ontoportal/bundle
       - .:/srv/ontoportal/ontologies_linked_data
     depends_on:
       - solr-ut
       - redis-ut
-      - 4store-ut
 
 services:
-  test:
+  # environment wtih 4store backend
+  ruby:
     <<: *app
-    command: "rake test TESTOPTS='-v'"
+    environment:
+      <<: *env
+      GOO_BACKEND_NAME: 4store
+      GOO_PORT: 9000
+      GOO_HOST: 4store-ut
+      GOO_PATH_QUERY: /sparql/
+      GOO_PATH_DATA: /data/
+      GOO_PATH_UPDATE: /update/
     profiles:
-      - test
+      - '4store'
+    depends_on:
+      - solr-ut
+      - redis-ut
+      - 4store-ut
 
-  dev:
+  # environment with AllegroGraph backend
+  ruby-agraph:
+    environment:
+      <<: *env
+      GOO_BACKEND_NAME: ag
+      GOO_PORT: 10035
+      GOO_HOST: agraph-ut
+      GOO_PATH_QUERY: /repositories/bioportal_test
+      GOO_PATH_DATA: /repositories/bioportal_test/statements
+      GOO_PATH_UPDATE: /repositories/bioportal_test/statements
     <<: *app
-    stdin_open: true
-    tty: true
-    command: "/bin/bash"
     profiles:
-      - dev
+      - 'agraph'
+    depends_on:
+      - solr-ut
+      - redis-ut
+      - agraph-ut
 
   redis-ut:
     image: redis
@@ -50,6 +68,8 @@ services:
       bash -c "4s-backend-setup --segments 4 ontoportal_kb
       && 4s-backend ontoportal_kb
       && 4s-httpd -D -s-1 -p 9000 ontoportal_kb"
+    profiles:
+      - 4store
 
   solr-ut:
     image: solr:8
@@ -61,5 +81,23 @@ services:
       bash -c "precreate-core term_search_core1 /configsets/term_search
       && precreate-core prop_search_core1 /configsets/property_search
       && solr-foreground"
+
+  agraph-ut:
+    image: franzinc/agraph:v7.1.0
+    environment:
+      - AGRAPH_SUPER_USER=test
+      - AGRAPH_SUPER_PASSWORD=xyzzy
+    shm_size: 1g
+    # ports:
+    #  - 10035:10035
+    command: >
+       bash -c "/agraph/bin/agraph-control --config /agraph/etc/agraph.cfg start
+       ; agtool repos create bioportal_test
+       ; agtool users add anonymous
+       ; agtool users grant anonymous root:bioportal_test:rw
+       ; tail -f /agraph/data/agraph.log"
+    profiles:
+      - agraph
+
 volumes:
   bundle:
