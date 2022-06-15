@@ -54,27 +54,27 @@ module LinkedData
       roots = submission.roots
       
       max_depth = 0
-      unless is_flat
-        depths = []
-        rdfsSC = Goo.namespaces[:rdfs][:subClassOf]
-        roots.each do |root|
-          ok = true
-          n=1
-          while ok
-            ok = hierarchy_depth?(submission.id.to_s,root.id.to_s,n,rdfsSC)
-            if ok
-              n += 1
-            end
-            if n > 40
-              #safe guard
-              ok = false
-            end
-          end
-          n -= 1
-          depths << n
-        end
-        max_depth = depths.max
-      end
+      # unless is_flat
+      #   depths = []
+      #   rdfsSC = Goo.namespaces[:rdfs][:subClassOf]
+      #   roots.each do |root|
+      #     ok = true
+      #     n=1
+      #     while ok
+      #       ok = hierarchy_depth?(submission.id.to_s,root.id.to_s,n,rdfsSC)
+      #       if ok
+      #         n += 1
+      #       end
+      #       if n > 40
+      #         #safe guard
+      #         ok = false
+      #       end
+      #     end
+      #     n -= 1
+      #     depths << n
+      #   end
+      #   max_depth = depths.max
+      # end
       cls_metrics = {}
       cls_metrics[:classes] = 0
       cls_metrics[:averageChildCount] = 0
