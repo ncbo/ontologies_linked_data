@@ -52,11 +52,11 @@ module LinkedData
 
       is_flat = submission.ontology.flat
       roots = submission.roots
-      
+      rdfsSC = Goo.namespaces[:rdfs][:subClassOf]
+
       max_depth = 0
       # unless is_flat
       #   depths = []
-      #   rdfsSC = Goo.namespaces[:rdfs][:subClassOf]
       #   roots.each do |root|
       #     ok = true
       #     n=1
