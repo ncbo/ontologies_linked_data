@@ -1,6 +1,15 @@
-# Start simplecov if this is a coverage task
-if ENV['COVERAGE'].eql?('true')
+# Start simplecov if this is a coverage task or if it is run in the CI workflows
+RUN_COVERAGE = ENV['COVERAGE'] || ENV['CODECOV'] || ENV['CI']
+if RUN_COVERAGE
   require 'simplecov'
+  if ENV['CODECOV'] == 'true'
+    require 'codecov'
+    # Generate HTML and JSON reports
+    SimpleCov.formatters = SimpleCov::Formatter::MultiFormatter.new([
+      SimpleCov::Formatter::HTMLFormatter,
+      SimpleCov::Formatter::Codecov # for CodeCov
+    ])
+  end
   SimpleCov.start do
     add_filter '/test/'
     add_filter 'app.rb'
