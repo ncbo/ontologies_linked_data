@@ -21,3 +21,9 @@ jobs:
     - name: Run unit tests
       # unit tests are run inside a container
       run: docker-compose run ${{ matrix.backend }} wait-for-it solr-ut:8983 -- bundle exec rake test TESTOPTS='-v'
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage/codecov-result.json
+        flags: unittests
+        fail_ci_if_error: false # optional (default = false)
