@@ -1,15 +1,13 @@
-# Start simplecov if this is a coverage task or if it is run in the CI workflows
-RUN_COVERAGE = ENV['COVERAGE'] || ENV['CODECOV'] || ENV['CI']
-if RUN_COVERAGE
+# Start simplecov if this is a coverage task or if it is run in the CI pipeline
+if ENV['COVERAGE'] == 'true' || ENV['CI'] == 'true'
   require 'simplecov'
-  if ENV['CODECOV'] == 'true' || ENV['CI'] == 'true'
-    require 'codecov'
-    # Generate HTML and JSON reports
-    SimpleCov.formatters = SimpleCov::Formatter::MultiFormatter.new([
-      SimpleCov::Formatter::HTMLFormatter,
-      SimpleCov::Formatter::Codecov # for CodeCov
-    ])
-  end
+  require 'simplecov-cobertura'
+  # https://github.com/codecov/ruby-standard-2
+  # Generate HTML and Cobertura reports which can be consumed by codecov uploader
+  SimpleCov.formatters = SimpleCov::Formatter::MultiFormatter.new([
+    SimpleCov::Formatter::HTMLFormatter,
+    SimpleCov::Formatter::CoberturaFormatter
+  ])
   SimpleCov.start do
     add_filter '/test/'
     add_filter 'app.rb'

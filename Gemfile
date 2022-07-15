@@ -22,11 +22,11 @@ gem 'thin'
 
 # Testing
 group :test do
-  gem 'codecov', require: false # for CodeCove.io
   gem 'email_spec'
   gem 'minitest-reporters', '>= 0.5.0'
   gem 'pry'
   gem 'simplecov'
+  gem 'simplecov-cobertura' # for codecov.io
   gem 'test-unit-minitest'
 end
 
