@@ -1,8 +1,5 @@
 name: Ruby Unit Tests
 
-env:
-  CODECOV: true
-
 on:
   push:
   pull_request:
@@ -28,6 +25,5 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         files: ./coverage/codecov-result.json
-        verbose: true
         flags: unittests
         fail_ci_if_error: false # optional (default = false)
