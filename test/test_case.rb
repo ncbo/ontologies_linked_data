@@ -2,7 +2,7 @@
 RUN_COVERAGE = ENV['COVERAGE'] || ENV['CODECOV'] || ENV['CI']
 if RUN_COVERAGE
   require 'simplecov'
-  if ENV['CODECOV'] == 'true'
+  if ENV['CODECOV'] == 'true' || ENV['CI'] == 'true'
     require 'codecov'
     # Generate HTML and JSON reports
     SimpleCov.formatters = SimpleCov::Formatter::MultiFormatter.new([
