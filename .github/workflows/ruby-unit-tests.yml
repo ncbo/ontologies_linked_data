@@ -1,5 +1,8 @@
 name: Ruby Unit Tests
 
+env:
+  CODECOV: true
+
 on:
   push:
   pull_request:
