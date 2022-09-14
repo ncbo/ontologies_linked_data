@@ -12,6 +12,8 @@ module LinkedData
 
     class OntologySubmission < LinkedData::Models::Base
 
+      include LinkedData::Concerns::OntologySubmission::MetadataExtractor
+
       FILES_TO_DELETE = ['labels.ttl', 'mappings.ttl', 'obsolete.ttl', 'owlapi.xrdf', 'errors.log']
       FLAT_ROOTS_LIMIT = 1000
 
@@ -480,28 +482,9 @@ module LinkedData
           logger.flush
         end
         delete_and_append(triples_file_path, logger, mime_type)
-        version_info = extract_version()
-
-        if version_info
-          self.version = version_info
-        end
       end
 
-      def extract_version
 
-        query_version_info = <<eos
-SELECT ?versionInfo
-FROM #{self.id.to_ntriples}
-WHERE {
-<http://bioportal.bioontology.org/ontologies/versionSubject>
- <http://www.w3.org/2002/07/owl#versionInfo> ?versionInfo .
-}
-eos
-        Goo.sparql_query_client.query(query_version_info).each_solution do |sol|
-          return sol[:versionInfo].to_s
-        end
-        return nil
-      end
 
       def process_callbacks(logger, callbacks, action_name, &block)
         callbacks.delete_if do |_, callback|
@@ -978,6 +961,7 @@ eos
                 zip_dst = unzip_submission(logger)
                 file_path = zip_dst ? zip_dst.to_s : self.uploadFilePath.to_s
                 generate_rdf(logger, file_path, reasoning=reasoning)
+                extract_metadata
                 add_submission_status(status)
                 self.save
               rescue Exception => e
