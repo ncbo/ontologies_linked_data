@@ -24,8 +24,8 @@ module LinkedData
       attribute :acronym, namespace: :omv,
         enforce: [:unique, :existence, lambda { |inst,attr| validate_acronym(inst,attr) } ]
       attribute :name, :namespace => :omv, enforce: [:unique, :existence]
-      attribute :submissions,
-                  inverse: { on: :ontology_submission, attribute: :ontology }
+      attribute :submissions, inverse: { on: :ontology_submission, attribute: :ontology },
+                metadataMappings: ["dct:hasVersion", "pav:hasCurrentVersion", "pav:hasVersion", "prov:generalizationOf", "adms:next"]
       attribute :projects,
                   inverse: { on: :project, attribute: :ontologyUsed }
       attribute :notes,
@@ -36,10 +36,10 @@ module LinkedData
                   inverse: { on: :provisional_class, attribute: :ontology }
       attribute :subscriptions,
                   inverse: { on: :subscription, attribute: :ontology}
-      attribute :administeredBy, enforce: [:existence, :user, :list]
+      attribute :administeredBy, enforce: [:existence, :user, :list], metadataMappings: ["oboInOwl:savedBy", "oboInOwl:saved-by"]
       attribute :group, enforce: [:list, :group]
 
-      attribute :viewingRestriction, :default => lambda {|x| "public"}
+      attribute :viewingRestriction, :default => lambda {|x| "public"}, metadataMappings: ["mod:accessibility"]
       attribute :doNotUpdate, enforce: [:boolean]
       attribute :flat, enforce: [:boolean]
       attribute :hasDomain, namespace: :omv, enforce: [:list, :category]
@@ -52,7 +52,7 @@ module LinkedData
       attribute :ontologyType, enforce: [:ontology_type], default: lambda { |record| LinkedData::Models::OntologyType.find("ONTOLOGY").include(:code).first }
 
       # Hypermedia settings
-      serialize_default :administeredBy, :acronym, :name, :summaryOnly, :flat, :ontologyType
+      serialize_default :administeredBy, :acronym, :name, :summaryOnly, :flat, :ontologyType, :group, :hasDomain, :viewingRestriction, :viewOf, :views
       links_load :acronym
       link_to LinkedData::Hypermedia::Link.new("submissions", lambda {|s| "ontologies/#{s.acronym}/submissions"}, LinkedData::Models::OntologySubmission.uri_type),
               LinkedData::Hypermedia::Link.new("properties", lambda {|s| "ontologies/#{s.acronym}/properties"}, "#{Goo.namespaces[:metadata].to_s}Property"),

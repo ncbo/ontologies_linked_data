@@ -226,40 +226,20 @@ class TestMapping < LinkedData::TestOntologyCommon
   end
 
   def test_mappings_rest
-    mapping_term_a = ["http://bioontology.org/ontologies/BiomedicalResourceOntology.owl#Image_Algorithm",
-      "http://bioontology.org/ontologies/BiomedicalResourceOntology.owl#Image",
-      "http://bioontology.org/ontologies/BiomedicalResourceOntology.owl#Integration_and_Interoperability_Tools" ]
-    submissions_a = [
-"http://data.bioontology.org/ontologies/MAPPING_TEST1/submissions/latest",
-"http://data.bioontology.org/ontologies/MAPPING_TEST1/submissions/latest",
-"http://data.bioontology.org/ontologies/MAPPING_TEST1/submissions/latest" ]
-    mapping_term_b = ["http://purl.org/incf/ontology/Computational_Neurosciences/cno_alpha.owl#cno_0000202",
-      "http://purl.org/incf/ontology/Computational_Neurosciences/cno_alpha.owl#cno_0000203",
-      "http://purl.org/incf/ontology/Computational_Neurosciences/cno_alpha.owl#cno_0000205" ]
-    submissions_b = [
-"http://data.bioontology.org/ontologies/MAPPING_TEST2/submissions/latest",
-"http://data.bioontology.org/ontologies/MAPPING_TEST2/submissions/latest",
-"http://data.bioontology.org/ontologies/MAPPING_TEST2/submissions/latest" ]
-    relations = [ "http://www.w3.org/2004/02/skos/core#exactMatch",
-                  "http://www.w3.org/2004/02/skos/core#closeMatch",
-                  "http://www.w3.org/2004/02/skos/core#relatedMatch" ]
-    user = LinkedData::Models::User.where.include(:username).all[0]
-    assert user != nil
+    mapping_term_a, mapping_term_b, submissions_a, submissions_b, relations, user = rest_mapping_data
+
     mappings_created = []
 
     3.times do |i|
-      process = LinkedData::Models::MappingProcess.new
-      process.name = "proc#{i}"
-      process.relation = RDF::URI.new(relations[i])
-      process.creator= user
-      process.save
-      classes = []
-      classes << LinkedData::Mappings.read_only_class(
-                    mapping_term_a[i], submissions_a[i])
-      classes << LinkedData::Mappings.read_only_class(
-                    mapping_term_b[i], submissions_b[i])
-      mappings_created << LinkedData::Mappings.create_rest_mapping(classes, process)
+      classes = get_mapping_classes(term_a:mapping_term_a[i], term_b: mapping_term_b[i],
+                                    submissions_a: submissions_a[i], submissions_b: submissions_b[i])
+
+      mappings_created << create_rest_mapping(relation: RDF::URI.new(relations[i]),
+                                              user: user,
+                                              classes: classes,
+                                              name: "proc#{i}")
     end
+
     ont_id = submissions_a.first.split("/")[0..-3].join("/")
     latest_sub = LinkedData::Models::Ontology.find(RDF::URI.new(ont_id)).first.latest_submission
     LinkedData::Mappings.create_mapping_counts(Logger.new(TestLogFile.new))
@@ -307,5 +287,79 @@ class TestMapping < LinkedData::TestOntologyCommon
       end
     end
     assert_equal 3, rest_mapping_count
+  end
+
+  def test_get_rest_mapping
+    mapping_term_a, mapping_term_b, submissions_a, submissions_b, relations, user = rest_mapping_data
+
+    classes = get_mapping_classes(term_a:mapping_term_a[0], term_b: mapping_term_b[0],
+                                  submissions_a: submissions_a[0], submissions_b: submissions_b[0])
+
+    mappings_created = []
+    mappings_created << create_rest_mapping(relation: RDF::URI.new(relations[0]),
+                                            user: user,
+                                            classes: classes,
+                                            name: "proc#{0}")
+
+    assert_equal 1, mappings_created.size
+    created_mapping_id = mappings_created.first.id
+
+    refute_nil LinkedData::Mappings.get_rest_mapping(created_mapping_id)
+
+    old_replace = LinkedData.settings.replace_url_prefix
+    LinkedData.settings.replace_url_prefix = true
+
+    old_rest_url = LinkedData.settings.rest_url_prefix
+    LinkedData.settings.rest_url_prefix = 'data.test.org'
+
+    refute_nil LinkedData::Mappings.get_rest_mapping(LinkedData::Models::Base.replace_url_id_to_prefix(created_mapping_id))
+
+    LinkedData.settings.rest_url_prefix = old_rest_url
+    LinkedData.settings.replace_url_prefix = old_replace
+  end
+
+  private
+
+  def get_mapping_classes(term_a:, term_b:, submissions_a:, submissions_b:)
+    classes = []
+    classes << LinkedData::Mappings.read_only_class(
+      term_a, submissions_a)
+    classes << LinkedData::Mappings.read_only_class(
+      term_b, submissions_b)
+    classes
+  end
+
+  def rest_mapping_data
+    mapping_term_a = ["http://bioontology.org/ontologies/BiomedicalResourceOntology.owl#Image_Algorithm",
+                      "http://bioontology.org/ontologies/BiomedicalResourceOntology.owl#Image",
+                      "http://bioontology.org/ontologies/BiomedicalResourceOntology.owl#Integration_and_Interoperability_Tools" ]
+    submissions_a = [
+      "http://data.bioontology.org/ontologies/MAPPING_TEST1/submissions/latest",
+      "http://data.bioontology.org/ontologies/MAPPING_TEST1/submissions/latest",
+      "http://data.bioontology.org/ontologies/MAPPING_TEST1/submissions/latest" ]
+    mapping_term_b = ["http://purl.org/incf/ontology/Computational_Neurosciences/cno_alpha.owl#cno_0000202",
+                      "http://purl.org/incf/ontology/Computational_Neurosciences/cno_alpha.owl#cno_0000203",
+                      "http://purl.org/incf/ontology/Computational_Neurosciences/cno_alpha.owl#cno_0000205" ]
+    submissions_b = [
+      "http://data.bioontology.org/ontologies/MAPPING_TEST2/submissions/latest",
+      "http://data.bioontology.org/ontologies/MAPPING_TEST2/submissions/latest",
+      "http://data.bioontology.org/ontologies/MAPPING_TEST2/submissions/latest" ]
+    relations = [ "http://www.w3.org/2004/02/skos/core#exactMatch",
+                  "http://www.w3.org/2004/02/skos/core#closeMatch",
+                  "http://www.w3.org/2004/02/skos/core#relatedMatch" ]
+
+    user = LinkedData::Models::User.where.include(:username).all[0]
+    assert user != nil
+
+    [mapping_term_a, mapping_term_b, submissions_a, submissions_b, relations, user]
+  end
+
+  def create_rest_mapping(relation:, user:, name:, classes:)
+    process = LinkedData::Models::MappingProcess.new
+    process.name = name
+    process.relation = [relation]
+    process.creator = user
+    process.save
+    LinkedData::Mappings.create_rest_mapping(classes, process)
   end
 end

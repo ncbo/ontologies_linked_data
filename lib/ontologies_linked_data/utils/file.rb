@@ -1,19 +1,43 @@
 require 'net/http'
 require 'uri'
 require 'zip'
+require 'zlib'
 require 'tmpdir'
 
 module LinkedData
   module Utils
     module FileHelpers
-
-      def self.zip?(file_path)
+      
+      class GzipFile
+        attr_accessor :name
+        def initialize(gz)
+          self.name = gz.orig_name
+        end
+      end
+      
+      def self.gzip?(file_path)
         file_path = file_path.to_s
         unless File.exist? file_path
           raise ArgumentError, "File path #{file_path} not found"
         end
         file_type = `file --mime -b #{Shellwords.escape(file_path)}`
-        return file_type.split(";")[0] == "application/zip"
+        return file_type.split(";")[0] == "application/x-gzip"
+      end
+
+      def self.zip?(file_path)
+        file_path = file_path.to_s
+        raise ArgumentError, "File path #{file_path} not found" unless File.exist? file_path
+
+        file_type = `file --mime -b #{Shellwords.escape(file_path)}`
+        file_type.split(';')[0] == 'application/zip'
+      end
+
+      def self.gzip?(file_path)
+        file_path = file_path.to_s
+        raise ArgumentError, "File path #{file_path} not found" unless File.exist? file_path
+
+        file_type = `file --mime -b #{Shellwords.escape(file_path)}`
+        file_type.split(';')[0] == 'application/x-gzip'
       end
 
       def self.files_from_zip(file_path)
@@ -21,11 +45,12 @@ module LinkedData
         unless File.exist? file_path
           raise ArgumentError, "File path #{file_path} not found"
         end
+
         files = []
         Zip::File.open(file_path) do |zipfile|
           zipfile.each do |file|
             if not file.directory?
-              if not file.name.split("/")[-1].start_with? "." #a hidden file in __MACOSX or .DS_Store
+              if not file.name.split('/')[-1].start_with? '.' #a hidden file in __MACOSX or .DS_Store
                 files << file.name
               end
             end
@@ -37,26 +62,30 @@ module LinkedData
       def self.unzip(file_path, dst_folder)
         file_path = file_path.to_s
         dst_folder = dst_folder.to_s
-        unless File.exist? file_path
-          raise ArgumentError, "File path #{file_path} not found"
-        end
-        unless Dir.exist? dst_folder
-          raise ArgumentError, "Folder path #{dst_folder} not found"
-        end
+        raise ArgumentError, "File path #{file_path} not found" unless File.exist? file_path
+        raise ArgumentError, "Folder path #{dst_folder} not found" unless Dir.exist? dst_folder
+
         extracted_files = []
-        Zip::File.open(file_path) do |zipfile|
-          zipfile.each do |file|
-            if file.name.split("/").length > 1
-              sub_folder = File.join(dst_folder,
-                                    file.name.split("/")[0..-2].join("/"))
-              unless Dir.exist?(sub_folder)
-                FileUtils.mkdir_p sub_folder
+        if gzip?(file_path)
+          Zlib::GzipReader.open(file_path) do |gz|
+            File.open([dst_folder, gz.orig_name].join('/'), "w") { |file| file.puts(gz.read) }
+            extracted_files << GzipFile.new(gz)
+          end
+        else
+          Zip::File.open(file_path) do |zipfile|
+            zipfile.each do |file|
+              if file.name.split('/').length > 1
+                sub_folder = File.join(dst_folder,
+                                      file.name.split('/')[0..-2].join('/'))
+                unless Dir.exist?(sub_folder)
+                  FileUtils.mkdir_p sub_folder
+                end
               end
+              extracted_files << file.extract(File.join(dst_folder,file.name))
             end
-            extracted_files << file.extract(File.join(dst_folder,file.name))
           end
         end
-        return extracted_files
+        extracted_files
       end
 
       def self.automaster?(path, format)
@@ -65,13 +94,13 @@ module LinkedData
 
       def self.automaster(path, format)
         files = self.files_from_zip(path)
-        basename = File.basename(path, ".zip")
+        basename = File.basename(path, '.zip')
         basename = File.basename(basename, format)
         files.select {|f| File.basename(f, format).downcase.eql?(basename.downcase)}.first
       end
 
       def self.repeated_names_in_file_list(file_list)
-        return file_list.group_by {|x| x.split("/")[-1]}.select { |k,v| v.length > 1}
+        return file_list.group_by {|x| x.split('/')[-1]}.select { |k,v| v.length > 1}
       end
 
       def self.exists_and_file(path)
@@ -95,7 +124,7 @@ module LinkedData
           http_session.use_ssl = (uri.scheme == 'https')
           http_session.start do |http|
             http.read_timeout = 1800
-            http.request_get(uri.request_uri, {"Accept-Encoding" => "gzip"}) do |res|
+            http.request_get(uri.request_uri, {'Accept-Encoding' => 'gzip'}) do |res|
               if res.kind_of?(Net::HTTPRedirection)
                 new_loc = res['location']
                 if new_loc.match(/^(http:\/\/|https:\/\/)/)
@@ -108,7 +137,7 @@ module LinkedData
 
               raise Net::HTTPBadResponse.new("#{uri.request_uri}: #{res.code}") if res.code.to_i >= 400
 
-              file_size = res.read_header["content-length"].to_i
+              file_size = res.read_header['content-length'].to_i
               begin
                 content_disposition = res.read_header['content-disposition']
                 filenames = content_disposition.match(/filename=\"(.*)\"/) || content_disposition.match(/filename=(.*)/)
@@ -120,7 +149,7 @@ module LinkedData
               file.write(res.body)
 
               if res.header['Content-Encoding'].eql?('gzip')
-                uncompressed_file = Tempfile.new("uncompressed-ont-rest-file")
+                uncompressed_file = Tempfile.new('uncompressed-ont-rest-file')
                 file.rewind
                 sio = StringIO.new(file.read)
                 gz = Zlib::GzipReader.new(sio)

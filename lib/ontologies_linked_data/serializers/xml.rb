@@ -9,8 +9,8 @@ module LinkedData
             current_cls = hashed_obj.respond_to?(:klass) ? hashed_obj.klass : hashed_obj.class
             # Add the id and type
             if current_cls.ancestors.include?(LinkedData::Hypermedia::Resource) && !current_cls.embedded?
-              prefixed_id = LinkedData.settings.replace_url_prefix ? hashed_obj.id.to_s.gsub(LinkedData.settings.id_url_prefix, LinkedData.settings.rest_url_prefix) : hashed_obj.id.to_s
-              hash["id"] = prefixed_id
+              prefixed_id = LinkedData::Models::Base.replace_url_id_to_prefix(hashed_obj.id)
+              hash["id"] = prefixed_id.to_s
               hash["type"] = current_cls.type_uri.to_s
             end
 

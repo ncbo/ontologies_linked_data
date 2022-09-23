@@ -37,11 +37,11 @@ module LinkedData
       # Loading one file locally and one from the web and outputting results to plain text:
       # java -jar bubastis_1_2.jar -ontology1 "H://disease_ontology_version_1.owl" -ontology2 "http://www.disease.org/diseaseontology_latest.owl" -output "C://my_diff.txt"
 
-      def initialize(input_fileOld, input_fileNew)
+      def initialize(input_fileOld, input_fileNew, output_repo)
         @bubastis_jar_path = LinkedData.bindir + "/bubastis.jar"
         @input_fileOld = input_fileOld
         @input_fileNew = input_fileNew
-        @output_repo = File.expand_path(@input_fileNew).gsub(File.basename(@input_fileNew),'')
+        @output_repo = output_repo
         @file_diff_path = nil
         @java_heap_size = LinkedData.settings.java_max_heap_size
       end

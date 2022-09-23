@@ -21,6 +21,8 @@ module LinkedData::Models
       return [:acronym_value_validator, nil]
     end
 
+    # Should synchronize the groups with the slices (creating slice if needed). But it bugs and create slices with a wrong URI
+    # http://data.bioontology.org/slice/ACR instead of http://data.bioontology.org/slices/ACR
     def self.synchronize_groups_to_slices
       # Check to make sure each group has a corresponding slice (and ontologies match)
       groups = LinkedData::Models::Group.where.include(LinkedData::Models::Group.attributes(:all)).all
@@ -30,12 +32,7 @@ module LinkedData::Models
           slice.ontologies = g.ontologies
           slice.save if slice.valid?
         else
-          slice = self.new({
-            acronym: g.acronym.downcase.gsub(" ", "_"),
-            name: g.name,
-            description: g.description,
-            ontologies: g.ontologies
-          })
+          slice = self.new({ acronym: g.acronym.downcase.gsub(" ", "_"), name: g.name, description: g.description, ontologies: g.ontologies})
           slice.save
         end
       end

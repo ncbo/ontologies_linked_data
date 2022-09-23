@@ -20,23 +20,26 @@ module LinkedData
         triples << triple(Goo.vocabulary(:rdfs)[:comment], subPropertyOf, Goo.vocabulary(:skos)[:definition])
 
 
+        # Add subPropertyOf triples for custom properties
         unless ont_sub.prefLabelProperty.nil?
-          unless ont_sub.prefLabelProperty == Goo.vocabulary(:rdfs)[:label]
-            triples << triple(ont_sub.prefLabelProperty, subPropertyOf, Goo.vocabulary(:metadata_def)[:prefLabel])
+          unless ont_sub.prefLabelProperty == Goo.vocabulary(:rdfs)[:label] || ont_sub.prefLabelProperty == Goo.vocabulary(:metadata_def)[:prefLabel]
+              triples << triple(ont_sub.prefLabelProperty, subPropertyOf, Goo.vocabulary(:metadata_def)[:prefLabel])
           end
         end
         unless ont_sub.definitionProperty.nil?
-          unless ont_sub.definitionProperty == Goo.vocabulary(:rdfs)[:label]
-            triples << triple(ont_sub.definitionProperty, subPropertyOf, Goo.vocabulary(:skos)[:definition])
+          unless ont_sub.definitionProperty == Goo.vocabulary(:rdfs)[:label] || ont_sub.definitionProperty == Goo.vocabulary(:skos)[:definition]
+              triples << triple(ont_sub.definitionProperty, subPropertyOf, Goo.vocabulary(:skos)[:definition])
           end
         end
         unless ont_sub.synonymProperty.nil?
-          unless ont_sub.synonymProperty == Goo.vocabulary(:rdfs)[:label]
+          unless ont_sub.synonymProperty == Goo.vocabulary(:rdfs)[:label] || ont_sub.synonymProperty == Goo.vocabulary(:skos)[:altLabel]
             triples << triple(ont_sub.synonymProperty, subPropertyOf, Goo.vocabulary(:skos)[:altLabel])
           end
         end
         unless ont_sub.authorProperty.nil?
-          triples << triple(ont_sub.authorProperty, subPropertyOf, Goo.vocabulary(:dc)[:creator])
+          unless ont_sub.authorProperty == Goo.vocabulary(:dc)[:creator]
+            triples << triple(ont_sub.authorProperty, subPropertyOf, Goo.vocabulary(:dc)[:creator])
+          end
         end
 
         if ont_sub.hasOntologyLanguage.obo? || ont_sub.hasOntologyLanguage.owl?
