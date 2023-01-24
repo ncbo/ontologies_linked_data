@@ -1,7 +1,19 @@
 module LinkedData
   module Diff
-    class <<self
+    class << self
       attr_accessor :logger
+    end
+
+    class DiffTool
+      def initialize(old_file_path, new_file_path)
+        @old_file_path = old_file_path
+        @new_file_path = new_file_path
+      end
+
+      # @return String  generated path file
+      def diff
+        raise NotImplementedError
+      end
     end
     class DiffException < Exception
     end
