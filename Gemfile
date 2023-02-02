@@ -7,7 +7,6 @@ gem 'cube-ruby', require: 'cube'
 gem 'faraday', '~> 1.9'
 gem 'ffi'
 gem 'libxml-ruby', '~> 2.0'
-gem 'minitest'
 gem 'multi_json', '~> 1.0'
 gem 'oj', '~> 2.0'
 gem 'omni_logger'
@@ -22,12 +21,12 @@ gem 'thin'
 
 # Testing
 group :test do
+  gem 'minitest', '~> 4'
   gem 'email_spec'
   gem 'minitest-reporters', '>= 0.5.0'
   gem 'pry'
   gem 'simplecov'
   gem 'simplecov-cobertura' # for codecov.io
-  gem 'test-unit-minitest'
 end
 
 group :development do

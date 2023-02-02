@@ -1,4 +1,4 @@
-require "test/unit"
+require 'minitest/unit'
 require 'pry'
 require_relative "../../lib/ontologies_linked_data"
 

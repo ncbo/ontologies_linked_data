@@ -1,4 +1,4 @@
-require "test/unit"
+require 'minitest/unit'
 require "rack/test"
 require "multi_json"
 require_relative "../../lib/ontologies_linked_data"

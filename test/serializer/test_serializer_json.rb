@@ -1,4 +1,4 @@
-require "test/unit"
+require 'minitest/unit'
 require "multi_json"
 require_relative "../../lib/ontologies_linked_data"
 require_relative "../../config/config"

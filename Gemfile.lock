@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/ncbo/goo.git
-  revision: f61c7f9ee1258f672fff0dcfcabe2bf12ee8a645
+  revision: 15023141f6051d4fa6cba6081d082c720327b0c9
   branch: develop
   specs:
     goo (0.0.2)
@@ -179,8 +179,6 @@ GEM
     simplecov-html (0.12.3)
     simplecov_json_formatter (0.1.4)
     systemu (2.6.5)
-    test-unit-minitest (0.9.1)
-      minitest (~> 4.7)
     thin (1.8.1)
       daemons (~> 1.0, >= 1.0.9)
       eventmachine (~> 1.0, >= 1.0.4)
@@ -210,7 +208,7 @@ DEPENDENCIES
   ffi
   goo!
   libxml-ruby (~> 2.0)
-  minitest
+  minitest (~> 4)
   minitest-reporters (>= 0.5.0)
   multi_json (~> 1.0)
   oj (~> 2.0)
@@ -227,8 +225,7 @@ DEPENDENCIES
   simplecov
   simplecov-cobertura
   sparql-client!
-  test-unit-minitest
   thin
 
 BUNDLED WITH
-   2.3.15
+   2.3.26

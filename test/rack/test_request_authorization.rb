@@ -1,4 +1,4 @@
-require "test/unit"
+require 'minitest/unit'
 require "rack/test"
 require "json"
 require "logger"
