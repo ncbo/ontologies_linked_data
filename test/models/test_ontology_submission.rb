@@ -1026,4 +1026,21 @@ eos
     assert_equal 133, metrics.classes
   end
 
+  def test_submission_delete_remove_files
+    #This one has resources wih accents.
+    submission_parse("ONTOMATEST",
+                     "OntoMA TEST",
+                     "./test/data/ontology_files/OntoMA.1.1_vVersion_1.1_Date__11-2011.OWL", 15,
+                     process_rdf: true, index_search: true,
+                     run_metrics: false, reasoning: true)
+
+    sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: "ONTOMATEST"],
+                                                       submissionId: 15)
+                                                .first
+
+    data_folder = sub.data_folder
+    assert Dir.exist? data_folder
+    sub.delete
+    assert !Dir.exist?(data_folder)
+  end
 end

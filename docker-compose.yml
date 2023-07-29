@@ -67,7 +67,7 @@ services:
     depends_on:
       <<: *depends_on
       agraph-ut:
-        condition: service_started
+        condition: service_healthy
 
   redis-ut:
     image: redis
@@ -80,6 +80,7 @@ services:
 
   4store-ut:
     image: bde2020/4store
+    platform: linux/amd64
     command: >
       bash -c "4s-backend-setup --segments 4 ontoportal_kb
       && 4s-backend ontoportal_kb
@@ -117,6 +118,7 @@ services:
 
   agraph-ut:
     image: franzinc/agraph:v7.3.1
+    platform: linux/amd64
     environment:
       - AGRAPH_SUPER_USER=test
       - AGRAPH_SUPER_PASSWORD=xyzzy
@@ -129,6 +131,12 @@ services:
        ; agtool users add anonymous
        ; agtool users grant anonymous root:bioportal_test:rw
        ; tail -f /agraph/data/agraph.log"
+    healthcheck:
+      test: ["CMD-SHELL", "agtool storage-report bioportal_test || exit 1"]
+      start_period: 10s
+      interval: 60s
+      timeout: 5s
+      retries: 3
     profiles:
       - agraph
 
