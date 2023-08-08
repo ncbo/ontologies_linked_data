@@ -155,16 +155,10 @@ class Object
   ##
   # If the config option is set, turn http://data.bioontology.org urls into the configured REST url
   def convert_url_prefix(value)
-    if LinkedData.settings.replace_url_prefix
-      if value.is_a?(String) && value.start_with?(LinkedData.settings.id_url_prefix)
-        value = value.sub(LinkedData.settings.id_url_prefix, LinkedData.settings.rest_url_prefix)
-      end
-
-      if (value.is_a?(Array) || value.is_a?(Set)) && value.first.is_a?(String) && value.first.start_with?(LinkedData.settings.id_url_prefix)
-        value = value.map {|v| v.sub(LinkedData.settings.id_url_prefix, LinkedData.settings.rest_url_prefix)}
-      end
+    tmp = Array(value).map do |val|
+      LinkedData::Models::Base.replace_url_id_to_prefix(val)
     end
-    value
+    value.is_a?(Array) || value.is_a?(Set) ? tmp : tmp.first
   end
 
   ##
