@@ -3,13 +3,17 @@ require 'ostruct'
 
 module LinkedData
   extend self
+
   attr_reader :settings
 
   @settings = OpenStruct.new
   @settings_run = false
 
+  DEFAULT_PREFIX = 'http://data.bioontology.org/'.freeze
+
   def config(&block)
     return if @settings_run
+
     @settings_run = true
 
     overide_connect_goo = false
@@ -40,6 +44,7 @@ module LinkedData
     @settings.ui_host                       ||= 'bioportal.bioontology.org'
     @settings.replace_url_prefix            ||= false
     @settings.id_url_prefix                 ||= 'http://data.bioontology.org/'
+
     @settings.queries_debug                 ||= false
     @settings.enable_monitoring             ||= false
     @settings.cube_host                     ||= 'localhost'
@@ -92,11 +97,9 @@ module LinkedData
     unless @settings.redis_host.nil?
       puts "Error: 'redis_host' is not a valid conf parameter."
       puts '        Redis databases were split into multiple hosts (09/22/13).'
-      raise Exception, 'redis_host is not a valid conf parameter.'
     end
-
     # Check to make sure url prefix has trailing slash
-    @settings.rest_url_prefix = @settings.rest_url_prefix + '/' unless @settings.rest_url_prefix[-1].eql?('/')
+    @settings.rest_url_prefix = "#{@settings.rest_url_prefix}/" unless @settings.rest_url_prefix[-1].eql?('/')
 
     puts "(LD) >> Using rdf store #{@settings.goo_host}:#{@settings.goo_port}#{@settings.goo_path_query}"
     puts "(LD) >> Using term search server at #{@settings.search_server_url}"
@@ -134,15 +137,14 @@ module LinkedData
                                port: @settings.goo_redis_port)
 
         if @settings.enable_monitoring
-          puts "(LD) >> Enable SPARQL monitoring with cube #{@settings.cube_host}:"+
-                    "#{@settings.cube_port}"
+          puts "(LD) >> Enable SPARQL monitoring with cube #{@settings.cube_host}:#{@settings.cube_port}"
           conf.enable_cube do |opts|
             opts[:host] = @settings.cube_host
             opts[:port] = @settings.cube_port
           end
         end
       end
-    rescue Exception => e
+    rescue StandardError => e
       abort("EXITING: Cannot connect to triplestore and/or search server:\n  #{e}\n#{e.backtrace.join("\n")}")
     end
   end
@@ -152,26 +154,27 @@ module LinkedData
   # We do this at initial runtime because goo needs namespaces for its DSL
   def goo_namespaces
     Goo.configure do |conf|
-      conf.add_namespace(:omv, RDF::Vocabulary.new("http://omv.ontoware.org/2005/05/ontology#"))
-      conf.add_namespace(:skos, RDF::Vocabulary.new("http://www.w3.org/2004/02/skos/core#"))
-      conf.add_namespace(:owl, RDF::Vocabulary.new("http://www.w3.org/2002/07/owl#"))
-      conf.add_namespace(:rdfs, RDF::Vocabulary.new("http://www.w3.org/2000/01/rdf-schema#"))
+      conf.add_namespace(:omv, RDF::Vocabulary.new('http://omv.ontoware.org/2005/05/ontology#'))
+      conf.add_namespace(:skos, RDF::Vocabulary.new('http://www.w3.org/2004/02/skos/core#'))
+      conf.add_namespace(:owl, RDF::Vocabulary.new('http://www.w3.org/2002/07/owl#'))
+      conf.add_namespace(:rdf, RDF::Vocabulary.new('http://www.w3.org/1999/02/22-rdf-syntax-ns#'))
+      conf.add_namespace(:rdfs, RDF::Vocabulary.new('http://www.w3.org/2000/01/rdf-schema#'))
       conf.add_namespace(:metadata,
-                         RDF::Vocabulary.new("http://data.bioontology.org/metadata/"),
+                         RDF::Vocabulary.new('http://data.bioontology.org/metadata/'),
                          default = true)
       conf.add_namespace(:metadata_def,
-                         RDF::Vocabulary.new("http://data.bioontology.org/metadata/def/"))
-      conf.add_namespace(:dc, RDF::Vocabulary.new("http://purl.org/dc/elements/1.1/"))
-      conf.add_namespace(:xsd, RDF::Vocabulary.new("http://www.w3.org/2001/XMLSchema#"))
+                         RDF::Vocabulary.new('http://data.bioontology.org/metadata/def/'))
+      conf.add_namespace(:dc, RDF::Vocabulary.new('http://purl.org/dc/elements/1.1/'))
+      conf.add_namespace(:xsd, RDF::Vocabulary.new('http://www.w3.org/2001/XMLSchema#'))
       conf.add_namespace(:oboinowl_gen,
-                         RDF::Vocabulary.new("http://www.geneontology.org/formats/oboInOwl#"))
-      conf.add_namespace(:obo_purl, RDF::Vocabulary.new("http://purl.obolibrary.org/obo/"))
+                         RDF::Vocabulary.new('http://www.geneontology.org/formats/oboInOwl#'))
+      conf.add_namespace(:obo_purl, RDF::Vocabulary.new('http://purl.obolibrary.org/obo/'))
       conf.add_namespace(:umls,
-                         RDF::Vocabulary.new("http://bioportal.bioontology.org/ontologies/umls/"))
-      conf.id_prefix = "http://data.bioontology.org/"
+                         RDF::Vocabulary.new('http://bioportal.bioontology.org/ontologies/umls/'))
+      conf.id_prefix = DEFAULT_PREFIX
       conf.pluralize_models(true)
     end
   end
-  self.goo_namespaces
+  goo_namespaces
 
 end
