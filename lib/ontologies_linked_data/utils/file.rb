@@ -7,6 +7,14 @@ require 'tmpdir'
 module LinkedData
   module Utils
     module FileHelpers
+      
+      class GzipFile
+        attr_accessor :name
+        def initialize(gz)
+          self.name = gz.orig_name
+        end
+      end
+
 
       def self.zip?(file_path)
         file_path = file_path.to_s
@@ -21,7 +29,7 @@ module LinkedData
         raise ArgumentError, "File path #{file_path} not found" unless File.exist? file_path
 
         file_type = `file --mime -b #{Shellwords.escape(file_path)}`
-        file_type.split(';')[0] == 'application/gzip' || file_type.split(';')[0] == 'application/x-gzip'
+        file_type.split(';')[0] == 'application/x-gzip'
       end
 
       def self.files_from_zip(file_path)
@@ -31,22 +39,15 @@ module LinkedData
         end
 
         files = []
-        if gzip?(file_path)
-          Zlib::GzipReader.open(file_path) do |file|
-            files << file.orig_name unless File.directory?(file) || file.orig_name.split('/')[-1].start_with?('.') # a hidden file in __MACOSX or .DS_Store
-          end
-        elsif zip?(file_path)
-          Zip::File.open(file_path) do |zip_files|
-            zip_files.each do |file|
-              unless file.directory? || file.name.split('/')[-1].start_with?('.') # a hidden file in __MACOSX or .DS_Store
+        Zip::File.open(file_path) do |zipfile|
+          zipfile.each do |file|
+            if not file.directory?
+              if not file.name.split('/')[-1].start_with? '.' #a hidden file in __MACOSX or .DS_Store
                 files << file.name
               end
             end
           end
-        else
-          raise StandardError, "Unsupported file format: #{File.extname(file_path)}"
         end
-
         return files
       end
 
@@ -60,22 +61,38 @@ module LinkedData
         if gzip?(file_path)
           Zlib::GzipReader.open(file_path) do |gz|
             File.open([dst_folder, gz.orig_name].join('/'), "w") { |file| file.puts(gz.read) }
-            extracted_files << gz
+            extracted_files << GzipFile.new(gz)
           end
-        elsif zip?(file_path)
+        else
           Zip::File.open(file_path) do |zipfile|
             zipfile.each do |file|
               if file.name.split('/').length > 1
-                sub_folder = File.join(dst_folder, file.name.split('/')[0..-2].join('/'))
-                FileUtils.mkdir_p sub_folder unless Dir.exist?(sub_folder)
+                sub_folder = File.join(dst_folder,
+                                      file.name.split('/')[0..-2].join('/'))
+                unless Dir.exist?(sub_folder)
+                  FileUtils.mkdir_p sub_folder
+                end
               end
-              extracted_files << file.extract(File.join(dst_folder, file.name))
+              extracted_files << file.extract(File.join(dst_folder,file.name))
             end
           end
-        else
-          raise StandardError, "Unsupported file format: #{File.extname(file_path)}"
         end
         extracted_files
+      end
+
+      def self.zip_file(file_path)
+        return file_path if self.zip?(file_path)
+
+        zip_file_path = "#{file_path}.zip"
+        Zip::File.open(zip_file_path, Zip::File::CREATE) do |zipfile|
+          # Add the file to the zip
+          begin
+            zipfile.add(File.basename(file_path), file_path)
+          rescue Zip::EntryExistsError
+          end
+
+        end
+        zip_file_path
       end
 
       def self.automaster?(path, format)
