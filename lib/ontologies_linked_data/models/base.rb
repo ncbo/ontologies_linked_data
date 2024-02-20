@@ -42,17 +42,17 @@ module LinkedData
         raise ArgumentError, "`attributes` should be an array" unless attributes.is_a?(Array)
 
         # Get attributes, either provided, all, or default
-        if !attributes.empty?
-          if attributes.first == :all
-            default_attrs = self.attributes
-          else
-            default_attrs = attributes
-          end
-        elsif self.hypermedia_settings[:serialize_default].empty?
-          default_attrs = self.attributes
-        else
-          default_attrs = self.hypermedia_settings[:serialize_default].dup
-        end
+        default_attrs = if !attributes.empty?
+                          if attributes.first == :all
+                            (self.attributes + self.hypermedia_settings[:serialize_default]).uniq
+                          else
+                            attributes
+                          end
+                        elsif self.hypermedia_settings[:serialize_default].empty?
+                          self.attributes
+                        else
+                          self.hypermedia_settings[:serialize_default].dup
+                        end
 
         embed_attrs = {}
         extra_attrs = []
@@ -99,7 +99,7 @@ module LinkedData
         # Add extra attrs to appropriate group (embed Hash vs default Array)
         extra_attrs.each do |attr|
           if attr.is_a?(Hash)
-            attr.each do |k,v|
+            attr.each do |k, v|
               if embed_attrs.key?(k)
                 embed_attrs[k].concat(v).uniq!
               else
@@ -172,7 +172,7 @@ module LinkedData
         if LinkedData.settings.enable_security
           user = nil
           options_hash = {}
-          args.each {|e| options_hash.merge!(e) if e.is_a?(Hash)}
+          args.each { |e| options_hash.merge!(e) if e.is_a?(Hash) }
           user = options_hash[:user]
 
           # Allow a passed option to short-cut the security process
