@@ -14,8 +14,9 @@ module LinkedData
             prefixed_id = LinkedData::Models::Base.replace_url_id_to_prefix(hashed_obj.id)
             hash["@id"] = prefixed_id.to_s
           end
+
           # Add the type
-          hash["@type"] = current_cls.type_uri.to_s if hash["@id"] && current_cls.respond_to?(:type_uri)
+          hash["@type"] = type(current_cls, hashed_obj) if  hash["@id"]
 
           # Generate links
           # NOTE: If this logic changes, also change in xml.rb
@@ -40,6 +41,23 @@ module LinkedData
       end
 
       private
+
+      def self.type(current_cls, hashed_obj)
+        if current_cls.respond_to?(:type_uri)
+          # For internal class
+          proc = current_cls
+        elsif hashed_obj.respond_to?(:type_uri)
+          # For External and Interportal class
+          proc = hashed_obj
+        end
+
+        collection = hashed_obj.respond_to?(:collection) ? hashed_obj.collection : nil
+        if collection
+          proc.type_uri(collection).to_s
+        else
+          proc.type_uri.to_s
+        end
+      end
 
       def self.generate_context(object, serialized_attrs = [], options = {})
         return remove_unused_attrs(CONTEXTS[object.hash], serialized_attrs) unless CONTEXTS[object.hash].nil?
