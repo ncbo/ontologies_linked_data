@@ -30,7 +30,7 @@ module LinkedData
           # Generate context
           if current_cls.ancestors.include?(Goo::Base::Resource) && !current_cls.embedded?
             if generate_context?(options)
-              context = generate_context(hashed_obj, hash.keys, options) if generate_context?(options)
+              context = generate_context(hashed_obj, hash.keys, options)
               hash.merge!(context)
             end
           end
@@ -52,13 +52,15 @@ module LinkedData
             linked_model = current_cls.model_settings[:range][attr]
           end
 
-          predicate = nil
           if linked_model && linked_model.ancestors.include?(Goo::Base::Resource) && !embedded?(object, attr)
             # linked object
             predicate = {"@id" => linked_model.type_uri.to_s, "@type" => "@id"}
-          elsif current_cls.model_settings[:attributes][attr][:namespace]
+          else
+            # use the original predicate property if set
+            predicate_attr =  current_cls.model_settings[:attributes][attr][:property] || attr
             # predicate with custom namespace
-            predicate = "#{Goo.vocabulary[current_cls.model_settings[:attributes][attr][:namespace]].to_s}#{attr}"
+            # if the namespace can be resolved by the namespaces added in Goo then it will be resolved.
+            predicate = "#{Goo.vocabulary(current_cls.model_settings[:attributes][attr][:namespace])&.to_s}#{predicate_attr}"
           end
           hash[attr] = predicate unless predicate.nil?
         end
