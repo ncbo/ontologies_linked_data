@@ -351,4 +351,25 @@ class TestClassModel < LinkedData::TestOntologyCommon
     assert_equal String, xml_comment.class
     assert_equal comment, xml_comment
   end
+
+  def test_fetch_date_attributes
+    acronym = 'BRO'
+    # Create a 1st version for BRO
+    submission_parse(acronym, "BRO",
+                     "./test/data/ontology_files/BRO_v3.4.owl", 1,
+                     process_rdf: true, index_search: false,
+                     run_metrics: false, reasoning: false,
+                     diff: true, delete: false)
+
+    os = LinkedData::Models::OntologySubmission.where(ontology: [ acronym: acronym ],
+                                                      submissionId: 1).all
+    assert(os.length == 1)
+    os = os[0]
+
+    class_id = RDF::URI.new "http://bioontology.org/ontologies/Activity.owl#Activity"
+    cls = LinkedData::Models::Class.find(class_id).in(os).include(:created, :modified).first
+    assert_equal '2015-06-29', cls.created
+    assert_equal '2015-10-01', cls.modified
+
+  end
 end

@@ -77,10 +77,12 @@ module LinkedData
 
       attribute :notes,
             inverse: { on: :note, attribute: :relatedClass }
+      attribute :created, namespace:  :dcterms
+      attribute :modified, namespace:  :dcterms
 
       # Hypermedia settings
       embed :children, :ancestors, :descendants, :parents
-      serialize_default :prefLabel, :synonym, :definition, :cui, :semanticType, :obsolete, :matchType, :ontologyType, :provisional # an attribute used in Search (not shown out of context)
+      serialize_default :prefLabel, :synonym, :definition, :cui, :semanticType, :obsolete, :matchType, :ontologyType, :provisional, :created, :modified # an attribute used in Search (not shown out of context)
       serialize_methods :properties, :childrenCount, :hasChildren
       serialize_never :submissionAcronym, :submissionId, :submission, :descendants
       aggregates childrenCount: [:count, :children]
