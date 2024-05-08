@@ -81,7 +81,7 @@ module LinkedData
 
       def notify_submission_processed(logger)
         begin
-          LinkedData::Utils::Notifications.submission_processed(@submission)
+          LinkedData::Utils::Notifications.submission_processed(@submission) unless archive
         rescue StandardError => e
           logger.error("Email sending failed: #{e.message}\n#{e.backtrace.join("\n\t")}"); logger.flush
         end
