@@ -311,7 +311,7 @@ module LinkedData
 
         status = LinkedData::Models::SubmissionStatus.find('OBSOLETE').first
         begin
-          generate_obsolete_classes(logger, file_path)
+          generate_obsolete_classes(logger, @submission.uploadFilePath.to_s)
           @submission.add_submission_status(status)
           @submission.save
         rescue Exception => e
