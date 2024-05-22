@@ -106,28 +106,16 @@ module LinkedData
 
       def self.obofoundry_sync(missing_onts, obsolete_onts)
         ui_name = LinkedData.settings.ui_name
-        subject = "[#{ui_name}] OBO Foundry synchronization report"
-        body = ''
+        gem_path = Gem.loaded_specs['ontologies_linked_data'].full_gem_path
+        template = File.read(File.join(gem_path, 'views/emails/obofoundry_sync.erb'))
 
-        if missing_onts.size > 0
-          body << "<strong>The following OBO Library ontologies are missing from #{ui_name}:</strong><br/><br/>"
-          missing_onts.each do |ont|
-            body << "<a href='#{ont['homepage']}'>#{ont['id']}</a> (#{ont['title']})<br/><br/>"
-          end
-        end
+        b = binding
+        b.local_variable_set(:ui_name, ui_name)
+        b.local_variable_set(:missing_onts, missing_onts)
+        b.local_variable_set(:obsolete_onts, obsolete_onts)
+        body = ERB.new(template).result(b)
 
-        if obsolete_onts.size > 0
-          body << '<strong>The following OBO Library ontologies have been deprecated:</strong><br/><br/>'
-          obsolete_onts.each do |ont|
-            body << "<a href='#{ont['homepage']}'>#{ont['id']}</a> (#{ont['title']})<br/><br/>"
-          end
-        end
-
-        if body.empty?
-          body << "#{ui_name} and the OBO Foundry are in sync.<br/><br/>"
-        end
-
-        Notifier.notify_mails_separately subject, body, [LinkedData.settings.email_sender]
+        Notifier.notify_ontoportal_admins("[#{ui_name}] OBO Foundry synchronization report", body)
       end
 
       NEW_NOTE = <<EOS

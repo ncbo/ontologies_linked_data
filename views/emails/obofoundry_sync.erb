@@ -1,0 +1,17 @@
+<% if missing_onts.present? %>
+  <strong>The following OBO Foundry ontologies are missing from <%= ui_name %>:</strong><br /><br />
+  <% missing_onts.each do |ont| %>
+    <a href="<%= ont['homepage'] %>"><%= ont['id'] %></a> (<%= ont['title'] %>)<br /><br />
+  <% end %>
+<% end %>
+
+<% if obsolete_onts.present? %>
+  <strong>The following OBO Foundry ontologies have been deprecated:</strong><br /><br />
+  <% obsolete_onts.each do |ont| %>
+    <a href="<%= ont['homepage'] %>"><%= ont['id'] %></a> (<%= ont['title'] %>)<br /><br />
+  <% end %>
+<% end %>
+
+<% if missing_onts.blank? && obsolete_onts.blank? %>
+  <%= ui_name %> and the OBO Foundry are in sync.
+<% end %>
