@@ -50,33 +50,35 @@ module LinkedData
 
       attribute :parents, namespace: :rdfs,
                   property: lambda {|x| self.tree_view_property(x) },
-                  enforce: [:list, :class]
+                enforce: [:list, :class]
 
       #transitive parent
       attribute :ancestors, namespace: :rdfs,
-                  property: :subClassOf,
-                  enforce: [:list, :class],
-                  transitive: true
+                property: :subClassOf,
+                enforce: [:list, :class],
+                transitive: true
 
       attribute :children, namespace: :rdfs,
                   property: lambda {|x| self.tree_view_property(x) },
                   inverse: { on: :class , :attribute => :parents }
 
       attribute :subClassOf, namespace: :rdfs,
-                 enforce: [:list, :uri]
+                enforce: [:list, :uri]
 
       attribute :ancestors, namespace: :rdfs, property: :subClassOf, handler: :retrieve_ancestors
 
       attribute :descendants, namespace: :rdfs, property: :subClassOf,
-          handler: :retrieve_descendants
+                handler: :retrieve_descendants
 
       attribute :semanticType, enforce: [:list], :namespace => :umls, :property => :hasSTY
       attribute :cui, enforce: [:list], :namespace => :umls, alias: true
       attribute :xref, :namespace => :oboinowl_gen, alias: true,
-        :property => :hasDbXref
+                :property => :hasDbXref
 
       attribute :notes,
-            inverse: { on: :note, attribute: :relatedClass }
+                inverse: { on: :note, attribute: :relatedClass }
+      attribute :created, namespace:  :dcterms
+      attribute :modified, namespace:  :dcterms
 
       # Hypermedia settings
       embed :children, :ancestors, :descendants, :parents
@@ -135,6 +137,31 @@ module LinkedData
         "#{self.id.to_s}_#{self.submission.ontology.acronym}_#{self.submission.submissionId}"
       end
 
+      def to_hash(include_languages: false)
+        attr_hash = {}
+        self.class.attributes.each do |attr|
+          v = self.instance_variable_get("@#{attr}")
+          attr_hash[attr] = v unless v.nil?
+        end
+        properties_values = properties(include_languages: include_languages)
+        if properties_values
+          all_attr_uris = Set.new
+          self.class.attributes.each do |attr|
+            if self.class.collection_opts
+              all_attr_uris << self.class.attribute_uri(attr, self.collection)
+            else
+              all_attr_uris << self.class.attribute_uri(attr)
+            end
+          end
+          properties_values.each do |attr, values|
+            values = values.values.flatten if values.is_a?(Hash)
+            attr_hash[attr] = values.map { |v| v.to_s } unless all_attr_uris.include?(attr)
+          end
+        end
+        attr_hash[:id] = @id
+        attr_hash
+      end
+
       # to_set is an optional array that allows passing specific
       # field names that require updating
       # if to_set is nil, it's assumed to be a new document for insert
@@ -170,21 +197,30 @@ module LinkedData
           end
 
           acronym = self.submission.ontology.acronym
-          doc[:id] = class_id
+
           doc[:ontologyId] = self.submission.id.to_s
-          doc[:submissionAcronym] = acronym
+          doc[:submissionAcronym] = self.submission.ontology.acronym
           doc[:submissionId] = self.submission.submissionId
           doc[:ontologyType] = self.submission.ontology.ontologyType.get_code_from_id
           doc[:obsolete] = self.obsolete.to_s
 
           all_attrs = self.to_hash
-          std = [:prefLabel, :notation, :synonym, :definition, :cui]
-
+          std = [:id, :prefLabel, :notation, :synonym, :definition, :cui]
+          multi_language_fields = [:prefLabel, :synonym, :definition]
           std.each do |att|
             cur_val = all_attrs[att]
 
             # don't store empty values
             next if cur_val.nil? || (cur_val.respond_to?('empty?') && cur_val.empty?)
+
+            if cur_val.is_a?(Hash) # Multi language
+              if multi_language_fields.include?(att)
+                doc[att] = cur_val.values.flatten # index all values of each language
+                cur_val.each { |lang, values| doc["#{att}_#{lang}".to_sym] = values } # index values per language
+              else
+                doc[att] = cur_val.values.flatten.first
+              end
+            end
 
             if cur_val.is_a?(Array)
               # don't store empty values
@@ -192,7 +228,7 @@ module LinkedData
               doc[att] = []
               cur_val = cur_val.uniq
               cur_val.map { |val| doc[att] << (val.kind_of?(Goo::Base::Resource) ? val.id.to_s : val.to_s.strip) }
-            else
+            elsif doc[att].nil?
               doc[att] = cur_val.to_s.strip
             end
           end
@@ -206,7 +242,7 @@ module LinkedData
           # mdorf, 2/4/2024: special handling for :notation field because some ontologies have it defined as :prefixIRI
           if !doc[:notation] || doc[:notation].empty?
             if all_attrs[:prefixIRI] && !all_attrs[:prefixIRI].empty?
-              doc[:notation] = all_attrs[:prefixIRI].strip
+              doc[:notation] = all_attrs[:prefixIRI].values.flatten.first.strip
             else
               doc[:notation] = LinkedData::Utils::Triples::last_iri_fragment(doc[:id])
             end
@@ -260,28 +296,28 @@ module LinkedData
 
         self_props.each do |attr_key, attr_val|
           # unless doc.include?(attr_key)
-            if attr_val.is_a?(Array)
-              props[attr_key] = []
-              attr_val = attr_val.uniq
+          if attr_val.is_a?(Array)
+            props[attr_key] = []
+            attr_val = attr_val.uniq
 
-              attr_val.map { |val|
-                real_val = val.kind_of?(Goo::Base::Resource) ? val.id.to_s : val.to_s.strip
-
-                # don't store empty values
-                unless real_val.respond_to?('empty?') && real_val.empty?
-                  prop_vals << real_val
-                  props[attr_key] << real_val
-                end
-              }
-            else
-              real_val = attr_val.to_s.strip
+            attr_val.map { |val|
+              real_val = val.kind_of?(Goo::Base::Resource) ? val.id.to_s : val.to_s.strip
 
               # don't store empty values
               unless real_val.respond_to?('empty?') && real_val.empty?
                 prop_vals << real_val
-                props[attr_key] = real_val
+                props[attr_key] << real_val
               end
+            }
+          else
+            real_val = attr_val.to_s.strip
+
+            # don't store empty values
+            unless real_val.respond_to?('empty?') && real_val.empty?
+              prop_vals << real_val
+              props[attr_key] = real_val
             end
+          end
           # end
         end
 
@@ -309,9 +345,9 @@ module LinkedData
       BAD_PROPERTY_URIS = LinkedData::Mappings.mapping_predicates.values.flatten + ['http://bioportal.bioontology.org/metadata/def/prefLabel']
       EXCEPTION_URIS = ["http://bioportal.bioontology.org/ontologies/umls/cui"]
       BLACKLIST_URIS = BAD_PROPERTY_URIS - EXCEPTION_URIS
-      def properties
-        return nil if self.unmapped.nil?
-        properties = self.unmapped
+      def properties(*args)
+        return nil if self.unmapped(*args).nil?
+        properties = self.unmapped(*args)
         BLACKLIST_URIS.each {|bad_iri| properties.delete(RDF::URI.new(bad_iri))}
         properties
       end
@@ -499,7 +535,7 @@ module LinkedData
         return @intlHasChildren
      end
 
-     def load_has_children()
+      def load_has_children()
         if !instance_variable_get("@intlHasChildren").nil?
           return
         end
@@ -508,7 +544,7 @@ module LinkedData
         has_c = false
         Goo.sparql_query_client.query(query,
                       query_options: {rules: :NONE }, graphs: graphs)
-                          .each do |sol|
+           .each do |sol|
           has_c = true
         end
         @intlHasChildren = has_c
@@ -531,7 +567,7 @@ module LinkedData
               next_level_thread = Set.new
               query = hierarchy_query(direction,ids_slice)
               Goo.sparql_query_client.query(query,query_options: {rules: :NONE }, graphs: graphs)
-                  .each do |sol|
+                 .each do |sol|
                 parent = sol[:node].to_s
                 next if !parent.start_with?("http")
                 ontology = sol[:graph].to_s
@@ -570,7 +606,7 @@ GRAPH <#{submission_id}> {
 }
 LIMIT 1
 eos
-         return query
+        return query
       end
 
       def hierarchy_query(direction, class_ids)
@@ -591,7 +627,7 @@ GRAPH ?graph {
 FILTER (#{filter_ids})
 }
 eos
-         return query
+        return query
       end
 
       def append_if_not_there_already(path, r)

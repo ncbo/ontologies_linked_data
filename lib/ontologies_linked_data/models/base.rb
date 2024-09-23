@@ -42,17 +42,17 @@ module LinkedData
         raise ArgumentError, "`attributes` should be an array" unless attributes.is_a?(Array)
 
         # Get attributes, either provided, all, or default
-        if !attributes.empty?
-          if attributes.first == :all
-            default_attrs = self.attributes
-          else
-            default_attrs = attributes
-          end
-        elsif self.hypermedia_settings[:serialize_default].empty?
-          default_attrs = self.attributes
-        else
-          default_attrs = self.hypermedia_settings[:serialize_default].dup
-        end
+        default_attrs = if !attributes.empty?
+                          if attributes.first == :all
+                            (self.attributes + self.hypermedia_settings[:serialize_default]).uniq
+                          else
+                            attributes
+                          end
+                        elsif self.hypermedia_settings[:serialize_default].empty?
+                          self.attributes
+                        else
+                          self.hypermedia_settings[:serialize_default].dup
+                        end
 
         embed_attrs = {}
         extra_attrs = []

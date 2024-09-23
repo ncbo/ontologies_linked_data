@@ -7,6 +7,14 @@ require 'tmpdir'
 module LinkedData
   module Utils
     module FileHelpers
+      
+      class GzipFile
+        attr_accessor :name
+        def initialize(gz)
+          self.name = gz.orig_name
+        end
+      end
+
 
       def self.zip?(file_path)
         file_path = file_path.to_s
@@ -76,6 +84,21 @@ module LinkedData
           raise StandardError, "Unsupported file format: #{File.extname(file_path)}"
         end
         extracted_files
+      end
+
+      def self.zip_file(file_path)
+        return file_path if self.zip?(file_path)
+
+        zip_file_path = "#{file_path}.zip"
+        Zip::File.open(zip_file_path, Zip::File::CREATE) do |zipfile|
+          # Add the file to the zip
+          begin
+            zipfile.add(File.basename(file_path), file_path)
+          rescue Zip::EntryExistsError
+          end
+
+        end
+        zip_file_path
       end
 
       def self.automaster?(path, format)

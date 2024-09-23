@@ -24,6 +24,9 @@ class TestMetric < LinkedData::TestCase
     os.submissionId = id
     os.contact = [contact]
     os.released = DateTime.now - 4
+    os.description = "description example"
+    os.status = 'beta'
+    os.URI = RDF::URI.new('https://test.com')
     bogus.name = name
     o = LinkedData::Models::Ontology.find(acronym)
     if o.nil?

@@ -19,9 +19,11 @@ class TestNote < LinkedData::TestCase
   end
 
   def _ontology_and_class
-    count, acronyms, ontologies = create_ontologies_and_submissions(ont_count: 1, submission_count: 1, process_submission: true)
+    count, acronyms, ontologies = create_ontologies_and_submissions(ont_count: 1, submission_count: 1,
+                                                                    process_submission: true,
+                                                                    process_options: {process_rdf: true, extract_metadata: false})
     ontology = ontologies.first
-    cls = LinkedData::Models::Class.where.include(:prefLabel).in(ontology.latest_submission).read_only.page(1, 1).first
+    cls = LinkedData::Models::Class.where.include(:prefLabel).in(ontology.latest_submission).read_only.first
     return ontology, cls
   end
 

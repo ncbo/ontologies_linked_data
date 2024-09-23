@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+	xmlns:owl="http://www.w3.org/2002/07/owl#"
+	xmlns:foaf="http://xmlns.com/foaf/0.1/"
+	xmlns:dbpedia="http://dbpedia.org/resource/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:dcterms="http://purl.org/dc/terms/"
+	xmlns:omv="http://omv.ontoware.org/2005/05/ontology#"
+	xmlns:door="http://kannel.open.ac.uk/ontology#"
+	xmlns:lexvo="http://lexvo.org/ontology#"
+	xmlns:void="http://rdfs.org/ns/void#"
+	xmlns:vann="http://purl.org/vocab/vann/"
+	xmlns:adms="http://www.w3.org/ns/adms#"
+	xmlns:voaf="http://purl.org/vocommons/voaf#"
+	xmlns:dcat="http://www.w3.org/ns/dcat#"
+	xmlns:prov="http://www.w3.org/ns/prov#"
+	xmlns:mod="http://www.isibang.ac.in/ns/mod#"
+	xmlns:cc="http://creativecommons.org/ns#"
+	xmlns:doap="http://usefulinc.com/ns/doap#"
+	xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+	xmlns:schema="http://schema.org/">
+
+<!--Dans ce fichier, uniquement les 80 propriétés surlignées en jaune dans la synthetic presentation -->
+
+<!--DESCRIPTION OF THE ONTOLOGY AND ITS METADATA -->
+
+<rdf:Description rdf:about="http://lirmm.fr/2015/ontology/agroportal_ontology_example.owl">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Ontology"/>
+	<rdf:type rdf:resource="http://omv.ontoware.org/2005/05/ontology#Ontology"/>
+	
+	<!-- GENERAL DESCRIPTION -->
+	<omv:name xml:lang="en"> AgroPortal ontology example</omv:name>
+	<omv:name xml:lang="fr"> Exemple d'ontologie pour AgroPortal</omv:name>
+	<dcterms:alternative> AgroPortal example of ontology </dcterms:alternative>
+	<skos:altLabel>metadata example </skos:altLabel>
+	<omv:acronym> AGROOE</omv:acronym>
+	<omv:URI> http://lirmm.fr/ontology/agroportal_ontology_example.owl</omv:URI>
+	<dcterms:identifier>http://agroportal.lirmm.fr</dcterms:identifier>
+
+	<omv:description> AGROOE is an ontology used to test the metadata extraction</omv:description>
+	<dcterms:description> AGROOE is an ontology to illustrate how to describe their ontologies</dcterms:description>
+
+	<omv:documentation>http://agroportal.lirmm.fr</omv:documentation>
+	<rdfs:seeAlso>http://agroportal.lirmm.fr</rdfs:seeAlso>
+
+	<omv:keyClasses> List the labels of the most important classes in your ontology here </omv:keyClasses>
+	<foaf:primaryTopic> primary topic </foaf:primaryTopic>
+	<void:exampleResource>example resource</void:exampleResource>
+
+	<omv:notes> notes omv </omv:notes>
+	<adms:versionNotes>notes adms</adms:versionNotes>
+
+	<owl:deprecated rdf:datatype="xsd:boolean">false</owl:deprecated>
+	<skos:hiddenLabel>Ontology for metadata test</skos:hiddenLabel>
+	<dcterms:coverage rdf:resource="http://vocab.getty.edu/tgn/7009369"/>
+	<dcterms:abstract> An ontology to test automatic extraction of metadata </dcterms:abstract>
+
+	<foaf:depiction rdf:resource="http://lirmm.fr/2015/ontology/agrooeImage.png"/>
+	<doap:screenshots rdf:resource="http://lirmm.fr/2015/ontology/agrooeScreenshot.png"/>
+
+	<foaf:logo rdf:resource="http://lirmm.fr/2015/ontology/agrooeLogo.png"/>
+
+	<mod:competencyQuestion>competency question</mod:competencyQuestion>
+
+	<voaf:toDoList rdf:resource="http://lirmm.fr/2015/ontology/toDoList.txt"/>
+
+	<vann:preferredNamespaceUri>http://purl.org/vocab/vann/</vann:preferredNamespaceUri>
+	<void:uriSpace>name space URI (void)</void:uriSpace>
+
+	<vann:preferredNamespacePrefix>A preferred name space prefix</vann:preferredNamespacePrefix>
+	<cc:morePermissions> A related resource which describes additional permissions</cc:morePermissions>
+	<cc:useGuidelines> A related resource which defines non-binding use guidelines</cc:useGuidelines>
+
+	<omv:reference>http://agroportal.lirmm.fr</omv:reference>
+	<dcterms:bibliographicCitation>http://doi.org/dio-1</dcterms:bibliographicCitation>
+	<foaf:isPrimaryTopicOf>http://my-page-topic</foaf:isPrimaryTopicOf>
+
+	<foaf:homepage>http://agroportal.lirmm.fr</foaf:homepage>
+	<cc:attributionURL>http://agroportal.lirmm.fr</cc:attributionURL>
+	<doap:blog>http://agroportal.lirmm.fr</doap:blog>
+
+	<doap:repository>https://github.com/agroportal/agroportal_web_ui</doap:repository>
+	<doap:bug-database>https://github.com/agroportal/agroportal_web_ui</doap:bug-database>
+	<doap:mailing-list>Mailing list</doap:mailing-list>
+
+
+	<!-- NATURAL LANGUAGES IN WHICH LABELS ARE AVAILABLE-->
+	<omv:naturalLanguage rdf:resource="http://lexvo.org/id/iso639-3/eng"/>
+	<omv:naturalLanguage rdf:resource="http://lexvo.org/id/iso639-3/fra"/>
+		
+	<!-- DOMAIN DESCRIPTION -->
+	<omv:keywords> Ontology metadata, AgroPortal, BioPortal, ontology engineering </omv:keywords>
+	<omv:keywords> others keywords with omv </omv:keywords>
+	<dcat:keywords> others keywords with dcat </dcat:keywords>
+
+	<omv:hasDomain rdf:resource="http://dbpedia.org/resource/Ontology_engineering"/>
+	<omv:hasDomain rdf:resource="http://lirmm.fr/2015/resource/domain01"/>
+	<dcterms:subject>dcterms subject</dcterms:subject>
+	<dc:subject>dc subject</dc:subject>
+	<foaf:topic>foaf subject</foaf:topic>
+	<dcat:theme>dcat subject</dcat:theme>
+		
+	<!-- RELATED DATES -->
+	<!-- <omv:creationDate rdf:datatype="xsd:dateTime"> 2015-09-28 </omv:creationDate> -->
+	<dcterms:dateSubmitted rdf:datatype="xsd:dateTime">2015-09-28</dcterms:dateSubmitted>
+
+	<!-- <omv:modificationDate rdf:datatype="xsd:dateTime">2015-10-01</omv:modificationDate> -->
+	<dcterms:modified rdf:datatype="xsd:dateTime">2015-10-01</dcterms:modified>
+
+	<dcterms:valid rdf:datatype="xsd:dateTime">2015-10-10 ffffff</dcterms:valid>
+	<prov:invaliatedAtTime rdf:datatype="xsd:dateTime">2015-10-10 gggggg</prov:invaliatedAtTime>
+	<schema:endDate rdf:datatype="xsd:dateTime">2015-10-10 hhhhhh</schema:endDate>
+
+	<dcterms:created rdf:datatype="xsd:dateTime">2015-06-29</dcterms:created>
+	<dc:date>2015-06-29 nnnnnn</dc:date>
+	<dcterms:date>2015-06-29 mmmmmm</dcterms:date>
+	<prov:generatedAtTime>2015-06-29 oooooo</prov:generatedAtTime>
+	<mod:creationDate>2015-06-29 pppppp</mod:creationDate>
+	<doap:created>2015-06-29 qqqqqq</doap:created>
+
+	<!-- INTEGER -->
+	<omv:numberOfAxioms rdf:datatype="xsd:integer">78</omv:numberOfAxioms>
+	<void:triples rdf:datatype="xsd:integer">100</void:triples>
+	
+	<void:entities rdf:datatype="xsd:integer">123</void:entities>
+		
+	
+
+	<!-- CREDITS & METHODS -->
+	<omv:hasCreator rdf:resource="http://lirmm.fr/2015/resource/clement"/>
+	<dc:creator>Alfred DC</dc:creator>
+	<dcterms:creator>Gaston Dcterms</dcterms:creator>
+	<foaf:maker>Paul Foaf</foaf:maker>
+	<prov:wasAttributedTo>Mirabelle Prov</prov:wasAttributedTo>
+	<doap:maintainer>Huguette Doap</doap:maintainer>
+
+	<omv:hasContributor rdf:resource="http://lirmm.fr/2015/resource/vincent"/>
+	<omv:hasContributor rdf:resource="http://lirmm.fr/2015/resource/anne"/>
+	<dc:contributor>Benjamine Dessay</dc:contributor>
+	<dcterms:contributor>Léontine Dessaiterm</dcterms:contributor>
+	<doap:helper>Augustine Doap</doap:helper>
+
+	<dcterms:publisher rdf:resource="http://lirmm.fr/2015/resource/lirmm"/>
+	<dc:publisher>Éditions "La Science en Marche"</dc:publisher>
+	<adms:schemaAgency>Agence 007</adms:schemaAgency>
+
+	<omv:hasFormalityLevel rdf:resource="http://omv.ontoware.org/2005/05/ontology#Vocabulary"/>
+	<omv:hasOntologyLanguage rdf:resource="http://omv.ontoware.org/2005/05/ontology#OWL"/>
+	<omv:usedOntologyEngineeringMethodology rdf:resource="http://lirmm.fr/2015/resource/methodo01"/>
+
+	<omv:usedOntologyEngineeringTool rdf:resource="http://lirmm.fr/2015/resource/tool01"/>
+	<mod:methodologyUsed>A special methodology</mod:methodologyUsed>
+	<adms:representationTechnique>A technical representation</adms:representationTechnique>
+
+	<omv:conformsToKnowledgeRepresentationParadigm>Description Logics</omv:conformsToKnowledgeRepresentationParadigm>
+	<omv:hasOntologySyntax rdf:resource="http://www.w3.org/ns/formats/RDF_XML"/>
+	<dc:format rdf:resource="http://www.w3.org/ns/formats/RDF_XML"/>
+	<dcterms:format rdf:resource="http://www.w3.org/ns/formats/RDF_XML"/>
+	
+	<!-- ROLE & RATIONALE -->
+	<omv:knownUsage> This ontology is used by AgroPortal's developers to test the portal processing of ontology metadata. </omv:knownUsage>
+	<omv:designedForOntologyTask rdf:resource="http://lirmm.fr/2015/resource/task01"/>
+	<omv:designedForOntologyTask rdf:resource="http://lirmm.fr/2015/resource/task02"/>
+	<omv:endorsedBy rdf:resource="http://lirmm.fr/2015/resource/lirmm"/>
+	<omv:isOfType rdf:resource="http://omv.ontoware.org/2005/05/ontology#TaskOntology"/>
+	<dc:type rdf:resource="http://omv.ontoware.org/2005/05/ontology#TaskOntology"/>
+	<dcterms:type rdf:resource="http://omv.ontoware.org/2005/05/ontology#TaskOntology"/>
+	
+	<dcterms:audience> Audience </dcterms:audience>
+	<foaf:fundedBy rdf:resource="http://lirmm.fr/2015/resource/lirmm"/>
+	<mod:sponsoredBy rdf:resource="http://lirmm.fr/2015/resource/lirmm"/>
+
+
+	<!-- FORMAT & AVAILABILITY -->
+	<omv:resourceLocator> http://tubo.lirmm.fr/ncbo/agroportal_ontology_example.owl</omv:resourceLocator>
+	<doap:download-page> http://tubo.lirmm.fr/ncbo/agroportal_ontology_example.owl</doap:download-page>
+
+	<omv:status> development omv </omv:status>
+	<adms:status> development adms </adms:status>
+
+	<omv:version> alpha 0.2 </omv:version>
+	<doap:release> alpha 0.3 </doap:release>
+	<mod:version> alpha 0.4 </mod:version>
+	<owl:versionInfo>alpĥa 0.5</owl:versionInfo>
+
+	<omv:hasLicense rdf:resource="http://creativecommons.org/licenses/by/4.0/"/>
+	<dc:rights> DC rights </dc:rights>
+	<dcterms:rights> DCTERMS rights </dcterms:rights>
+	<dcterms:license> DCTERMS license </dcterms:license>
+	<dcterms:accessRight>Public</dcterms:accessRight>
+	<cc:license> DCTERMS license </cc:license>
+
+	<void:sparqlEndpoint> http://sparql.agroportal.lirmm.fr/ </void:sparqlEndpoint>
+
+	<void:dataDump> http://data.agroportal.lirmm.fr/ </void:dataDump>
+	<doap:download-mirror> http://data.agroportal.lirmm.fr/ </doap:download-mirror>
+
+	<void:uriLookupEndpoint> http://data.agroportal.lirmm.fr/ </void:uriLookupEndpoint>
+	<void:openSearchDescription> http://agroportal.lirmm.fr/ </void:openSearchDescription>
+	<doap:service-endpoint> http://agroportal.lirmm.fr/ </doap:service-endpoint>
+	<vann:example rdf:resource="http://lirmm.fr/2015/ontology/example.owl"/>
+
+	
+	<!--RELATION TO OTHER ONTOLOGIES -->
+	<omv:isIncompatibleWith rdf:resource="http://lirmm.fr/2015/ontology/test-ontology.owl"/>
+	<omv:hasPriorVersion rdf:resource="http://lirmm.fr/2015/ontology/agroportal_ontology_example_v0.1.owl"/>
+	<omv:isBackwardCompatibleWith rdf:resource="http://lirmm.fr/2015/ontology/agroportal_ontology_example_v0.1.owl"/>
+
+	<omv:useImports rdf:resource="http://lirmm.fr/2015/ontology/omv-import.owl"/>
+	<!--owl:imports rdf:resource="http://lirmm.fr/2015/ontology/owl-import.owl"/-->
+	<void:vocabulary rdf:resource="http://lirmm.fr/2015/ontology/void-import.owl"/>
+	<voaf:extends rdf:resource="http://lirmm.fr/2015/ontology/voaf-import.owl"/>
+	<dcterms:requires rdf:resource="http://lirmm.fr/2015/ontology/dcterms-import.owl"/>	
+
+	<dcterms:hasPart rdf:resource="http://lirmm.fr/2015/ontology/hasPart.owl"/>
+	<dcterms:isFormatOf rdf:resource="http://lirmm.fr/2015/ontology/isFormatOf.owl"/>
+	<dcterms:hasFormat rdf:resource="http://lirmm.fr/2015/ontology/hasFormat.owl"/>
+
+	<door:ontologyRelatedTo rdf:resource="http://lirmm.fr/2015/ontology/door-relation.owl"/>
+	<dc:relation rdf:resource="http://lirmm.fr/2015/ontology/dc-relation.owl"/>
+	<dcterms:relation rdf:resource="http://lirmm.fr/2015/ontology/dcterms-relation.owl"/>
+	<voaf:reliesOn rdf:resource="http://lirmm.fr/2015/ontology/voaf-relation.owl"/>
+
+
+	<door:similarTo rdf:resource="http://lirmm.fr/2015/ontology/door-similarTo.owl"/>
+	<voaf:similar rdf:resource="http://lirmm.fr/2015/ontology/voaf-similarTo.owl"/>
+
+	<door:isAlignedTo rdf:resource="http://lirmm.fr/2015/ontology/door-isAlignedTo.owl"/>
+	<voaf:hasEquivalencesWith rdf:resource="http://lirmm.fr/2015/ontology/voaf-equivalence.owl"/>
+
+	<door:explanationEvolution rdf:resource="http://lirmm.fr/2015/ontology/door-explanationEvolution.owl"/>
+	<voaf:specializes rdf:resource="http://lirmm.fr/2015/ontology/voaf-specializes.owl"/>
+	<prov:specializationOf rdf:resource="http://lirmm.fr/2015/ontology/prov-specializationOf.owl"/>
+
+	<door:hasDisparateModelling rdf:resource="http://lirmm.fr/2015/ontology/hasDisparateModelling.owl"/>
+	<door:comesFromTheSameDomain rdf:resource="http://lirmm.fr/2015/ontology/comesFromTheSameDomain.owl"/>
+	<voaf:usedBy rdf:resource="http://lirmm.fr/2015/ontology/usedBy.owl"/>
+
+	<voaf:metadataVoc rdf:resource="http://lirmm.fr/2015/ontology/voaf-metadataVoc.owl"/>
+	<mod:vocabularyUsed rdf:resource="http://lirmm.fr/2015/ontology/mod-vocabularyUsed.owl"/>
+	<adms:supportedSchema rdf:resource="http://lirmm.fr/2015/ontology/adms-supportedSchema.owl"/>
+
+
+	<voaf:generalizes rdf:resource="http://lirmm.fr/2015/ontology/generalizes.owl"/>
+	<voaf:hasDisjunctionsWith rdf:resource="http://lirmm.fr/2015/ontology/hasDisjunctionsWith.owl"/>
+	<adms:translation rdf:resource="http://lirmm.fr/2015/ontology/translation.owl"/>
+
+	<dcterms:source rdf:resource="http://lirmm.fr/2015/dcterms-source.owl"/>
+	<dc:source rdf:resource="http://lirmm.fr/2015/dc-source.owl"/>
+	<prov:wasInfluencedBy rdf:resource="http://lirmm.fr/2015/prov-wasInfluencedBy.owl"/>
+
+	<prov:wasGeneratedBy rdf:resource="http://lirmm.fr/2015/wasGeneratedBy.owl"/>
+	<prov:wasInvalidatedBy rdf:resource="http://lirmm.fr/2015/wasInvalidatedBy.owl"/>
+
+    <owl:imports rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+</rdf:Description>
+
+<!-- DESCRIPTION OF RESOURCES INVOLVED IN METADATA DESCRIPTION -->
+
+<!-- DOMAINS-->
+<rdf:Description rdf:about="http://lirmm.fr/2015/resource/domain01">
+    <rdf:type rdf:resource="http://omv.ontoware.org/2005/05/ontology#OntologyDomain"/>
+	<omv:name> BioPortal/AgroPortal Ontology engineering </omv:name>
+	<omv:URI> http://lirmm.fr/2015/resource/domain01 </omv:URI>
+</rdf:Description>
+
+<!-- ONTOLOGY TYPE-->
+<rdf:Description rdf:about="http://omv.ontoware.org/2005/05/ontology#TaskOntology">
+    <rdf:type rdf:resource="http://omv.ontoware.org/2005/05/ontology#OntologyType"/>
+	<omv:name>Task Ontology !</omv:name>
+</rdf:Description>
+
+<!-- CREATOR & CONTRIBUTORS -->
+<rdf:Description rdf:about="http://lirmm.fr/2015/resource/clement">
+    <rdf:type rdf:resource="http://omv.ontoware.org/2005/05/ontology#Person"/>
+	<rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+	<omv:firstName>Clement</omv:firstName>
+    <omv:lastName>Jonquet</omv:lastName>
+    <omv:eMail>jonquet@lirmm.fr</omv:eMail>
+	<foaf:openid> http://orcid.org/0000-0002-2404-1582 </foaf:openid>
+</rdf:Description>
+ 
+<rdf:Description rdf:about="http://lirmm.fr/2015/resource/vincent">
+    <rdf:type rdf:resource="http://omv.ontoware.org/2005/05/ontology#Person"/>
+	<omv:firstName>Vincent</omv:firstName>
+    <omv:lastName>Emonet</omv:lastName>
+    <omv:eMail>vincent.emonet@lirmm.fr</omv:eMail>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://lirmm.fr/2015/resource/anne">
+    <rdf:type rdf:resource="http://omv.ontoware.org/2005/05/ontology#Person"/>
+	<omv:firstName>Anne</omv:firstName>
+    <omv:lastName>Toulet</omv:lastName>
+    <omv:eMail>anne.toulet@lirmm.fr</omv:eMail>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://lirmm.fr/2015/resource/teest">
+    <rdf:type rdf:resource="http://purl.org/dc/terms/Agent"/>
+	<dc:title>test title</dc:title>
+    <rdfs:label>test label</rdfs:label>
+</rdf:Description>
+ 
+ <rdf:Description rdf:about="http://lirmm.fr/2015/resource/methodo01">
+    <rdf:type rdf:resource="http://omv.ontoware.org/2005/05/ontology#OntologyEngineeringMethodology"/>
+	<omv:name> Manual </omv:name>
+	<omv:description> Done manually class by class with text editor </omv:description>
+</rdf:Description>
+ 
+ <rdf:Description rdf:about="http://lirmm.fr/2015/resource/tool01">
+    <rdf:type rdf:resource="http://omv.ontoware.org/2005/05/ontology#OntologyEngineeringTool"/>
+	<omv:name> Notepad++ </omv:name>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://lirmm.fr/2015/resource/task01">
+    <rdf:type rdf:resource="http://omv.ontoware.org/2005/05/ontology#OntologyTask"/>
+	<omv:name> Testing AgroPortal ontology metadata processing </omv:name>
+</rdf:Description>
+ 
+<rdf:Description rdf:about="http://lirmm.fr/2015/resource/task02">
+    <rdf:type rdf:resource="http://omv.ontoware.org/2005/05/ontology#OntologyTask"/>
+	<omv:name> Illustrating ontology metadata </omv:name>
+	<omv:name> Illustrating ontology metadata 2 </omv:name>
+	<omv:name> Illustrating ontology metadata 3 </omv:name>
+	<omv:name> Illustrating ontology metadata 4 </omv:name>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://lirmm.fr/2015/resource/lirmm">
+    <rdf:type rdf:resource="http://omv.ontoware.org/2005/05/ontology#Organisation"/>
+	<omv:name xml:lang='eng'> Laboratory of Informatics, Robotics and Microelectronics of Montpellier </omv:name> 
+	<omv:name> LIRMM (default name) </omv:name>
+	<omv:name xml:lang='fr'> Laboratoire d'Informatique, de Robotique et de Microélectronique de Montpellier </omv:name>
+	<omv:acronym> LIRMM </omv:acronym>
+</rdf:Description>
+ 
+<!-- CONTENT OF THE ONTOLOGY -->
+ 
+<!-- PROPERTIES -->
+
+<rdf:Description rdf:about="http://lirmm.fr/2015/resource/AGROOE_p_01">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#SymmetricProperty"/>
+    <rdfs:label xml:lang="en">is related to</rdfs:label>
+	<rdfs:label xml:lang="fr">est liée a </rdfs:label>
+	<rdfs:comment>'is related to' is the top level relation in AGROOE </rdfs:comment>
+    <dcterms:description xml:lang="en">A is related to B iff there is some relation between A and B.</dcterms:description>
+    <dcterms:identifier>AGROOE_p_01</dcterms:identifier>
+    <rdfs:isDefinedBy rdf:resource="http://lirmm.fr/2015/ontology/agroportal_ontology_example.owl"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://lirmm.fr/2015/resource/AGROOE_p_02">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:subPropertyOf rdf:resource="http://lirmm.fr/2015/resource/AGROOE_p_01"/>
+    <rdfs:label xml:lang="en">has attribute</rdfs:label>
+    <rdfs:label xml:lang="fr">a pour attibut</rdfs:label>
+    <dcterms:description xml:lang="en">has attribute is a relation that associates a entity with an attribute where an attribute is an intrinsic characteristic such as a quality, capability, disposition, function, or is an externally derived attribute determined from some descriptor (e.g. a quantity, position, label/identifier) either directly or indirectly through generalization of entities of the same type.</dcterms:description>
+    <dcterms:identifier>AGROOE_p_02</dcterms:identifier>
+    <rdfs:isDefinedBy rdf:resource="http://lirmm.fr/2015/ontology/agroportal_ontology_example.owl"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://lirmm.fr/2015/resource/AGROOE_p_03">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#ObjectProperty"/>
+    <rdfs:subPropertyOf rdf:resource="http://lirmm.fr/2015/resource/AGROOE_p_01"/>
+    <rdfs:inverseOf rdf:resource="http://lirmm.fr/2015/resource/AGROOE_p_02"/>
+    <rdfs:label xml:lang="en">is attribute of</rdfs:label>
+    <rdfs:label xml:lang="fr">est l'attribut de</rdfs:label>
+    <dcterms:description xml:lang="en">is attribute of is a relation that associates an attribute with an entity where an attribute is an intrinsic characteristic such as a quality, capability, disposition, function, or is an externally derived attribute determined from some descriptor (e.g. a quantity, position, label/identifier) either directly or indirectly through generalization of entities of the same type.</dcterms:description>
+    <dcterms:identifier>AGROOE_p_03</dcterms:identifier>
+    <rdfs:isDefinedBy rdf:resource="http://lirmm.fr/2015/ontology/agroportal_ontology_example.owl"/>
+</rdf:Description>
+
+ <!-- CLASSES -->
+
+<rdf:Description rdf:about="http://lirmm.fr/2015/resource/AGROOE_c_01">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:label xml:lang="en">entity</rdfs:label>
+    <rdfs:label xml:lang="fr">entité</rdfs:label>
+    <dcterms:description>Every thing is an entity.</dcterms:description>
+    <dcterms:identifier>AGROOE_c_01</dcterms:identifier>
+    <rdfs:isDefinedBy rdf:resource="http://lirmm.fr/2015/ontology/agroportal_ontology_example.owl"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://lirmm.fr/2015/resource/AGROOE_c_02">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="http://lirmm.fr/2015/resource/AGROOE_c_01"/>
+    <rdfs:label xml:lang="en">material entity</rdfs:label>
+    <rdfs:label xml:lang="fr">entité matérielle</rdfs:label>
+    <dcterms:description xml:lang="en">Some entities are material.</dcterms:description>
+    <dcterms:identifier>AGROOE_c_02</dcterms:identifier>
+    <rdfs:isDefinedBy rdf:resource="http://lirmm.fr/2015/ontology/agroportal_ontology_example.owl"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://lirmm.fr/2015/resource/AGROOE_c_03">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+    <rdfs:subClassOf rdf:resource="http://lirmm.fr/2015/resource/AGROOE_c_02"/>
+    <rdfs:label xml:lang="en">material detailed entity</rdfs:label>
+    <rdfs:label xml:lang="fr">entité matérielle detaillée</rdfs:label>
+    <skos:prefLabel xml:lang="en">skos prefLabel en</skos:prefLabel>
+    <skos:prefLabel xml:lang="fr">skos prefLabel fr</skos:prefLabel>
+    <skos:prefLabel>skos prefLabel rien</skos:prefLabel>
+    <skos:altLabel xml:lang="en">entity eng</skos:altLabel>
+    <skos:altLabel xml:lang="fr">entité fra</skos:altLabel>
+    <skos:altLabel xml:lang="es">entita esp</skos:altLabel>
+    <skos:altLabel>entite rien</skos:altLabel>
+    <dcterms:description xml:lang="en">Some entities are material and detailed.</dcterms:description>
+    <rdfs:comment xml:lang="en">Some entities are material and detailed.</rdfs:comment>
+    <rdfs:comment xml:lang="fr">comment fr</rdfs:comment>
+    <rdfs:comment xml:lang="es">comment es.</rdfs:comment>
+    <rdfs:comment>comment rien</rdfs:comment>
+    <dcterms:identifier>AGROOE_c_03</dcterms:identifier>
+    <rdfs:isDefinedBy rdf:resource="http://lirmm.fr/2015/ontology/agroportal_ontology_example.owl"/>
+</rdf:Description>
+    
+ <!-- INSTANCES -->
+ 
+ <rdf:Description rdf:about="http://lirmm.fr/2015/resource/AGROOE_i_01">
+    <rdf:type rdf:resource="http://lirmm.fr/2015/resource/AGROOE_c_01"/>
+    <rdfs:label xml:lang="en">human beings</rdfs:label>
+    <rdfs:label xml:lang="fr">les êtres humain</rdfs:label>
+    <rdfs:isDefinedBy rdf:resource="http://lirmm.fr/2015/ontology/agroportal_ontology_example.owl"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://lirmm.fr/2015/resource/AGROOE_i_02">
+    <rdf:type rdf:resource="http://lirmm.fr/2015/resource/AGROOE_c_01"/>
+    <rdfs:label xml:lang="en">aliens</rdfs:label>
+    <rdfs:label xml:lang="fr">les étrangers</rdfs:label>
+    <rdfs:isDefinedBy rdf:resource="http://lirmm.fr/2015/ontology/agroportal_ontology_example.owl"/>
+</rdf:Description>
+ 
+ </rdf:RDF>

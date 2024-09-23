@@ -642,7 +642,7 @@
     <owl:Class rdf:about="&activity;Biospecimen_Management">
         <rdfs:subClassOf rdf:resource="&activity;Activity"/>
         <desc:definition rdf:datatype="&xsd;string">Activity related to the creation, use, or maintenance of a biorepository (http://en.wikipedia.org/wiki/Biorepository)</desc:definition>
-        <core:prefLabel rdf:datatype="&xsd;string">Biospecimen Management</core:prefLabel>
+        <core:prefLabel xml:lang="fr">Biospecimen Management</core:prefLabel>
     </owl:Class>
     
 

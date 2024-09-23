@@ -1,7 +1,16 @@
 require_relative "../test_case"
+require 'rack'
 
 module LinkedData
   class TestOntologyCommon < LinkedData::TestCase
+    def create_count_mapping
+      count = LinkedData::Models::MappingCount.where.all.length
+      unless count > 2
+        LinkedData::Mappings.create_mapping_counts(Logger.new(TestLogFile.new))
+        count = LinkedData::Models::MappingCount.where.all.length
+      end
+      count
+    end
     def submission_dependent_objects(format, acronym, user_name, name_ont)
       #ontology format
       owl = LinkedData::Models::OntologyFormat.where(:acronym => format).first
@@ -44,7 +53,9 @@ module LinkedData
     ##############################################
     def submission_parse(acronym, name, ontologyFile, id, parse_options={})
       return if ENV["SKIP_PARSING"]
-      parse_options[:process_rdf] = true
+      parse_options[:process_rdf].nil? && parse_options[:process_rdf] = true
+      parse_options[:index_search].nil? && parse_options[:index_search] = false
+      parse_options[:extract_metadata].nil? && parse_options[:extract_metadata] = false
       parse_options[:delete].nil? && parse_options[:delete] = true
       if parse_options[:delete]
         ont = LinkedData::Models::Ontology.find(acronym).first
@@ -57,6 +68,9 @@ module LinkedData
         end
       end
       ont_submission =  LinkedData::Models::OntologySubmission.new({ :submissionId => id})
+      ont_submission.uri = RDF::URI.new('https://test.com')
+      ont_submission.description = 'description example'
+      ont_submission.status = 'beta'
       assert (not ont_submission.valid?)
       assert_equal 4, ont_submission.errors.length
       uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository(acronym, id, ontologyFile)
@@ -109,6 +123,10 @@ module LinkedData
         LinkedData::TestCase.backend_4s_delete
       end
       ont_submission =  LinkedData::Models::OntologySubmission.new({ :submissionId => 1 })
+      ont_submission.uri = RDF::URI.new('https://test.com')
+      ont_submission.description = 'description example'
+      ont_submission.status = 'beta'
+
       assert (not ont_submission.valid?)
       assert_equal 4, ont_submission.errors.length
       if acr["OBS"]
@@ -142,7 +160,7 @@ module LinkedData
       assert (ont_submission.valid?)
       ont_submission.save
       assert_equal true, ont_submission.exist?
-      parse_options = {process_rdf: true, index_search: true, run_metrics: true, reasoning: true}
+      parse_options = {process_rdf: true, extract_metadata: false}
       begin
         tmp_log = Logger.new(TestLogFile.new)
         ont_submission.process_submission(tmp_log, parse_options)
@@ -185,6 +203,44 @@ eos
           end
         end
         assert (count > 0)
+      end
+    end
+
+    def start_server
+      max_retries = 5
+      retries = 0
+      server_port = Random.rand(55000..65535)
+
+      while port_in_use?(server_port)
+        retries += 1
+        break if retries >= max_retries
+        server_port = Random.rand(55000..65535)
+      end
+
+      raise "Could not find an available port after #{max_retries} retries" if retries >= max_retries
+
+      server_url = 'http://localhost:' + server_port.to_s
+      server_thread = Thread.new do
+        Rack::Server.start(
+          app: lambda do |e|
+            [200, {'Content-Type' => 'text/plain'}, ['test file']]
+          end,
+          Port: server_port
+        )
+      end
+      Thread.pass
+
+      [server_url, server_thread, server_port]
+    end
+
+    private
+    def port_in_use?(port)
+      begin
+        server = TCPServer.new(port)
+        server.close
+        false
+      rescue Errno::EADDRINUSE
+        true
       end
     end
   end

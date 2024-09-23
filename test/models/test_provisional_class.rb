@@ -3,12 +3,11 @@ require_relative "./test_ontology_common"
 class TestProvisionalClass < LinkedData::TestOntologyCommon
 
   def self.before_suite
-    self._delete
-
     @@user = LinkedData::Models::User.new({username: "Test User", email: "tester@example.org", password: "password"})
     @@user.save
 
-    ont_count, ont_names, ont_models = LinkedData::SampleData::Ontology.create_ontologies_and_submissions(ont_count: 1, submission_count: 1)
+    ont_count, ont_names, ont_models = LinkedData::SampleData::Ontology.create_ontologies_and_submissions(ont_count: 1,
+                                                                                                          submission_count: 1)
     @@ontology = ont_models.first
     @@ontology.bring(:name)
     @@ontology.bring(:acronym)
@@ -21,15 +20,15 @@ class TestProvisionalClass < LinkedData::TestOntologyCommon
   def self.after_suite
     pc = LinkedData::Models::ProvisionalClass.find(@@provisional_class.id).first
     pc.delete unless pc.nil?
-    LinkedData::Models::Ontology.indexClear
-    LinkedData::Models::Ontology.indexCommit
-  end
 
-  def self._delete
+    LinkedData::Models::ProvisionalClass.indexClear
+    LinkedData::Models::ProvisionalClass.indexCommit
     LinkedData::SampleData::Ontology.delete_ontologies_and_submissions
     user = LinkedData::Models::User.find("Test User").first
     user.delete unless user.nil?
+
   end
+
 
   def test_provisional_class_lifecycle
     label = "Test Provisional Class Lifecycle"
@@ -71,7 +70,7 @@ class TestProvisionalClass < LinkedData::TestOntologyCommon
     pc_array = Array.new(3) { LinkedData::Models::ProvisionalClass.new }
     pc_array.each_with_index do |pc, i|
       pc.label = "Test PC #{i}"
-      pc.creator = LinkedData::Models::User.new({username: creators[i], email: "tester@example.org", password: "password"}).save
+      pc.creator = LinkedData::Models::User.new({username: creators[i], email: "tester#{i}@example.org", password: "password"}).save
       pc.save
       assert pc.valid?, "#{pc.errors}"
     end
@@ -91,7 +90,7 @@ class TestProvisionalClass < LinkedData::TestOntologyCommon
 
   def test_provisional_class_filter_by_creator
     username = "User Testing Filtering"
-    user = LinkedData::Models::User.new({username: username, email: "tester@example.org", password: "password"})
+    user = LinkedData::Models::User.new({username: username, email: "tester#{rand}@example.org", password: "password"})
     user.save
     assert user.valid?, "#{user.errors}"
 
@@ -292,7 +291,7 @@ class TestProvisionalClass < LinkedData::TestOntologyCommon
     pc.index
     resp = LinkedData::Models::Ontology.search("\"#{pc.label}\"", params)
     assert_equal 1, resp["response"]["numFound"]
-    assert_equal pc.label, resp["response"]["docs"][0]["prefLabel"]
+    assert_equal pc.label, resp["response"]["docs"][0]["prefLabel"].first
     pc.unindex
 
     acr = "CSTPROPS"
@@ -315,7 +314,7 @@ class TestProvisionalClass < LinkedData::TestOntologyCommon
 
     resp = LinkedData::Models::Ontology.search("\"#{pc1.label}\"", params)
     assert_equal 1, resp["response"]["numFound"]
-    assert_equal pc1.label, resp["response"]["docs"][0]["prefLabel"]
+    assert_equal pc1.label, resp["response"]["docs"][0]["prefLabel"].first
     par_len = resp["response"]["docs"][0]["parents"].length
     assert_equal 5, par_len
     assert_equal 1, (resp["response"]["docs"][0]["parents"].select { |x| x == class_id.to_s }).length

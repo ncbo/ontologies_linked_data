@@ -5,15 +5,7 @@ require 'rack'
 class TestOntology < LinkedData::TestOntologyCommon
 
   def self.before_suite
-    @@port = Random.rand(55000..65535) # http://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers#Dynamic.2C_private_or_ephemeral_ports
-    @@thread = Thread.new do
-      Rack::Server.start(
-        app: lambda do |e|
-          [200, {'Content-Type' => 'text/plain'}, ['test file']]
-        end,
-        Port: @@port
-      )
-    end
+    url , @@thread, @@port= self.new('').start_server
   end
 
   def self.after_suite
@@ -59,7 +51,10 @@ class TestOntology < LinkedData::TestOntologyCommon
       pullLocation: RDF::IRI.new("http://localhost:#{@@port}/"),
       submissionId: o.next_submission_id,
       contact: [@contact],
-      released: DateTime.now - 5
+      released: DateTime.now - 5,
+      description: 'description example',
+      uri: RDF::URI.new('https://test.com'),
+      status: 'beta'
     })
     os.save
   end
@@ -214,10 +209,10 @@ class TestOntology < LinkedData::TestOntologyCommon
     assert_equal 10, apr.length
     # check for non-root properties
     assert_empty pr.select { |p| ["http://www.w3.org/2004/02/skos/core#broaderTransitive",
-                  "http://www.w3.org/2004/02/skos/core#topConceptOf",
-                  "http://www.w3.org/2004/02/skos/core#relatedMatch",
-                  "http://www.w3.org/2004/02/skos/core#exactMatch",
-                  "http://www.w3.org/2004/02/skos/core#narrowMatch"].include?(p.id.to_s) },
+                                  "http://www.w3.org/2004/02/skos/core#topConceptOf",
+                                  "http://www.w3.org/2004/02/skos/core#relatedMatch",
+                                  "http://www.w3.org/2004/02/skos/core#exactMatch",
+                                  "http://www.w3.org/2004/02/skos/core#narrowMatch"].include?(p.id.to_s) },
                  "Non-root nodes found where roots are expected"
 
     # test property trees
@@ -296,11 +291,12 @@ class TestOntology < LinkedData::TestOntologyCommon
   end
 
   def test_ontology_delete
-    count, acronyms, ontologies = create_ontologies_and_submissions(ont_count: 2, submission_count: 1, process_submission: true)
+    count, acronyms, ontologies = create_ontologies_and_submissions(ont_count: 2, submission_count: 1, process_submission: false)
     u, of, contact = ontology_objects()
     o1 = ontologies[0]
     o2 = ontologies[1]
     pc = LinkedData::Models::ProvisionalClass.new({label: "Test Provisional Class", creator: u, ontology: o1})
+    pc.save
     n = LinkedData::Models::Note.new({
                                          creator: u,
                                          relatedOntology: [o1]
@@ -389,7 +385,7 @@ class TestOntology < LinkedData::TestOntologyCommon
     count, acronyms, ont = create_ontologies_and_submissions(ont_count: 1, submission_count: 3)
     ont = ont.first
     ont.bring(submissions: [:submissionId])
-    sub = ont.submissions[1]
+    sub = ont.submissions.sort_by(&:id)[1]
     sub.bring(*LinkedData::Models::OntologySubmission.attributes)
     sub.set_ready
     sub.save

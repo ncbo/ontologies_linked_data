@@ -90,7 +90,7 @@ class TestProject < LinkedData::TestCase
     users = Array.new(3) { LinkedData::Models::User.new }
     users.each_with_index do |user, i|
       user.username = "Test User #{i}"
-      user.email = 'test_user@example.org'
+      user.email = "test_user#{i}@example.org"
       user.password = 'password'
       user.save
       assert user.valid?, user.errors

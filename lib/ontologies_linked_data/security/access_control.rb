@@ -57,12 +57,12 @@ module LinkedData::Security
     def read_restricted_based_on?(based_on)
       if based_on.is_a?(Proc)
         instance_to_base_on = based_on.call(self)
-        restricted = instance_to_base_on.read_restricted?
+        restricted = instance_to_base_on ? instance_to_base_on.read_restricted?  : false
       elsif based_on.is_a?(LinkedData::Models::Base)
         restricted = based_on.read_restricted?
       elsif based_on.is_a?(Symbol)
         instance_to_base_on = based_on.send(based_on)
-        restricted = instance_to_base_on.read_restricted?
+        restricted =  instance_to_base_on ? instance_to_base_on.read_restricted?  : false
       else
         restricted = false
       end

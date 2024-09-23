@@ -616,6 +616,8 @@
 
     <owl:Class rdf:about="&activity;Activity">
         <core:prefLabel rdf:datatype="&xsd;string">Activity</core:prefLabel>
+        <core:prefLabel xml:lang="en">ActivityEnglish</core:prefLabel>
+        <core:prefLabel xml:lang="fr">Activité</core:prefLabel>
         <desc:definition rdf:datatype="&xsd;string">Activity of interest that may be related to a BRO:Resource.</desc:definition>
         <core:altLabel>activities</core:altLabel>
     </owl:Class>

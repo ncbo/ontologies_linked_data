@@ -88,7 +88,7 @@ class TestNotifications < LinkedData::TestCase
   end
 
   def test_processing_complete_notification
-    options = { ont_count: 1, submission_count: 1, acronym: "NOTIFY" }
+    options = { ont_count: 1, submission_count: 2, acronym: "NOTIFY" }
     ont = LinkedData::SampleData::Ontology.create_ontologies_and_submissions(options)[2].first
     subscription = _subscription(ont)
     @@user.subscription = @@user.subscription.dup << subscription
@@ -107,6 +107,13 @@ class TestNotifications < LinkedData::TestCase
     assert_match ("Parsing Success"), all_emails.last.subject
     assert_equal @@support_mails.uniq.sort, all_emails[1].to.sort
     assert_equal admin_mails.uniq.sort, all_emails.last.to.sort
+
+
+    reset_mailer
+    sub = ont.submissions.sort_by { |s| s.id}.first
+    sub.process_submission(Logger.new(TestLogFile.new), {archive: true})
+
+    assert_empty all_emails
   ensure
     ont.delete if ont
     subscription.delete if subscription
@@ -162,6 +169,9 @@ class TestNotifications < LinkedData::TestCase
   end
 
   def test_mail_options
+    current_auth_type = LinkedData.settings.smtp_auth_type
+
+    LinkedData.settings.smtp_auth_type = :none
     options = LinkedData::Utils::Notifier.mail_options
     expected_options = {
       address: LinkedData.settings.smtp_host,
@@ -171,7 +181,7 @@ class TestNotifications < LinkedData::TestCase
     assert_equal options, expected_options
 
     # testing SMTP authentification-based login
-    current_auth_type = LinkedData.settings.smtp_auth_type
+
     LinkedData.settings.smtp_auth_type = :plain
     options = LinkedData::Utils::Notifier.mail_options
     expected_options = {

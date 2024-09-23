@@ -16,6 +16,8 @@ gem 'rest-client'
 gem 'rsolr'
 gem 'rubyzip', '~> 1.0'
 gem 'thin'
+gem 'request_store'
+
 
 # Testing
 group :test do
@@ -31,7 +33,6 @@ end
 group :development do
   gem 'rubocop', require: false
 end
-
 # NCBO gems (can be from a local dev path or from rubygems/git)
 gem 'goo', github: 'ncbo/goo', branch: 'develop'
 gem 'sparql-client', github: 'ncbo/sparql-client', branch: 'develop'

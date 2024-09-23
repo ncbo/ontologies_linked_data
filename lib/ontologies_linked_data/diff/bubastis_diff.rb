@@ -10,7 +10,7 @@ module LinkedData
     class DiffFileNotGeneratedException < Diff::DiffException
     end
 
-    class BubastisDiffCommand
+    class BubastisDiffCommand < DiffTool
 
       # Bubastis version 1.2
       # 18th December 2014
@@ -37,14 +37,32 @@ module LinkedData
       # Loading one file locally and one from the web and outputting results to plain text:
       # java -jar bubastis_1_2.jar -ontology1 "H://disease_ontology_version_1.owl" -ontology2 "http://www.disease.org/diseaseontology_latest.owl" -output "C://my_diff.txt"
 
-      def initialize(input_fileOld, input_fileNew, output_repo)
+      def initialize(old_file_path, new_file_path, output_repo)
         @bubastis_jar_path = LinkedData.bindir + "/bubastis.jar"
-        @input_fileOld = input_fileOld
-        @input_fileNew = input_fileNew
+        @input_fileOld = old_file_path
+        @input_fileNew = new_file_path
         @output_repo = output_repo
         @file_diff_path = nil
         @java_heap_size = LinkedData.settings.java_max_heap_size
       end
+
+
+      def file_diff_path
+        @file_diff_path
+      end
+
+      def diff
+        setup_environment
+        call_bubastis_java_cmd
+        if @file_diff_path.nil?
+          raise DiffFileNotGeneratedException, "Diff file nil"
+        elsif not File.exist?(@file_diff_path)
+          raise DiffFileNotGeneratedException, "Diff file not found in #{@file_diff_path}"
+        end
+        return @file_diff_path
+      end
+
+      private
 
       def setup_environment
         if @input_fileOld.nil? or (not File.exist?(@input_fileOld))
@@ -102,21 +120,6 @@ module LinkedData
           "Output file #{@file_diff_path} cannot be found."
         else
           Diff.logger.info("Output size #{File.stat(@file_diff_path).size} in `#{@file_diff_path}`")
-        end
-        return @file_diff_path
-      end
-
-      def file_diff_path
-        @file_diff_path
-      end
-
-      def diff
-        setup_environment
-        call_bubastis_java_cmd
-        if @file_diff_path.nil?
-          raise DiffFileNotGeneratedException, "Diff file nil"
-        elsif not File.exist?(@file_diff_path)
-          raise DiffFileNotGeneratedException, "Diff file not found in #{@file_diff_path}"
         end
         return @file_diff_path
       end

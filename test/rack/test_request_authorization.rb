@@ -43,7 +43,7 @@ class TestRackAuthorization < MiniTest::Unit::TestCase
       user = LinkedData::Models::User.new({
         username: username,
         password: "test_password",
-        email: "test_email@example.org"
+        email: "test_email#{rand}@example.org"
       })
       user.save unless user.exist?
       users << user

@@ -18,6 +18,9 @@ module LinkedData
         submission_count = options[:submission_count] || 5
         random_submission_count = options[:random_submission_count] || false
         process_submission = options[:process_submission] || false
+        process_options = options[:process_options] || { process_rdf: true, index_search: true, index_properties: true,
+                                                         run_metrics: true, reasoning: true }
+
         submissions_to_process = options[:submissions_to_process]
         acronym = options[:acronym] || "TEST-ONT"
         pref_label_property = options[:pref_label_property] || false
@@ -43,12 +46,12 @@ module LinkedData
           ont_acronyms << acronym_count
 
           o = LinkedData::Models::Ontology.new({
-            acronym: acronym_count,
-            name: name || "#{acronym_count} Ontology",
-            administeredBy: [u],
-            summaryOnly: false,
-            ontologyType: ontology_type
-          })
+                                                 acronym: acronym_count,
+                                                 name: name ? "#{name}#{count > 0 ? count : ''}" : "#{acronym_count} Ontology",
+                                                 administeredBy: [u],
+                                                 summaryOnly: false,
+                                                 ontologyType: ontology_type
+                                               })
 
           if o.exist?
             o = LinkedData::Models::Ontology.find(acronym_count).include(LinkedData::Models::Ontology.attributes(:all)).first
@@ -110,14 +113,12 @@ module LinkedData
             o.submissions.each do |ss|
               ss.bring(:submissionId) if ss.bring?(:submissionId)
               next if (!submissions_to_process.nil? && !submissions_to_process.include?(ss.submissionId))
-              
+
               test_log_file = TestLogFile.new
               tmp_log = Logger.new(test_log_file)
-              
+
               begin
-                ss.process_submission(tmp_log,
-                                    process_rdf: true, index_search: true, index_properties: true,
-                                    run_metrics: true, reasoning: true)
+                ss.process_submission(tmp_log, process_options)
               rescue Exception => e
                 puts "Error processing submission: #{ss.id.to_s}"
                 puts "See test log for errors: #{test_log_file.path}"
@@ -135,15 +136,15 @@ module LinkedData
         file_path = "../../../../test/data/ontology_files/umls_semantictypes.ttl" if file_path.nil?
 
         count, acronyms, sty = create_ontologies_and_submissions({
-          ont_count: 1,
-          submission_count: 1,
-          process_submission: true,
-          acronym: "STY",
-          ontology_format: "UMLS",
-          name: "Semantic Types Ontology",
-          acronym_suffix: "",
-          file_path: file_path
-        })
+                                                                   ont_count: 1,
+                                                                   submission_count: 1,
+                                                                   process_submission: true,
+                                                                   acronym: "STY",
+                                                                   ontology_format: "UMLS",
+                                                                   name: "Semantic Types Ontology",
+                                                                   acronym_suffix: "",
+                                                                   file_path: file_path
+                                                                 })
         sty
       end
 
@@ -176,35 +177,39 @@ module LinkedData
         u.delete unless u.nil?
       end
 
-      def self.sample_owl_ontologies
+      def self.sample_owl_ontologies(process_submission: false, process_options: nil)
+        process_options ||= {process_rdf: true, extract_metadata: false, index_search: false}
         count, acronyms, bro = create_ontologies_and_submissions({
-          process_submission: true,
-          acronym: "BROTEST",
-          name: "ontTEST Bla",
-          file_path: "../../../../test/data/ontology_files/BRO_v3.2.owl",
-          ont_count: 1,
-          submission_count: 1
-        })
+                                                                   process_submission: process_submission,
+                                                                   process_options: process_options,
+                                                                   acronym: "BROTEST",
+                                                                   name: "ontTEST Bla",
+                                                                   file_path: "../../../../test/data/ontology_files/BRO_v3.2.owl",
+                                                                   ont_count: 1,
+                                                                   submission_count: 1
+                                                                 })
 
         # This one has some nasty looking IRIS with slashes in the anchor
         count, acronyms, mccl = create_ontologies_and_submissions({
-          process_submission: true,
-          acronym: "MCCLTEST",
-          name: "MCCLS TEST",
-          file_path: "../../../../test/data/ontology_files/CellLine_OWL_BioPortal_v1.0.owl",
-          ont_count: 1,
-          submission_count: 1
-        })
+                                                                    process_submission: process_submission,
+                                                                    process_options: process_options,
+                                                                    acronym: "MCCLTEST",
+                                                                    name: "MCCLS TEST",
+                                                                    file_path: "../../../../test/data/ontology_files/CellLine_OWL_BioPortal_v1.0.owl",
+                                                                    ont_count: 1,
+                                                                    submission_count: 1
+                                                                  })
 
         # This one has resources wih accents.
         count, acronyms, onto_matest = create_ontologies_and_submissions({
-          process_submission: true,
-          acronym: "ONTOMATEST",
-          name: "OntoMA TEST",
-          file_path: "../../../../test/data/ontology_files/OntoMA.1.1_vVersion_1.1_Date__11-2011.OWL",
-          ont_count: 1,
-          submission_count: 1
-        })
+                                                                           process_submission: process_submission,
+                                                                           process_options: process_options,
+                                                                           acronym: "ONTOMATEST",
+                                                                           name: "OntoMA TEST",
+                                                                           file_path: "../../../../test/data/ontology_files/OntoMA.1.1_vVersion_1.1_Date__11-2011.OWL",
+                                                                           ont_count: 1,
+                                                                           submission_count: 1
+                                                                         })
 
         return bro.concat(mccl).concat(onto_matest)
       end
