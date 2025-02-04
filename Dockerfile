@@ -1,4 +1,4 @@
-ARG RUBY_VERSION
+ARG RUBY_VERSION=3.0
 ARG DISTRO_NAME=bullseye
 
 FROM ruby:$RUBY_VERSION-$DISTRO_NAME
@@ -14,8 +14,8 @@ COPY Gemfile* /srv/ontoportal/ontologies_linked_data/
 
 WORKDIR /srv/ontoportal/ontologies_linked_data
 
-RUN gem update --system
-RUN gem install bundler
+RUN gem update --system 3.5.11
+RUN gem install bundler -v 2.5.11
 ENV BUNDLE_PATH=/srv/ontoportal/bundle
 RUN bundle install
 
