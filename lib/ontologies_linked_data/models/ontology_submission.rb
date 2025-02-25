@@ -66,6 +66,8 @@ module LinkedData
       serialize_default :contact, :ontology, :hasOntologyLanguage, :released, :creationDate, :homepage,
                         :publication, :documentation, :version, :description, :status, :submissionId
 
+      serialize_never :uploadFilePath, :diffFilePath, :masterFileName
+
       # Links
       links_load :submissionId, ontology: [:acronym]
       link_to LinkedData::Hypermedia::Link.new("metrics", lambda {|s| "#{self.ontology_link(s)}/submissions/#{s.submissionId}/metrics"}, self.type_uri)
