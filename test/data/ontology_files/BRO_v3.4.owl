@@ -618,6 +618,8 @@
         <core:prefLabel rdf:datatype="&xsd;string">Activity</core:prefLabel>
         <desc:definition rdf:datatype="&xsd;string">Activity of interest that may be related to a BRO:Resource.</desc:definition>
         <core:altLabel>activities</core:altLabel>
+        <dct:created rdf:datatype="xsd:dateTime">2015-06-29</dct:created>
+        <dct:modified rdf:datatype="xsd:dateTime">2015-10-01</dct:modified>
     </owl:Class>
     
 
