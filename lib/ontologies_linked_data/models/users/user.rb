@@ -36,7 +36,7 @@ module LinkedData
       serialize_never :passwordHash, :show_apikey, :resetToken, :resetTokenExpireTime
       serialize_filter lambda {|inst| show_apikey?(inst)}
 
-      system_controlled :created, :resetToken, :resetTokenExpireTime, :username
+      system_controlled :created, :resetToken, :resetTokenExpireTime
 
       # Cache
       cache_timeout 3600
