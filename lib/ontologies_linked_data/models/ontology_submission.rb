@@ -176,6 +176,9 @@ module LinkedData
       # Link to ontology
       attribute :ontology, type: :ontology, enforce: [:existence]
 
+      # System-controlled attributes that should not be set by API clients
+      system_controlled :submissionId, :uploadFilePath, :diffFilePath, :masterFileName
+
       def self.agents_attrs
         return [] #TODO implement agent separately
         %i[hasCreator publisher copyrightHolder hasContributor

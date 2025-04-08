@@ -8,6 +8,16 @@ class TestOntologySubmission < LinkedData::TestOntologyCommon
     LinkedData::TestCase.backend_4s_delete
   end
 
+  def test_system_controlled_dsl_in_ontology_submission
+    klass = LinkedData::Models::OntologySubmission
+    attrs = klass.hypermedia_settings[:system_controlled]
+
+    assert_includes attrs, :uploadFilePath
+    assert_includes attrs, :diffFilePath
+    assert_includes attrs, :masterFileName
+    assert attrs.all? { |a| a.is_a?(Symbol) }, "Expected all system-controlled attributes to be symbols"
+  end
+
   def test_valid_ontology
 
     acronym = "BRO-TST"
