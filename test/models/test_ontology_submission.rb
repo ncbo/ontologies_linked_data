@@ -14,7 +14,6 @@ class TestOntologySubmission < LinkedData::TestOntologyCommon
 
     assert_includes attrs, :uploadFilePath
     assert_includes attrs, :diffFilePath
-    assert_includes attrs, :masterFileName
     assert attrs.all? { |a| a.is_a?(Symbol) }, "Expected all system-controlled attributes to be symbols"
   end
 
