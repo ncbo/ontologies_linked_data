@@ -66,7 +66,7 @@ module LinkedData
       serialize_default :contact, :ontology, :hasOntologyLanguage, :released, :creationDate, :homepage,
                         :publication, :documentation, :version, :description, :status, :submissionId
 
-      serialize_never :uploadFilePath, :diffFilePath, :masterFileName
+      serialize_never :uploadFilePath, :diffFilePath
 
       # Links
       links_load :submissionId, ontology: [:acronym]
