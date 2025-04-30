@@ -383,18 +383,19 @@ WHERE {
 FILTER(?uuid = <#{LinkedData::Models::Base.replace_url_prefix_to_id(mapping_id)}>)
 FILTER(?s1 != ?s2)
 } LIMIT 1
-eos
-    epr = Goo.sparql_query_client(:main)
-    graphs = [LinkedData::Models::MappingProcess.type_uri]
-    mapping = nil
-    epr.query(qmappings,
-              graphs: graphs).each do |sol|
-      classes = [ read_only_class(sol[:c1].to_s,sol[:s1].to_s),
-                read_only_class(sol[:c2].to_s,sol[:s2].to_s) ]
-      process = LinkedData::Models::MappingProcess.find(sol[:o]).first
-      mapping = LinkedData::Models::Mapping.new(classes,"REST",
-                                                process,
-                                                sol[:uuid])
+      eos
+      epr = Goo.sparql_query_client(:main)
+      graphs = [LinkedData::Models::MappingProcess.type_uri]
+      mapping = nil
+      epr.query(qmappings,
+                graphs: graphs).each do |sol|
+        classes = [read_only_class(sol[:c1].to_s, sol[:s1].to_s),
+                   read_only_class(sol[:c2].to_s, sol[:s2].to_s)]
+        process = LinkedData::Models::MappingProcess.find(sol[:o]).first
+        process.bring_remaining unless process.nil?
+        mapping = LinkedData::Models::Mapping.new(classes, 'REST',
+                                                  process,
+                                                  sol[:uuid])
     end
     return mapping
   end
