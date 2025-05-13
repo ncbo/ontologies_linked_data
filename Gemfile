@@ -36,8 +36,8 @@ group :development do
   gem 'rubocop', require: false
 end
 # NCBO gems (can be from a local dev path or from rubygems/git)
-gem 'goo', github: 'ncbo/goo', branch: 'develop'
-gem 'sparql-client', github: 'ncbo/sparql-client', branch: 'develop'
+gem 'goo', github: 'ncbo/goo', branch: 'master'
+gem 'sparql-client', github: 'ncbo/sparql-client', branch: 'master'
 
 gem 'public_suffix', '~> 5.1.1'
 gem 'net-imap', '~> 0.4.18'
