@@ -19,8 +19,7 @@ module LinkedData
 
         LinkedData::Diff::BubastisDiffCommand.new(
           File.expand_path(older.uploadFilePath.to_s),
-          File.expand_path(@submission.uploadFilePath.to_s),
-          File.expand_path(@submission.data_folder.to_s))
+          File.expand_path(@submission.uploadFilePath.to_s))
       end
 
       def process_diff(logger)

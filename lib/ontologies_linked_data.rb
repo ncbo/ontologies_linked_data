@@ -52,7 +52,7 @@ models.each do |m|
 end
 
 # We need to require deterministic - that is why we have the sort.
-models = Dir.glob("#{project_root}/ontologies_linked_data/models/concerns//**/*.rb").sort
+models = Dir.glob("#{project_root}/ontologies_linked_data/models/concerns/**/*.rb").sort
 models.each do |m|
   require m
 end

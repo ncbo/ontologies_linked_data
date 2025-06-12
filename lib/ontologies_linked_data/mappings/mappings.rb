@@ -46,7 +46,7 @@ module Mappings
   def self.mapping_counts(enable_debug=false, logger=nil, reload_cache=false, arr_acronyms=[])
     logger = nil unless enable_debug
     t = Time.now
-    latest = self.retrieve_latest_submissions(options={acronyms:arr_acronyms})
+    latest = self.retrieve_latest_submissions(options={ acronyms:arr_acronyms })
     counts = {}
     i = 0
     epr = Goo.sparql_query_client(:main)
