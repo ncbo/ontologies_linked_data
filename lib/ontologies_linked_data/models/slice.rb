@@ -13,27 +13,16 @@ module LinkedData::Models
 
     def self.validate_acronym(inst, attr)
       inst.bring(attr) if inst.bring?(attr)
-      acronym = inst.send(attr)
-
-      return [] if acronym.nil?
-
-      errors = []
-
-      if acronym.match(/\A[^a-z^A-Z]{1}/)
-        errors << [:start_with_letter, "`acronym` must start with a letter"]
+      value = inst.send(attr)
+      acronym_regex = /\A[-_a-z]+\Z/
+      if (acronym_regex.match value).nil?
+        return [:acronym_value_validator,"The acronym value #{value} is invalid"]
       end
-
-      if acronym.match(/[^-0-9a-zA-Z]/)
-        errors << [:special_characters, "`acronym` must only contain the folowing characters: -, letters, and numbers"]
-      end
-
-      if acronym.match(/.{17,}/)
-        errors << [:length, "`acronym` must be sixteen characters or less"]
-      end
-
-      return errors.flatten
+      return [:acronym_value_validator, nil]
     end
 
+    # Should synchronize the groups with the slices (creating slice if needed). But it bugs and create slices with a wrong URI
+    # http://data.bioontology.org/slice/ACR instead of http://data.bioontology.org/slices/ACR
     def self.synchronize_groups_to_slices
       # Check to make sure each group has a corresponding slice (and ontologies match)
       groups = LinkedData::Models::Group.where.include(LinkedData::Models::Group.attributes(:all)).all
@@ -43,12 +32,7 @@ module LinkedData::Models
           slice.ontologies = g.ontologies
           slice.save if slice.valid?
         else
-          slice = self.new({
-            acronym: g.acronym.downcase.gsub(" ", "-"),
-            name: g.name,
-            description: g.description,
-            ontologies: g.ontologies
-          })
+          slice = self.new({ acronym: g.acronym.downcase.gsub(" ", "_"), name: g.name, description: g.description, ontologies: g.ontologies})
           slice.save
         end
       end

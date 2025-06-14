@@ -17,6 +17,9 @@ module LinkedData
       include LinkedData::Concerns::OntologySubmission::Validators
       extend LinkedData::Concerns::OntologySubmission::DefaultCallbacks
 
+      include SKOS::ConceptSchemes
+      include SKOS::RootsFetcher
+
       FLAT_ROOTS_LIMIT = 1000
       # default file permissions for files copied from tempdir
       REPOSITORY_FILE_MODE = 0o660   # rw-rw----
@@ -218,19 +221,14 @@ module LinkedData
       serialize_default :contact, :ontology, :hasOntologyLanguage, :released, :creationDate, :homepage,
                         :publication, :documentation, :version, :description, :status, :submissionId
 
-      # Links
-      links_load :submissionId, ontology: [:acronym]
-      link_to LinkedData::Hypermedia::Link.new("metrics", lambda {|s| "#{self.ontology_link(s)}/submissions/#{s.submissionId}/metrics"}, self.type_uri)
-      LinkedData::Hypermedia::Link.new("download", lambda {|s| "#{self.ontology_link(s)}/submissions/#{s.submissionId}/download"}, self.type_uri)
-
       # HTTP Cache settings
       cache_timeout 3600
-      cache_segment_instance lambda {|sub| segment_instance(sub)}
+      cache_segment_instance lambda { |sub| segment_instance(sub) }
       cache_segment_keys [:ontology_submission]
       cache_load ontology: [:acronym]
 
       # Access control
-      read_restriction_based_on lambda {|sub| sub.ontology}
+      read_restriction_based_on lambda { |sub| sub.ontology }
       access_control_load ontology: [:administeredBy, :acl, :viewingRestriction]
 
       def initialize(*args)
@@ -266,6 +264,24 @@ module LinkedData
         ontology_link
       end
 
+      # Override the bring_remaining method from Goo::Base::Resource : https://github.com/ncbo/goo/blob/master/lib/goo/base/resource.rb#L383
+      # Because the old way to query the 4store was not working when lots of attributes
+      # Now it is querying attributes 5 by 5 (way faster than 1 by 1)
+      def bring_remaining
+        to_bring = []
+        i = 0
+        self.class.attributes.each do |attr|
+          to_bring << attr if self.bring?(attr)
+          if i == 5
+            self.bring(*to_bring)
+            to_bring = []
+            i = 0
+          end
+          i = i + 1
+        end
+        self.bring(*to_bring)
+      end
+
       def self.segment_instance(sub)
         sub.bring(:ontology) unless sub.loaded_attributes.include?(:ontology)
         sub.ontology.bring(:acronym) unless sub.ontology.loaded_attributes.include?(:acronym)
@@ -284,6 +300,7 @@ module LinkedData
         )
       end
 
+      # Copy file from /tmp/uncompressed-ont-rest-file to /srv/ncbo/repository/MY_ONT/1/
       def self.copy_file_repository(acronym, submission_id, src, filename = nil)
         path_to_repo = File.join(
           LinkedData.settings.repository_folder,
@@ -402,7 +419,7 @@ module LinkedData
           end
 
           #check for duplicated names
-          repeated_names =  LinkedData::Utils::FileHelpers.repeated_names_in_file_list(files)
+          repeated_names = LinkedData::Utils::FileHelpers.repeated_names_in_file_list(files)
           if repeated_names.length > 0
             names = repeated_names.keys.to_s
             self.errors[:uploadFilePath] <<
@@ -505,7 +522,7 @@ module LinkedData
         zip_dst
       end
 
-      def class_count(logger=nil)
+      def class_count(logger = nil)
         logger ||= LinkedData::Parser.logger || Logger.new($stderr)
         count = -1
         count_set = false
@@ -550,7 +567,7 @@ module LinkedData
         count
       end
 
-      def metrics_from_file(logger=nil)
+      def metrics_from_file(logger = nil)
         logger ||= LinkedData::Parser.logger || Logger.new($stderr)
         metrics = []
         m_path = self.metrics_path
@@ -648,7 +665,7 @@ module LinkedData
       #TODO: revise this with a better process
       def delete(*args)
         options = {}
-        args.each {|e| options.merge!(e) if e.is_a?(Hash)}
+        args.each { |e| options.merge!(e) if e.is_a?(Hash) }
         remove_index = options[:remove_index] ? true : false
         index_commit = options[:index_commit] == false ? false : true
 
@@ -677,7 +694,7 @@ module LinkedData
         FileUtils.remove_dir(self.data_folder) if Dir.exist?(self.data_folder)
       end
 
-      def roots(extra_include=nil, page=nil, pagesize=nil)
+      def roots(extra_include = [], page = nil, pagesize = nil, concept_schemes: [], concept_collections: [])
         self.bring(:ontology) unless self.loaded_attributes.include?(:ontology)
         self.bring(:hasOntologyLanguage) unless self.loaded_attributes.include?(:hasOntologyLanguage)
         paged = false
@@ -689,46 +706,12 @@ module LinkedData
           paged = true
         end
 
-        skos = self.hasOntologyLanguage&.skos?
+        skos = self.skos?
         classes = []
 
         if skos
-          root_skos = <<eos
-SELECT DISTINCT ?root WHERE {
-GRAPH #{self.id.to_ntriples} {
-  ?x #{RDF::SKOS[:hasTopConcept].to_ntriples} ?root .
-}}
-eos
-          count = 0
-
-          if paged
-            query = <<eos
-SELECT (COUNT(?x) as ?count) WHERE {
-GRAPH #{self.id.to_ntriples} {
-  ?x #{RDF::SKOS[:hasTopConcept].to_ntriples} ?root .
-}}
-eos
-            rs = Goo.sparql_query_client.query(query)
-            rs.each do |sol|
-              count = sol[:count].object
-            end
-
-            offset = (page - 1) * pagesize
-            root_skos = "#{root_skos} LIMIT #{pagesize} OFFSET #{offset}"
-          end
-
-          #needs to get cached
-          class_ids = []
-
-          Goo.sparql_query_client.query(root_skos, { :graphs => [self.id] }).each_solution do |s|
-            class_ids << s[:root]
-          end
-
-          class_ids.each do |id|
-            classes << LinkedData::Models::Class.find(id).in(self).disable_rules.first
-          end
-
-          classes = Goo::Base::Page.new(page, pagesize, count, classes) if paged
+          classes = skos_roots(concept_schemes, page, paged, pagesize)
+          extra_include += LinkedData::Models::Class.concept_is_in_attributes
         else
           self.ontology.bring(:flat)
           data_query = nil
@@ -761,7 +744,7 @@ eos
         where = LinkedData::Models::Class.in(self).models(classes).include(:prefLabel, :definition, :synonym, :obsolete)
 
         if extra_include
-          [:prefLabel, :definition, :synonym, :obsolete, :childrenCount].each do |x|
+          %i[prefLabel definition synonym obsolete childrenCount].each do |x|
             extra_include.delete x
           end
         end
@@ -781,24 +764,76 @@ eos
             load_children = [:children]
           end
 
-          if extra_include.length > 0
-            where.include(extra_include)
-          end
+          where.include(extra_include) if extra_include.length > 0
         end
         where.all
 
-        if load_children.length > 0
-          LinkedData::Models::Class.partially_load_children(classes, 99, self)
-        end
+        LinkedData::Models::Class.partially_load_children(classes, 99, self) if load_children.length > 0
 
         classes.delete_if { |c|
           obs = !c.obsolete.nil? && c.obsolete == true
-          c.load_has_children if extra_include&.include?(:hasChildren) && !obs
+          if !obs
+            c.load_computed_attributes(to_load: extra_include,
+                                       options: { schemes: current_schemes(concept_schemes), collections: concept_collections })
+          end
           obs
         }
-
         classes
       end
+
+      def children(cls, includes_param: [], concept_schemes: [], concept_collections: [], page: 1, size: 50)
+        ld = LinkedData::Models::Class.goo_attrs_to_load(includes_param)
+        unmapped = ld.delete(:properties)
+
+        ld += LinkedData::Models::Class.concept_is_in_attributes if skos?
+
+        page_data_query = LinkedData::Models::Class.where(parents: cls).in(self).include(ld)
+        aggregates = LinkedData::Models::Class.goo_aggregates_to_load(ld)
+        page_data_query.aggregate(*aggregates) unless aggregates.empty?
+        page_data = page_data_query.page(page, size).all
+        LinkedData::Models::Class.in(self).models(page_data).include(:unmapped).all if unmapped
+
+        page_data.delete_if { |x| x.id.to_s == cls.id.to_s }
+        if ld.include?(:hasChildren) || ld.include?(:isInActiveScheme) || ld.include?(:isInActiveCollection)
+          page_data.each do |c|
+            c.load_computed_attributes(to_load: ld,
+                                       options: { schemes: concept_schemes, collections: concept_collections })
+          end
+        end
+
+        unless concept_schemes.empty?
+          page_data.delete_if { |c| Array(c.isInActiveScheme).empty? && !c.load_has_children }
+          if (page_data.size < size) && page_data.next_page
+            page_data += children(cls, includes_param: includes_param, concept_schemes: concept_schemes,
+                                  concept_collections: concept_collections,
+                                  page: page_data.next_page, size: size)
+          end
+        end
+
+        page_data
+      end
+
+      def skos?
+        self.bring :hasOntologyLanguage if bring? :hasOntologyLanguage
+        self.hasOntologyLanguage&.skos?
+      end
+
+      def ontology_uri
+        self.bring(:URI) if self.bring? :URI
+        RDF::URI.new(self.URI)
+      end
+
+
+
+
+
+
+
+
+
+
+
+
 
       def roots_sorted(extra_include=nil)
         classes = roots(extra_include)

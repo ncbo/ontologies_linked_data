@@ -448,7 +448,7 @@ SELECT DISTINCT * WHERE {
                      "./test/data/ontology_files/BRO_v3.5.owl", 1,
                      process_rdf: true, extract_metadata: false, index_properties: true)
     res = LinkedData::Models::Class.search("*:*", {:fq => "submissionAcronym:\"BRO\"", :start => 0, :rows => 80}, :property)
-    assert_equal 80 , res["response"]["numFound"]
+    assert_equal 81, res["response"]["numFound"]
     found = 0
 
     res["response"]["docs"].each do |doc|
@@ -1115,7 +1115,7 @@ eos
     assert_equal 0, metrics.classesWithMoreThan25Children
     assert_equal 18, metrics.maxChildCount
     assert_equal 3, metrics.averageChildCount
-    assert_equal 4, metrics.maxDepth
+    assert_equal 3, metrics.maxDepth
 
     submission_parse("BROTEST-METRICS", "BRO testing metrics",
                      "./test/data/ontology_files/BRO_v3.2.owl", 33,
@@ -1165,12 +1165,12 @@ eos
     assert_equal 63, metrics.properties
     assert_equal 124, metrics.individuals
     assert_equal 0, metrics.classesWithOneChild
-    assert_equal 7, metrics.maxDepth
     #cause it has not the subproperty added
     assert_equal 474, metrics.classesWithNoDefinition
     assert_equal 0, metrics.classesWithMoreThan25Children
     assert_equal 0, metrics.maxChildCount
     assert_equal 0, metrics.averageChildCount
+    assert_equal 0, metrics.maxDepth
 
     #test UMLS metrics
     acronym = 'UMLS-TST'

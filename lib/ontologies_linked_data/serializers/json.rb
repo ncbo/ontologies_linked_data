@@ -37,7 +37,20 @@ module LinkedData
               context = generate_context(hashed_obj, hash.keys, options)
               hash.merge!(context)
             end
+
+          elsif (hashed_obj.instance_of?(LinkedData::Models::ExternalClass) || hashed_obj.instance_of?(LinkedData::Models::InterportalClass)) && !current_cls.embedded?
+            # Add context for ExternalClass
+            context_hash = {"@vocab" => Goo.vocabulary.to_s, "prefLabel" => "http://data.bioontology.org/metadata/skosprefLabel"}
+            context = {"@context" => context_hash}
+            hash.merge!(context)
+
+
+
           end
+
+
+
+
           hash['@context']['@language'] = result_lang if hash['@context']
         end
         MultiJson.dump(hash)

@@ -38,7 +38,7 @@
 	<skos:altLabel>metadata example </skos:altLabel>
 	<omv:acronym> AGROOE</omv:acronym>
 	<omv:URI> http://lirmm.fr/ontology/agroportal_ontology_example.owl</omv:URI>
-	<dcterms:identifier>http://agroportal.lirmm.fr</dcterms:identifier>
+	<dcterms:identifier> URI DC terms identifiers </dcterms:identifier>
 
 	<omv:description> AGROOE is an ontology used to test the metadata extraction</omv:description>
 	<dcterms:description> AGROOE is an ontology to illustrate how to describe their ontologies</dcterms:description>
@@ -67,7 +67,7 @@
 
 	<voaf:toDoList rdf:resource="http://lirmm.fr/2015/ontology/toDoList.txt"/>
 
-	<vann:preferredNamespaceUri>http://purl.org/vocab/vann/</vann:preferredNamespaceUri>
+	<vann:preferredNamespaceUri>A preferred name space URI (vann)</vann:preferredNamespaceUri>
 	<void:uriSpace>name space URI (void)</void:uriSpace>
 
 	<vann:preferredNamespacePrefix>A preferred name space prefix</vann:preferredNamespacePrefix>
@@ -75,8 +75,8 @@
 	<cc:useGuidelines> A related resource which defines non-binding use guidelines</cc:useGuidelines>
 
 	<omv:reference>http://agroportal.lirmm.fr</omv:reference>
-	<dcterms:bibliographicCitation>http://doi.org/dio-1</dcterms:bibliographicCitation>
-	<foaf:isPrimaryTopicOf>http://my-page-topic</foaf:isPrimaryTopicOf>
+	<dcterms:bibliographicCitation> Includes reference here or DOI </dcterms:bibliographicCitation>
+	<foaf:isPrimaryTopicOf>is primary topic of</foaf:isPrimaryTopicOf>
 
 	<foaf:homepage>http://agroportal.lirmm.fr</foaf:homepage>
 	<cc:attributionURL>http://agroportal.lirmm.fr</cc:attributionURL>
@@ -255,7 +255,7 @@
 	<prov:wasGeneratedBy rdf:resource="http://lirmm.fr/2015/wasGeneratedBy.owl"/>
 	<prov:wasInvalidatedBy rdf:resource="http://lirmm.fr/2015/wasInvalidatedBy.owl"/>
 
-    <owl:imports rdf:resource="http://www.w3.org/2004/02/skos/core"/>
+	
 </rdf:Description>
 
 <!-- DESCRIPTION OF RESOURCES INVOLVED IN METADATA DESCRIPTION -->
