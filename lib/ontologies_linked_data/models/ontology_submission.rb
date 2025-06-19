@@ -240,14 +240,6 @@ module LinkedData
         @mutex.synchronize(&block)
       end
 
-      def URI=(value)
-        self.uri  = value
-      end
-
-      def URI
-        self.uri
-      end
-
       def self.ontology_link(m)
         ontology_link = ""
 
@@ -818,13 +810,28 @@ module LinkedData
         self.hasOntologyLanguage&.skos?
       end
 
+
+
       def ontology_uri
-        self.bring(:URI) if self.bring? :URI
+        self.bring(:uri) if self.bring? :uri
         RDF::URI.new(self.URI)
       end
 
+      # def uri
+      #   self.ontology_uri.to_s
+      # end
+      #
+      # def uri=(uri)
+      #   self.URI = RDF::URI.new(uri)
+      # end
 
+      def URI=(value)
+        self.uri = value
+      end
 
+      def URI
+        self.uri
+      end
 
 
 

@@ -4,7 +4,7 @@ module LinkedData
       class Collection < LinkedData::Models::Base
 
         model :collection, name_with: :id, collection: :submission,
-                           namespace: :skos, schemaless: :true, rdf_type: ->(*x) { RDF::Vocab::SKOS[:Collection] }
+                           namespace: :skos, schemaless: :true, rdf_type: ->(*x) { RDF::SKOS[:Collection] }
 
         attribute :prefLabel, namespace: :skos, enforce: [:existence]
         attribute :member, namespace: :skos, enforce: [:list, :class]

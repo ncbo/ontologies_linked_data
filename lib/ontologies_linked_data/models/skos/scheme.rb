@@ -4,7 +4,7 @@ module LinkedData
       class Scheme < LinkedData::Models::Base
 
         model :scheme, name_with: :id, collection: :submission,
-              namespace: :skos, schemaless: :true, rdf_type: ->(*x) { RDF::Vocab::SKOS[:ConceptScheme] }
+              namespace: :skos, schemaless: :true, rdf_type: ->(*x) { RDF::SKOS[:ConceptScheme] }
 
         attribute :prefLabel, namespace: :skos, enforce: [:existence]
 
