@@ -304,13 +304,18 @@ module LinkedData
           # repository files are also accessible by the service group as intended,
           # we explicitly chmod the destination file to REPOSITORY_FILE_MODE.
           FileUtils.chmod(REPOSITORY_FILE_MODE, dst)
-
-          raise "Unable to copy #{src} to #{dst}" unless File.exist?(dst)
-
-          dst
         rescue StandardError => e
-          raise "Failed to copy #{src} to #{dst}: [#{e.class}] #{e.message}"
+          raise e.class, "Failed to copy #{src} to #{dst}: #{e.message}", e.backtrace
         end
+
+        # Sanity check: ensure the file actually exists after copy and chmod
+        # This guards against rare cases like silent file storage failures or
+        # race conditions
+        unless File.exist?(dst)
+          raise IOError, "Copy operation completed without error, but file '#{dst}' does not exist"
+        end
+
+        dst
       end
 
       def valid?
