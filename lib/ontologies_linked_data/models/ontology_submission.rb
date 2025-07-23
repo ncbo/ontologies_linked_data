@@ -46,7 +46,7 @@ module LinkedData
       # Ontology metadata
       # General metadata
       attribute :versionIRI, namespace: :owl, type: :uri, enforce: [:distinct_of_uri]
-      attribute :version, namespace: :omv
+      attribute :version, namespace: :omv, enforce: [:safe_text_64]
       attribute :status, namespace: :omv, default: ->(x) { 'production' }
       attribute :deprecated, namespace: :owl, type: :boolean, default: ->(x) { false }
       attribute :hasOntologyLanguage, namespace: :omv, type: :ontology_format, enforce: [:existence]

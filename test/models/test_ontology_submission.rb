@@ -18,7 +18,7 @@ class TestOntologySubmission < LinkedData::TestOntologyCommon
     owl, bogus, user, contact = submission_dependent_objects("OWL", acronym, "test_linked_models", name)
 
     os = LinkedData::Models::OntologySubmission.new
-    assert (not os.valid?)
+    refute os.valid?
 
     assert_raises ArgumentError do
       bogus.acronym = acronym
@@ -62,12 +62,12 @@ class TestOntologySubmission < LinkedData::TestOntologyCommon
     ont_submision.uploadFilePath = uploadFilePath
     ont_submision.hasOntologyLanguage = owl
     ont_submision.ontology = rad
-    assert (not ont_submision.valid?)
+    refute ont_submision.valid?
     assert_equal 1, ont_submision.errors.length
     assert_instance_of Hash, ont_submision.errors[:uploadFilePath][0]
     assert_instance_of Array, ont_submision.errors[:uploadFilePath][0][:options]
     assert_instance_of String, ont_submision.errors[:uploadFilePath][0][:message]
-    assert (ont_submision.errors[:uploadFilePath][0][:options].length > 0)
+    assert ont_submision.errors[:uploadFilePath][0][:options].length > 0
     ont_submision.masterFileName = "does not exist"
     ont_submision.valid?
     assert_instance_of Hash, ont_submision.errors[:uploadFilePath][0]
@@ -189,7 +189,6 @@ eos
     # Test for version info
     sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: "TAO-TEST"], submissionId: 55).include(:version).first
     assert sub.version == "2012-08-10"
-
     qthing = <<-eos
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 SELECT DISTINCT * WHERE {
@@ -289,27 +288,30 @@ SELECT DISTINCT * WHERE {
     unless ENV["BP_SKIP_HEAVY_TESTS"] == "1"
       submission_parse("MCCLTEST", "MCCLS TEST",
                          "./test/data/ontology_files/CellLine_OWL_BioPortal_v1.0.owl", 11,
-                         process_rdf: true, extract_metadata: true)
+                       process_rdf: true, extract_metadata: true)
 
-      sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: "MCCLTEST"],
-                                                         submissionId: 11)
-                                                  .include(:version)
-                                                  .first
-      assert_equal sub.version, "3.0"
+      sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: "MCCLTEST"], submissionId: 11)
+                                                  .include(:version, :uri, :notes).first
+      assert_equal '3.0', sub.version
+      assert_equal 'http://www.semanticweb.org/ontologies/2009/9/12/Ontology1255323704656.owl', sub.uri
+      assert_equal ['The Breast Cancer Cell Line Ontology is licensed under the terms of the Creative Commons Attribution License version 3.0 Unported, details at http://creativecommons.org/licenses/by/3.0/'], sub.notes
     end
 
-    #This one has resources wih accents.
+    version = 'Version 5.0'
+
+    # This one has resources wih accents.
     submission_parse("ONTOMATEST",
                        "OntoMA TEST",
                        "./test/data/ontology_files/OntoMA.1.1_vVersion_1.1_Date__11-2011.OWL", 15,
-                       process_rdf: true, extract_metadata: false)
+                     {process_rdf: true, extract_metadata: true}, {version: version})
 
-    sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: "ONTOMATEST"],
-                                                       submissionId: 15)
-                                                .include(:version)
-                                                .first
-    assert sub.version["Version 1.1"]
-    assert sub.version["Date: 11-2011"]
+    sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: "ONTOMATEST"], submissionId: 15)
+                                                .include(:version, :uri, :notes).first
+    # This ontology has an invalid extracted version. That version should have been discarded
+    # and replaced with the original one, defined in the variable `version`
+    assert_equal version, sub.version
+    assert_equal 'http://www.semanticweb.org/associatedmedicine/lavima/2011/10/Ontology1.owl', sub.uri.to_s
+    assert_equal ['La première ontologie déddiée aux concepts de la médecine associée'], sub.notes
   end
 
   def test_generate_language_preflabels
@@ -1184,27 +1186,81 @@ eos
     assert_equal 133, metrics.classes
   end
 
+  # See https://github.com/ncbo/ncbo_cron/issues/82#issuecomment-3104054081
+  def test_disappearing_values
+    acronym = "ONTOMATEST"
+    name = "ONTOMA Test Ontology"
+    ontologyFile = "./test/data/ontology_files/OntoMA.1.1_vVersion_1.1_Date__11-2011.OWL"
+
+    id = 15
+    ont_submission =  LinkedData::Models::OntologySubmission.new({ :submissionId => id})
+    assert (not ont_submission.valid?)
+    assert_equal 4, ont_submission.errors.length
+    uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository(acronym, id, ontologyFile)
+    ont_submission.uploadFilePath = uploadFilePath
+    owl, ontoma, user, contact = submission_dependent_objects("OWL", acronym, "test_linked_models", name)
+    ont_submission.released = DateTime.now - 4
+    ont_submission.hasOntologyLanguage = owl
+    ont_submission.ontology = ontoma
+    ont_submission.contact = [contact]
+    ont_submission.uri = RDF::URI.new("https://test-#{id}.com")
+    ont_submission.description =  "Description #{id}"
+    ont_submission.status = 'production'
+    old_version = 'Version 5.0'
+    ont_submission.version = old_version
+
+    assert ont_submission.valid?
+    ont_submission.save
+
+    logger = Logger.new(TestLogFile.new)
+    ont_submission.generate_rdf(logger, reasoning: true)
+
+    sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: "ONTOMATEST"], submissionId: 15).include(:version).first
+    puts "Version should be equal to \"#{old_version}\". The value is: \"#{sub.version}\""
+    assert_equal old_version, sub.version, "Version should be equal to: \"#{old_version}\", but it is equal to: \"#{sub.version}\""
+
+    # Make sure, :previous_values has an entry :version.
+    # Until this bug is resolved, :previous_values is forcibly
+    # reset inside ont_submission.generate_rdf() to handle this bug
+    ont_submission.previous_values[:version] = old_version
+    # Set ANY attribute in the submission. Status is picked as an example
+    ont_submission.status = 'pre-production'
+    ont_submission.save
+
+    sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: "ONTOMATEST"], submissionId: 15).include(:version).first
+    puts "Due to a bug, the version became nil. The value is: #{sub.version.nil? ? "nil" : '"' + sub.version + '"'}"
+    assert_nil sub.version, "Due to a bug, the version should be nil, but it is equal to: \"#{sub.version}\""
+  end
+
   # To test extraction of metadata when parsing a submission (we extract the submission attributes that have the
   # extractedMetadata on true)
   def test_submission_extract_metadata
+    acronym = "AGROOE"
     2.times.each do |i|
-      submission_parse("AGROOE", "AGROOE Test extract metadata ontology",
-                       "./test/data/ontology_files/agrooeMappings-05-05-2016.owl", i+1,
+      submission_parse(acronym, "#{acronym} Test extract metadata ontology",
+                       "./test/data/ontology_files/agrooeMappings-05-05-2016.owl", i + 1,
                        process_rdf: true, extract_metadata: true, generate_missing_labels: false)
-      ont =  LinkedData::Models::Ontology.find("AGROOE").first
-      sub = ont.latest_submission
+      sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: acronym], submissionId: i + 1)
+                                                  .include(:description).first
       refute_nil sub
+
       sub.bring_remaining
-
-      assert_equal "http://lirmm.fr/2015/ontology/agroportal_ontology_example.owl", sub.uri
-
-      # remaining not implemented in NCBO branch
-      # assert_equal '2015-09-28', sub.creationDate.to_date.to_s
-      # assert_equal '2015-10-01', sub.modificationDate.to_date.to_s
-      # assert_equal  "description example,  AGROOE is an ontology used to test the metadata extraction,  AGROOE is an ontology to illustrate how to describe their ontologies", sub.description
-      # assert_equal ["http://lexvo.org/id/iso639-3/fra", "http://lexvo.org/id/iso639-3/eng"].sort, sub.naturalLanguage.sort
-      # sub.description = "test changed value"
-      # sub.save
+      assert_equal false, sub.deprecated
+      assert_equal '2015-09-28', sub.creationDate.to_date.to_s
+      assert_equal '2015-10-01', sub.modificationDate.to_date.to_s
+      assert_equal "description example,  AGROOE is an ontology used to test the metadata extraction,  AGROOE is an ontology to illustrate how to describe their ontologies", sub.description
+      assert_equal [RDF::URI.new('http://agroportal.lirmm.fr')], sub.identifier
+      assert_equal ["http://lexvo.org/id/iso639-3/fra", "http://lexvo.org/id/iso639-3/eng"].sort, sub.naturalLanguage.sort
+      assert_equal [RDF::URI.new("http://lirmm.fr/2015/ontology/door-relation.owl"),
+                    RDF::URI.new("http://lirmm.fr/2015/ontology/dc-relation.owl"),
+                    RDF::URI.new("http://lirmm.fr/2015/ontology/dcterms-relation.owl"),
+                    RDF::URI.new("http://lirmm.fr/2015/ontology/voaf-relation.owl"),
+                    RDF::URI.new("http://lirmm.fr/2015/ontology/void-import.owl")
+                   ].sort, sub.ontologyRelatedTo.sort
+      # assert_equal ["Agence 007", "Éditions \"La Science en Marche\"", " LIRMM (default name) "].sort, sub.publisher.map { |x| x.bring_remaining.name }.sort
+      # assert_equal ["Alfred DC", "Clement Jonquet", "Gaston Dcterms", "Huguette Doap", "Mirabelle Prov", "Paul Foaf", "Vincent Emonet"].sort, sub.hasCreator.map { |x| x.bring_remaining.name }.sort
+      # assert_equal ["Léontine Dessaiterm", "Anne Toulet", "Benjamine Dessay", "Augustine Doap", "Vincent Emonet"].sort, sub.hasContributor.map { |x| x.bring_remaining.name }.sort
+      # assert_equal 1, LinkedData::Models::Agent.where(name: "Vincent Emonet").count
     end
   end
 
@@ -1258,40 +1314,4 @@ eos
     end
   end
 
-   # To test extraction of metadata when parsing a submission (we extract the submission attributes that have the
-  # extractedMetadata on true)
-  def test_submission_extract_metadata
-    2.times.each do |i|
-      submission_parse("AGROOE", "AGROOE Test extract metadata ontology",
-                       "./test/data/ontology_files/agrooeMappings-05-05-2016.owl", i + 1,
-                       process_rdf: true, extract_metadata: true, generate_missing_labels: false)
-      ont = LinkedData::Models::Ontology.find("AGROOE").first
-      sub = ont.latest_submission
-      refute_nil sub
-
-      sub.bring_remaining
-      assert_equal false, sub.deprecated
-      assert_equal '2015-09-28', sub.creationDate.to_date.to_s
-      assert_equal '2015-10-01', sub.modificationDate.to_date.to_s
-      assert_equal "description example,  AGROOE is an ontology used to test the metadata extraction,  AGROOE is an ontology to illustrate how to describe their ontologies", sub.description
-      assert_equal [RDF::URI.new('http://agroportal.lirmm.fr')], sub.identifier
-      assert_equal ["http://lexvo.org/id/iso639-3/fra", "http://lexvo.org/id/iso639-3/eng"].sort, sub.naturalLanguage.sort
-      assert_equal [RDF::URI.new("http://lirmm.fr/2015/ontology/door-relation.owl"), RDF::URI.new("http://lirmm.fr/2015/ontology/dc-relation.owl"),
-                    RDF::URI.new("http://lirmm.fr/2015/ontology/dcterms-relation.owl"),
-                    RDF::URI.new("http://lirmm.fr/2015/ontology/voaf-relation.owl"),
-                    RDF::URI.new("http://lirmm.fr/2015/ontology/void-import.owl")
-                   ].sort, sub.ontologyRelatedTo.sort
-
-
-
-
-      # assert_equal ["Agence 007", "Éditions \"La Science en Marche\"", " LIRMM (default name) "].sort, sub.publisher.map { |x| x.bring_remaining.name }.sort
-      # assert_equal ["Alfred DC", "Clement Jonquet", "Gaston Dcterms", "Huguette Doap", "Mirabelle Prov", "Paul Foaf", "Vincent Emonet"].sort, sub.hasCreator.map { |x| x.bring_remaining.name }.sort
-      # assert_equal ["Léontine Dessaiterm", "Anne Toulet", "Benjamine Dessay", "Augustine Doap", "Vincent Emonet"].sort, sub.hasContributor.map { |x| x.bring_remaining.name }.sort
-      # assert_equal 1, LinkedData::Models::Agent.where(name: "Vincent Emonet").count
-
-      sub.description = "test changed value"
-      sub.save
-    end
-  end
 end

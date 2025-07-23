@@ -306,25 +306,43 @@ module LinkedData
         # Parse RDF
         begin
           unless @submission.valid?
-            error = 'Submission is not valid, it cannot be processed. Check errors.'
+            error = "Submission is not valid, it cannot be processed: #{@submission.errors.inspect}"
             raise ArgumentError, error
           end
+
           unless @submission.uploadFilePath
-            error = 'Submission is missing an ontology file, cannot parse.'
+            error = 'Submission is missing an ontology file, it cannot be processed.'
             raise ArgumentError, error
           end
+
           status = LinkedData::Models::SubmissionStatus.find('RDF').first
           @submission.remove_submission_status(status) #remove RDF status before starting
 
           generate_rdf(logger, reasoning: reasoning)
           @submission.extract_metadata
           @submission.add_submission_status(status)
-          @submission.save
+
+          if @submission.valid?
+            # This addresses an obscure bug in GOO. See https://github.com/ncbo/ncbo_cron/issues/82#issuecomment-3104054081
+            @submission.previous_values.clear
+            @submission.save
+          else
+            logger.error("Submission is not valid after extracting metadata: #{@submission.errors.inspect}")
+          end
+
         rescue Exception => e
           logger.error("#{e.class}: #{e.message}\n#{e.backtrace.join("\n\t")}")
           logger.flush
+
           @submission.add_submission_status(status.get_error_status)
-          @submission.save
+
+          if @submission.valid?
+            @submission.save
+          else
+            logger.error("In addition to the above error, the status #{status.get_error_status} cannot be saved
+                because the submission is invalid: #{@submission.errors.inspect}")
+          end
+
           # If RDF generation fails, no point of continuing
           raise e
         end

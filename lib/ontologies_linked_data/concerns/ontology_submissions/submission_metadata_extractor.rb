@@ -5,42 +5,63 @@ module LinkedData
 
         def extract_metadata(logger = nil, heavy_extraction = true, user_params = nil)
           logger ||= Logger.new(STDOUT)
-          logger.info('Extracting metadata from the ontology submission.')
+          logger.info("Extracting metadata from the ontology submission #{self.id}")
+
+          unless self.valid?
+            logger.error("Cannot extract metadata from #{self.id} because the submission is invalid")
+            return
+          end
 
           @submission = self
-          version_info = extract_version
           ontology_iri = extract_ontology_iri
-          @submission.version = version_info if version_info
-          @submission.uri = ontology_iri if ontology_iri
-          @submission.save
+
+          if ontology_iri
+            old_uri = @submission.uri
+            @submission.uri = ontology_iri
+
+            if @submission.valid?
+              @submission.save
+            else
+              logger.error("The extracted submission URI #{ontology_iri} is invalid. Discarding...")
+              @submission.uri = old_uri
+            end
+          end
 
           if heavy_extraction
             begin
               # Extract metadata directly from the ontology
-              extract_ontology_metadata(logger, user_params, skip_attrs: [:version, :uri])
-              logger.info('Additional metadata extracted.')
+              extract_ontology_metadata(logger, user_params, skip_attrs: [:uri])
+              logger.info('Additional metadata extracted')
             rescue StandardError => e
-              e.backtrace
-              logger.error("Error while extracting additional metadata: #{e}")
+              message = e.message + "\n\n  " + e.backtrace.join("\n  ")
+              logger.error("Error while extracting additional metadata: #{message}")
             end
           end
 
-          if @submission.valid?
-            @submission.save
-          else
-            logger.error("Error while extracting additional metadata: #{@submission.errors}")
-            @submission = LinkedData::Models::OntologySubmission.find(@submission.id).first.bring_remaining
+          version_exists = @submission.version
+
+          if version_exists.to_s.strip.empty?
+            version_info = extract_version
+
+            if version_info
+              @submission.version = version_info
+
+              unless @submission.valid?
+                logger.error("The extracted submission version \"#{version_info}\" is invalid. Discarding...")
+                @submission.version = nil
+              end
+            end
           end
+
+          @submission.save
         end
 
         def extract_version
-
           query = Goo.sparql_query_client.select(:versionInfo).distinct
                      .from(@submission.id)
                      .where([RDF::URI.new('http://bioportal.bioontology.org/ontologies/versionSubject'),
-                             RDF::URI.new('http://www.w3.org/2002/07/owl#versionInfo'),
+                             RDF::URI.new("#{Goo.namespaces[:owl].to_s}versionInfo"),
                              :versionInfo])
-
           sol = query.each_solution.first || {}
           sol[:versionInfo]&.to_s
         end
@@ -49,8 +70,8 @@ module LinkedData
           query = Goo.sparql_query_client.select(:uri).distinct
                      .from(@submission.id)
                      .where([:uri,
-                             RDF::URI.new('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-                             RDF::URI.new('http://www.w3.org/2002/07/owl#Ontology')])
+                             RDF::URI.new("#{Goo.namespaces[:rdf].to_s}type"),
+                             RDF::URI.new("#{Goo.namespaces[:owl].to_s}Ontology")])
           sol = query.each_solution.first || {}
           RDF::URI.new(sol[:uri]) if sol[:uri]
         end
@@ -58,9 +79,11 @@ module LinkedData
         # Extract additional metadata about the ontology
         # First it extracts the main metadata, then the mapped metadata
         def extract_ontology_metadata(logger, user_params, skip_attrs: [])
+          # The commented out line below would give priority to the existing values over extracted values
+          # user_params = object_to_hash(@submission) unless user_params
           user_params = {} if user_params.nil? || !user_params
           ontology_uri = @submission.uri
-          logger.info("Extraction metadata from ontology #{ontology_uri}")
+          logger.info("Extracting additional metadata from ontology #{ontology_uri}")
 
           # go through all OntologySubmission attributes. Returns symbols
           LinkedData::Models::OntologySubmission.attributes(:all).each do |attr|
@@ -68,9 +91,11 @@ module LinkedData
             # for attribute with the :extractedMetadata setting on, and that have not been defined by the user
             attr_settings = LinkedData::Models::OntologySubmission.attribute_settings(attr)
 
-            attr_not_excluded = user_params && !(user_params.key?(attr) && !user_params[attr].nil? && !user_params[attr].empty?)
-
-            next unless attr_settings[:extractedMetadata] && attr_not_excluded
+            # Check if the user provided a non-empty value for this attribute
+            user_provided_value = user_params.key?(attr) && !empty_value?(user_params[attr])
+            # Proceed only if the attribute is marked as extractable and the user did NOT provide a value
+            should_extract = attr_settings[:extractedMetadata] && !user_provided_value
+            next unless should_extract
 
             # a boolean to check if a value that should be single have already been extracted
             single_extracted = false
@@ -95,7 +120,18 @@ module LinkedData
 
             new_value = value(attr, type)
 
-            send_value(attr, old_value, logger) if empty_value?(new_value) && !empty_value?(old_value)
+            if empty_value?(new_value) && !empty_value?(old_value)
+              logger.error("Extracted attribute #{attr} with the value #{new_value} is empty. Returning to the old value: #{old_value}.")
+              send_value(attr, old_value, logger)
+            end
+          end
+        end
+
+        def object_to_hash(obj)
+          obj.instance_variables.each_with_object({}) do |ivar, hash|
+            key = ivar.to_s.delete("@").to_sym
+            value = obj.instance_variable_get(ivar)
+            hash[key] = value
           end
         end
 
@@ -130,11 +166,10 @@ module LinkedData
 
             @submission.send("#{attr}=", (metadata_values + new_values).uniq.join(', '))
           else
-            new_value = new_value.values.first
-
+            new_value = new_value.is_a?(Hash)? new_value.values.first : new_value.to_s
             new_value = find_or_create_agent(attr, nil, logger) if enforce?(attr, :Agent)
-
             @submission.send("#{attr}=", new_value)
+            old_val = @submission.previous_values&.key?(attr) ? @submission.previous_values[attr] : nil
             single_extracted = true
           end
 
@@ -160,14 +195,14 @@ module LinkedData
                 case metadata_literal.language
                 when :en, :eng
                   # Take the value with english language over other languages
-                  hash[metadata_uri] = metadata_literal
+                  hash[metadata_uri] = metadata_literal.to_s
                   return hash
                 when :fr, :fre
                   # If no english, take french
                   if hash[metadata_uri].language == :en || hash[metadata_uri].language == :eng
                     return hash
                   else
-                    hash[metadata_uri] = metadata_literal
+                    hash[metadata_uri] = metadata_literal.to_s
                     return hash
                   end
                 else
@@ -176,11 +211,11 @@ module LinkedData
               end
             else
               # Take the value with no language in priority (considered as a default)
-              hash[metadata_uri] = metadata_literal
+              hash[metadata_uri] = metadata_literal.to_s
               return hash
             end
           else
-            hash[metadata_uri] = metadata_literal
+            hash[metadata_uri] = metadata_literal.to_s
             hash
           end
         end
