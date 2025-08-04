@@ -9,6 +9,8 @@ module LinkedData
       attribute :parentCategory, enforce: [:category]
       attribute :ontologies, inverse: { on: :ontology, attribute: :hasDomain }
 
+      system_controlled :created
+
       cache_timeout 86400
     end
   end

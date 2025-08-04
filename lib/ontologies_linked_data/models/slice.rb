@@ -9,6 +9,8 @@ module LinkedData::Models
     attribute :created, enforce: [:date_time], :default => lambda { |record| DateTime.now }
     attribute :ontologies, enforce: [:existence, :list, :ontology]
 
+    system_controlled :created
+
     cache_timeout 3600
 
     def self.validate_acronym(inst, attr)

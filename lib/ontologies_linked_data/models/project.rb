@@ -12,6 +12,8 @@ module LinkedData
       attribute :contacts
       attribute :institution
       attribute :ontologyUsed, enforce: [:ontology, :list]
+
+      system_controlled :creator, :created
     end
   end
 end

@@ -22,6 +22,8 @@ module LinkedData
       link_to LinkedData::Hypermedia::Link.new("replies", lambda {|n| "notes/#{n.id.to_s.split('/').last}/replies"}, LinkedData::Models::Notes::Reply.type_uri),
               LinkedData::Hypermedia::Link.new("ui", lambda {|n| "http://#{LinkedData.settings.ui_host}/notes/#{CGI.escape(n.id)}"}, self.type_uri)
 
+      system_controlled :creator, :created
+
       # HTTP Cache settings
       cache_segment_instance lambda {|note| segment_instance(note)}
       cache_segment_keys [:note]

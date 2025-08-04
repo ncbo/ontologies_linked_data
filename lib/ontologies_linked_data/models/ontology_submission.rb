@@ -177,7 +177,7 @@ module LinkedData
       attribute :ontology, type: :ontology, enforce: [:existence]
 
       # System-controlled attributes that should not be set by API clients
-      system_controlled :submissionId, :uploadFilePath, :diffFilePath
+      system_controlled :submissionId, :uploadFilePath, :diffFilePath, :missingImports
 
       def self.agents_attrs
         return [] #TODO implement agent separately

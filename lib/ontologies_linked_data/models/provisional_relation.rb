@@ -10,6 +10,8 @@ module LinkedData
       attribute :creator, enforce: [:existence, :user]
       attribute :created, enforce: [:date_time], :default => lambda { |record| DateTime.now }
 
+      system_controlled :creator, :created
+
       def self.find_unique(source_id, relation_type, target_class_id, target_ont_id_or_acronym)
         source_id = RDF::URI.new(source_id) unless source_id.is_a?(RDF::URI)
         relation_type = RDF::URI.new(relation_type) unless relation_type.is_a?(RDF::URI)

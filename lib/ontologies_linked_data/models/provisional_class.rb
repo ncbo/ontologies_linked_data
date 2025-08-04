@@ -20,6 +20,8 @@ module LinkedData
 
       embed :relations
 
+      system_controlled :creator, :created
+
       # display relations and some search attributes by default
       serialize_default *(self.attributes.unshift(:prefLabel) << :relations << :obsolete << :matchType << :ontologyType << :provisional)
 
