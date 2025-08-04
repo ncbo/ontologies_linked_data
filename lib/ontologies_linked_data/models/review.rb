@@ -15,8 +15,6 @@ module LinkedData
       attribute :formalityRating
       attribute :correctnessRating
       attribute :documentationRating
-
-      system_controlled :creator, :created
     end
   end
 end
