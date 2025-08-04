@@ -3,8 +3,8 @@ module LinkedData
     class Category < LinkedData::Models::Base
       model :category, name_with: :acronym
       attribute :acronym, enforce: [:unique, :existence]
-      attribute :name, enforce: [:existence]
-      attribute :description
+      attribute :name, enforce: [:existence, :safe_text_64]
+      attribute :description, enforce: [:safe_text_64]
       attribute :created, enforce: [:date_time], default: lambda { |record| DateTime.now }
       attribute :parentCategory, enforce: [:category]
       attribute :ontologies, inverse: { on: :ontology, attribute: :hasDomain }

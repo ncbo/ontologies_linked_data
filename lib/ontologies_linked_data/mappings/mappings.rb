@@ -5,21 +5,32 @@ module LinkedData
 module Mappings
   OUTSTANDING_LIMIT = 30
 
-  def self.mapping_predicates()
-    predicates = {}
-    predicates["CUI"] = ["http://bioportal.bioontology.org/ontologies/umls/cui"]
-    predicates["SAME_URI"] =
-      ["http://data.bioontology.org/metadata/def/mappingSameURI"]
-    predicates["LOOM"] =
-      ["http://data.bioontology.org/metadata/def/mappingLoom"]
-    predicates["REST"] =
-      ["http://data.bioontology.org/metadata/def/mappingRest"]
-    return predicates
-  end
+    def self.mapping_predicates
+      predicates = {}
+      predicates["CUI"] = ["http://bioportal.bioontology.org/ontologies/umls/cui"]
+      predicates["SAME_URI"] =
+        ["http://data.bioontology.org/metadata/def/mappingSameURI"]
+      predicates["LOOM"] =
+        ["http://data.bioontology.org/metadata/def/mappingLoom"]
+      predicates["REST"] =
+        ["http://data.bioontology.org/metadata/def/mappingRest"]
+      return predicates
+    end
 
-  def self.handle_triple_store_downtime(logger=nil)
-    epr = Goo.sparql_query_client(:main)
-    status = epr.status
+    def self.internal_mapping_predicates
+      predicates = {}
+      predicates["SKOS:EXACT_MATCH"] = ["http://www.w3.org/2004/02/skos/core#exactMatch"]
+      predicates["SKOS:CLOSE_MATCH"] = ["http://www.w3.org/2004/02/skos/core#closeMatch"]
+      predicates["SKOS:BROAD_MATH"] = ["http://www.w3.org/2004/02/skos/core#broadMatch"]
+      predicates["SKOS:NARROW_MATH"] = ["http://www.w3.org/2004/02/skos/core#narrowMatch"]
+      predicates["SKOS:RELATED_MATH"] = ["http://www.w3.org/2004/02/skos/core#relatedMatch"]
+
+      return predicates
+    end
+
+    def self.handle_triple_store_downtime(logger = nil)
+      epr = Goo.sparql_query_client(:main)
+      status = epr.status
 
     if status[:exception]
       logger.info(status[:exception]) if logger
@@ -35,7 +46,7 @@ module Mappings
   def self.mapping_counts(enable_debug=false, logger=nil, reload_cache=false, arr_acronyms=[])
     logger = nil unless enable_debug
     t = Time.now
-    latest = self.retrieve_latest_submissions(options={acronyms:arr_acronyms})
+    latest = self.retrieve_latest_submissions(options={ acronyms:arr_acronyms })
     counts = {}
     i = 0
     epr = Goo.sparql_query_client(:main)
@@ -145,142 +156,59 @@ eos
       return p
   end
 
-  def self.mappings_ontologies(sub1,sub2,page,size,classId=nil,reload_cache=false)
-    union_template = <<-eos
-{
-  GRAPH <#{sub1.id.to_s}> {
-      classId <predicate> ?o .
-  }
-  GRAPH graph {
-      ?s2 <predicate> ?o .
-  }
-  bind
-}
-eos
-    blocks = []
-    mappings = []
-    persistent_count = 0
-    acr1 = sub1.id.to_s.split("/")[-3]
+    def self.mappings_ontologies(sub1, sub2, page, size, classId = nil, reload_cache = false)
+      sub1, acr1 = extract_acronym(sub1)
+      sub2, acr2 = extract_acronym(sub2)
 
-    if classId.nil?
-      acr2 = nil
-      acr2 = sub2.id.to_s.split("/")[-3] unless sub2.nil?
-      pcount = LinkedData::Models::MappingCount.where(ontologies: acr1)
-      pcount = pcount.and(ontologies: acr2) unless acr2.nil?
-      f = Goo::Filter.new(:pair_count) == (not acr2.nil?)
-      pcount = pcount.filter(f)
-      pcount = pcount.include(:count)
-      pcount_arr = pcount.all
-      persistent_count = pcount_arr.length == 0 ? 0 : pcount_arr.first.count
+      mappings = []
+      persistent_count = 0
 
-      return LinkedData::Mappings.empty_page(page,size) if persistent_count == 0
-    end
-
-    if classId.nil?
-      union_template = union_template.gsub("classId", "?s1")
-    else
-      union_template = union_template.gsub("classId", "<#{classId.to_s}>")
-    end
-    # latest_sub_ids = self.retrieve_latest_submission_ids
-
-    mapping_predicates().each do |_source,mapping_predicate|
-      union_block = union_template.gsub("predicate", mapping_predicate[0])
-      union_block = union_block.gsub("bind","BIND ('#{_source}' AS ?source)")
-
-      if sub2.nil?
-        union_block = union_block.gsub("graph","?g")
-      else
-        union_block = union_block.gsub("graph","<#{sub2.id.to_s}>")
-      end
-      blocks << union_block
-    end
-    unions = blocks.join("\nUNION\n")
-
-    mappings_in_ontology = <<-eos
-SELECT DISTINCT query_variables
-WHERE {
-unions
-filter
-} page_group
-eos
-    query = mappings_in_ontology.gsub("unions", unions)
-    variables = "?s2 graph ?source ?o"
-    variables = "?s1 " + variables if classId.nil?
-    query = query.gsub("query_variables", variables)
-    filter = classId.nil? ? "FILTER ((?s1 != ?s2) || (?source = 'SAME_URI'))" : ''
-
-    if sub2.nil?
-      query = query.gsub("graph","?g")
-      ont_id = sub1.id.to_s.split("/")[0..-3].join("/")
-
-      # latest_sub_filter_arr = latest_sub_ids.map { |_, id| "?g = <#{id}>" }
-      # filter += "\nFILTER (#{latest_sub_filter_arr.join(' || ')}) "
-
-      #STRSTARTS is used to not count older graphs
-      #no need since now we delete older graphs
-      filter += "\nFILTER (!STRSTARTS(str(?g),'#{ont_id}'))"
-    else
-      query = query.gsub("graph", "")
-    end
-    query = query.gsub("filter", filter)
-
-    if size > 0
-      pagination = "OFFSET offset LIMIT limit"
-      query = query.gsub("page_group",pagination)
-      limit = size
-      offset = (page-1) * size
-      query = query.gsub("limit", "#{limit}").gsub("offset", "#{offset}")
-    else
-      query = query.gsub("page_group","")
-    end
-    epr = Goo.sparql_query_client(:main)
-    graphs = [sub1.id]
-    unless sub2.nil?
-      graphs << sub2.id
-    end
-    solutions = epr.query(query, graphs: graphs, reload_cache: reload_cache)
-    s1 = nil
-    unless classId.nil?
-      s1 = RDF::URI.new(classId.to_s)
-    end
-    solutions.each do |sol|
-      graph2 = nil
-      if sub2.nil?
-        graph2 = sol[:g]
-      else
-        graph2 = sub2.id
-      end
       if classId.nil?
-        s1 = sol[:s1]
+        persistent_count = count_mappings(acr1, acr2)
+        return LinkedData::Mappings.empty_page(page, size) if persistent_count == 0
       end
-      classes = [ read_only_class(s1.to_s,sub1.id.to_s),
-                read_only_class(sol[:s2].to_s,graph2.to_s) ]
 
-      backup_mapping = nil
-      mapping = nil
-      if sol[:source].to_s == "REST"
-        backup_mapping = LinkedData::Models::RestBackupMapping
-                      .find(sol[:o]).include(:process).first
-        backup_mapping.process.bring_remaining
+      query = mappings_ont_build_query(classId, page, size, sub1, sub2)
+      epr = Goo.sparql_query_client(:main)
+      graphs = [sub1]
+      unless sub2.nil?
+        graphs << sub2
       end
-      if backup_mapping.nil?
-        mapping = LinkedData::Models::Mapping.new(
-                    classes,sol[:source].to_s)
-      else
-        mapping = LinkedData::Models::Mapping.new(
-                    classes,sol[:source].to_s,
-                    backup_mapping.process,backup_mapping.id)
-      end
-      mappings << mapping
-    end
+      solutions = epr.query(query, graphs: graphs, reload_cache: reload_cache)
+      s1 = nil
+      s1 = RDF::URI.new(classId.to_s) unless classId.nil?
 
-    if size == 0
-      return mappings
+      solutions.each do |sol|
+        graph2 = sub2.nil? ? sol[:g] : sub2
+        s1 = sol[:s1] if classId.nil?
+        backup_mapping = nil
+
+        if sol[:source].to_s == "REST"
+          backup_mapping = LinkedData::Models::RestBackupMapping
+                             .find(sol[:o]).include(:process, :class_urns).first
+          backup_mapping.process.bring_remaining
+        end
+
+        classes = get_mapping_classes_instance(s1, sub1, sol[:s2], graph2)
+
+        mapping = if backup_mapping.nil?
+                    LinkedData::Models::Mapping.new(classes, sol[:source].to_s)
+                  else
+                    LinkedData::Models::Mapping.new(
+                      classes, sol[:source].to_s,
+                      backup_mapping.process, backup_mapping.id)
+                  end
+
+        mappings << mapping
+      end
+
+      if size == 0
+        return mappings
+      end
+
+      page = Goo::Base::Page.new(page, size, persistent_count, mappings)
+      return page
     end
-    page = Goo::Base::Page.new(page,size,nil,mappings)
-    page.aggregate = persistent_count
-    return page
-  end
 
   def self.mappings_ontology(sub,page,size,classId=nil,reload_cache=false)
     return self.mappings_ontologies(sub,nil,page,size,classId=classId,
@@ -383,18 +311,18 @@ WHERE {
 FILTER(?uuid = <#{LinkedData::Models::Base.replace_url_prefix_to_id(mapping_id)}>)
 FILTER(?s1 != ?s2)
 } LIMIT 1
-eos
-    epr = Goo.sparql_query_client(:main)
-    graphs = [LinkedData::Models::MappingProcess.type_uri]
-    mapping = nil
-    epr.query(qmappings,
-              graphs: graphs).each do |sol|
-      classes = [ read_only_class(sol[:c1].to_s,sol[:s1].to_s),
-                read_only_class(sol[:c2].to_s,sol[:s2].to_s) ]
-      process = LinkedData::Models::MappingProcess.find(sol[:o]).first
-      mapping = LinkedData::Models::Mapping.new(classes,"REST",
-                                                process,
-                                                sol[:uuid])
+      eos
+      epr = Goo.sparql_query_client(:main)
+      graphs = [LinkedData::Models::MappingProcess.type_uri]
+      mapping = nil
+      epr.query(qmappings,
+                graphs: graphs).each do |sol|
+        classes = [read_only_class(sol[:c1].to_s, sol[:s1].to_s),
+                   read_only_class(sol[:c2].to_s, sol[:s2].to_s)]
+        process = LinkedData::Models::MappingProcess.find(sol[:o]).first
+        mapping = LinkedData::Models::Mapping.new(classes, 'REST',
+                                                  process,
+                                                  sol[:uuid])
     end
     return mapping
   end
@@ -437,7 +365,7 @@ eos
       graph_insert << [c.id, RDF::URI.new(rest_predicate), backup_mapping.id]
       Goo.sparql_update_client.insert_data(graph_insert, graph: sub.id)
     end
-    mapping = LinkedData::Models::Mapping.new(classes,"REST",process, backup_mapping.id)
+    mapping = LinkedData::Models::Mapping.new(classes,"REST", process, backup_mapping.id)
     return mapping
   end
 
@@ -773,5 +701,115 @@ GROUP BY ?ontology
     # fsave.close
   end
 
+    private
+
+    def self.get_mapping_classes_instance(s1, graph1, s2, graph2)
+      [read_only_class(s1.to_s, graph1.to_s),
+       read_only_class(s2.to_s, graph2.to_s)]
+    end
+
+    def self.mappings_ont_build_query(class_id, page, size, sub1, sub2)
+      blocks = []
+      mapping_predicates.each do |_source, mapping_predicate|
+        blocks << mappings_union_template(class_id, sub1, sub2,
+                                          mapping_predicate[0],
+                                          "BIND ('#{_source}' AS ?source)")
+      end
+
+
+
+
+
+
+      filter = class_id.nil? ? "FILTER ((?s1 != ?s2) || (?source = 'SAME_URI'))" : ''
+      if sub2.nil?
+        
+        class_id_subject = class_id.nil? ? '?s1' :  "<#{class_id.to_s}>"
+        source_graph = sub1.nil? ? '?g' :  "<#{sub1.to_s}>"
+        internal_mapping_predicates.each do |_source, predicate|
+          blocks << <<-eos
+        {
+          GRAPH #{source_graph} {
+            #{class_id_subject} <#{predicate[0]}> ?s2 .
+          }
+          BIND(<http://data.bioontology.org/metadata/ExternalMappings> AS ?g)
+          BIND(?s2 AS ?o)
+          BIND ('#{_source}' AS ?source)
+        }
+          eos
+        end
+
+        ont_id = sub1.to_s.split("/")[0..-3].join("/")
+        #STRSTARTS is used to not count older graphs
+        #no need since now we delete older graphs
+
+        filter += "\nFILTER (!STRSTARTS(str(?g),'#{ont_id}')"
+        filter += " || " + internal_mapping_predicates.keys.map{|x| "(?source = '#{x}')"}.join('||')
+        filter += ")"
+      end
+
+      variables = "?s2 #{sub2.nil? ? '?g' : ''} ?source ?o"
+      variables = "?s1 " + variables if class_id.nil?
+
+      pagination = ''
+      if size > 0
+        limit = size
+        offset = (page - 1) * size
+        pagination = "OFFSET #{offset} LIMIT #{limit}"
+      end
+
+      query = <<-eos
+SELECT DISTINCT #{variables}
+WHERE {
+   #{blocks.join("\nUNION\n")}
+   #{filter}
+} #{pagination}
+      eos
+
+      query
+    end
+
+    def self.mappings_union_template(class_id, sub1, sub2, predicate, bind)
+      class_id_subject = class_id.nil? ? '?s1' : "<#{class_id.to_s}>"
+      target_graph = sub2.nil? ? '?g' : "<#{sub2.to_s}>"
+      union_template = <<-eos
+{
+  GRAPH <#{sub1.to_s}> {
+      #{class_id_subject} <#{predicate}> ?o .
+  }
+  GRAPH #{target_graph} {
+      ?s2 <#{predicate}> ?o .
+  }
+  #{bind}
+}
+      eos
+    end
+
+    def self.count_mappings(acr1, acr2)
+      count = LinkedData::Models::MappingCount.where(ontologies: acr1)
+      count = count.and(ontologies: acr2) unless acr2.nil?
+      f = Goo::Filter.new(:pair_count) == (not acr2.nil?)
+      count = count.filter(f)
+      count = count.include(:count)
+      pcount_arr = count.all
+      pcount_arr.length == 0 ? 0 : pcount_arr.first.count
+    end
+
+    def self.extract_acronym(submission)
+      sub = submission
+      if submission.nil?
+        acr = nil
+      elsif submission.respond_to?(:id)
+        # Case where sub2 is a Submission
+        sub = submission.id
+        acr = sub.to_s.split("/")[-3]
+      else
+        acr = sub.to_s
+      end
+
+      return sub, acr
+    end
+
+  end
 end
-end
+

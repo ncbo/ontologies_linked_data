@@ -13,11 +13,11 @@ module LinkedData
       attr_accessor :show_apikey
 
       model :user, name_with: :username
-      attribute :username, enforce: [:unique, :existence]
-      attribute :email, enforce: [:existence]
+      attribute :username, enforce: [:unique, :existence, :safe_text_56]
+      attribute :email, enforce: [:existence, :email]
       attribute :role, enforce: [:role, :list], :default => lambda {|x| [LinkedData::Models::Users::Role.default]}
-      attribute :firstName
-      attribute :lastName
+      attribute :firstName, enforce: [:safe_text_128]
+      attribute :lastName, enforce: [:safe_text_128]
       attribute :githubId, enforce: [:unique]
       attribute :orcidId, enforce: [:unique]
       attribute :created, enforce: [:date_time], :default => lambda { |record| DateTime.now }

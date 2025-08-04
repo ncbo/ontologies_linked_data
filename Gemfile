@@ -26,6 +26,8 @@ group :test do
   gem 'email_spec'
   gem 'minitest', '~> 4'
   gem 'minitest-reporters', '>= 0.5.0'
+  gem 'mocha', '~> 2.7'
+  gem 'mock_redis', '~> 0.5'
   gem 'pry'
   gem 'rack-test', '~> 0.6'
   gem 'simplecov'
@@ -36,8 +38,8 @@ group :development do
   gem 'rubocop', require: false
 end
 # NCBO gems (can be from a local dev path or from rubygems/git)
-gem 'goo', github: 'ncbo/goo', branch: 'develop'
-gem 'sparql-client', github: 'ncbo/sparql-client', branch: 'develop'
+gem 'goo', github: 'ncbo/goo', branch: 'master'
+gem 'sparql-client', github: 'ncbo/sparql-client', tag: 'v6.3.0'
 
 gem 'public_suffix', '~> 5.1.1'
 gem 'net-imap', '~> 0.4.18'

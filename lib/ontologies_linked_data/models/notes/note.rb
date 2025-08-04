@@ -6,8 +6,8 @@ module LinkedData
   module Models
     class Note < LinkedData::Models::Base
       model :note, name_with: lambda { |inst| uuid_uri_generator(inst) }
-      attribute :subject
-      attribute :body
+      attribute :subject, enforce: [:safe_text_64]
+      attribute :body, enforce: [:safe_text]
       attribute :creator, enforce: [:existence, :user]
       attribute :created, enforce: [:date_time], :default => lambda { |record| DateTime.now }
       attribute :archived, enforce: [:boolean]

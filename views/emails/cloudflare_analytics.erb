@@ -1,0 +1,16 @@
+<% if result_data[:status] == 'success' %>
+  Cloudflare Analytics job completed successfully<br><br>
+
+  Start time: <%= result_data[:start_time].utc %><br>
+  End time: <%= result_data[:end_time].utc %><br>
+  Duration: <%= result_data[:duration] %> seconds<br><br>
+<% else %>
+  <span style="font-weight: bold; color: red;">Cloudflare Analytics job failed!</span><br><br>
+
+  Start time: <%= result_data[:start_time].utc %><br>
+  End time: <%= result_data[:end_time].utc %><br>
+  Duration: <%= result_data[:duration] %> seconds<br><br>
+
+  Error:
+  <pre><%= result_data[:error] %></pre><br><br>
+<% end %>

@@ -634,6 +634,7 @@
         <skos:narrower rdf:resource="&efo;EFO_0001642"/>
         <skos:topConceptOf rdf:resource="&efo;skos/EFO_GWAS_view"/>
         <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view_2"/>
     </skos:Concept>
     
 
@@ -710,6 +711,7 @@
         <skos:narrower rdf:resource="&CL;CL_0000763"/>
         <skos:narrower rdf:resource="&CL;CL_0000988"/>
         <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view"/>
+        <skos:inScheme rdf:resource="&efo;skos/EFO_GWAS_view_2"/>
         <skos:topConceptOf rdf:resource="&efo;skos/EFO_GWAS_view"/>
     </skos:Concept>
     
@@ -4258,14 +4260,27 @@
     <skos:ConceptScheme rdf:about="&efo;skos/EFO_GWAS_view">
         <rdf:type rdf:resource="&owl;NamedIndividual"/>
         <skos:hasTopConcept rdf:resource="http://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:37577"/>
-        <skos:hasTopConcept rdf:resource="&efo;EFO_0000311"/>
-        <skos:hasTopConcept rdf:resource="&efo;EFO_0000324"/>
         <skos:hasTopConcept rdf:resource="&efo;EFO_0000635"/>
         <skos:hasTopConcept rdf:resource="&efo;EFO_0001444"/>
         <skos:hasTopConcept rdf:resource="&snap;Disposition"/>
     </skos:ConceptScheme>
-    
 
+    <!-- http://www.ebi.ac.uk/efo/skos/EFO_GWAS_view_2 -->
+    <skos:ConceptScheme rdf:about="&efo;skos/EFO_GWAS_view_2">
+        <rdf:type rdf:resource="&owl;NamedIndividual"/>
+        <skos:hasTopConcept rdf:resource="&efo;EFO_0000311"/>
+        <skos:hasTopConcept rdf:resource="&efo;EFO_0000324"/>
+    </skos:ConceptScheme>
+
+
+    <skos:Collection rdf:about="&efo;skos/collection_1">
+        <skos:member rdf:resource="&efo;EFO_0000635"/>
+        <skos:member rdf:resource="&efo;EFO_0001444"/>
+    </skos:Collection>
+
+   <skos:Collection rdf:about="&efo;skos/collection_2">
+        <skos:member rdf:resource="&efo;EFO_0000324"/>
+    </skos:Collection>
 
     <!-- http://www.ifomis.org/bfo/1.1/snap#Disposition -->
 

@@ -6,6 +6,9 @@ require 'ontologies_linked_data/models/group'
 require 'ontologies_linked_data/models/metric'
 require 'ontologies_linked_data/models/category'
 require 'ontologies_linked_data/models/project'
+require 'ontologies_linked_data/models/skos/scheme'
+require 'ontologies_linked_data/models/skos/collection'
+require 'ontologies_linked_data/models/skos/skosxl'
 require 'ontologies_linked_data/models/notes/note'
 require 'ontologies_linked_data/purl/purl_client'
 
@@ -15,7 +18,6 @@ module LinkedData
       class ParsedSubmissionError < StandardError; end
       class OntologyAnalyticsError < StandardError; end
 
-      ONTOLOGY_ANALYTICS_REDIS_FIELD = "ontology_analytics"
       ONTOLOGY_RANK_REDIS_FIELD = "ontology_rank"
       DEFAULT_RANK_WEIGHT_ANALYTICS = 0.50
       DEFAULT_RANK_WEIGHT_UMLS = 0.50
@@ -23,7 +25,7 @@ module LinkedData
       model :ontology, :name_with => :acronym
       attribute :acronym, namespace: :omv,
         enforce: [:unique, :existence, lambda { |inst,attr| validate_acronym(inst,attr) } ]
-      attribute :name, :namespace => :omv, enforce: [:unique, :existence]
+      attribute :name, :namespace => :omv, enforce: [:unique, :existence, :safe_text_256]
       attribute :submissions,
                   inverse: { on: :ontology_submission, attribute: :ontology }
       attribute :projects,
@@ -59,6 +61,9 @@ module LinkedData
               LinkedData::Hypermedia::Link.new("classes", lambda {|s| "ontologies/#{s.acronym}/classes"}, LinkedData::Models::Class.uri_type),
               LinkedData::Hypermedia::Link.new("single_class", lambda {|s| "ontologies/#{s.acronym}/classes/{class_id}"}, LinkedData::Models::Class.uri_type),
               LinkedData::Hypermedia::Link.new("roots", lambda {|s| "ontologies/#{s.acronym}/classes/roots"}, LinkedData::Models::Class.uri_type),
+              LinkedData::Hypermedia::Link.new("schemes", lambda {|s| "ontologies/#{s.acronym}/schemes"}, LinkedData::Models::SKOS::Scheme.uri_type),
+              LinkedData::Hypermedia::Link.new("collections", lambda {|s| "ontologies/#{s.acronym}/collections"}, LinkedData::Models::SKOS::Collection.uri_type),
+              LinkedData::Hypermedia::Link.new("xl_labels", lambda {|s| "ontologies/#{s.acronym}/skos_xl_labels"}, LinkedData::Models::SKOS::Label.uri_type),
               LinkedData::Hypermedia::Link.new("instances", lambda {|s| "ontologies/#{s.acronym}/instances"}, Goo.vocabulary["Instance"]),
               LinkedData::Hypermedia::Link.new("metrics", lambda {|s| "ontologies/#{s.acronym}/metrics"}, LinkedData::Models::Metric.type_uri),
               LinkedData::Hypermedia::Link.new("reviews", lambda {|s| "ontologies/#{s.acronym}/reviews"}, LinkedData::Models::Review.uri_type),
@@ -309,7 +314,8 @@ module LinkedData
       end
 
       def self.load_analytics_data
-        self.load_data(ONTOLOGY_ANALYTICS_REDIS_FIELD)
+        redis_field = LinkedData.settings.ontology_analytics_redis_field
+        self.load_data(redis_field)
       end
 
       def self.load_ranking_data

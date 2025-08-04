@@ -35,6 +35,11 @@ class TestMapping < LinkedData::TestOntologyCommon
                      process_rdf: true, extract_metadata: false)
   end
 
+  def delete_all_rest_mappings
+    LinkedData::Models::RestBackupMapping.all.each do |m|
+      LinkedData::Mappings.delete_rest_mapping(m.id)
+    end
+  end
   def test_mapping_count_models
     LinkedData::Models::MappingCount.where.all(&:delete)
 

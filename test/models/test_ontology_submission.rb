@@ -298,13 +298,13 @@ SELECT DISTINCT * WHERE {
     unless ENV["BP_SKIP_HEAVY_TESTS"] == "1"
       submission_parse("MCCLTEST", "MCCLS TEST",
                          "./test/data/ontology_files/CellLine_OWL_BioPortal_v1.0.owl", 11,
-                         process_rdf: true, extract_metadata: false)
+                         process_rdf: true, extract_metadata: true)
 
       sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: "MCCLTEST"],
                                                          submissionId: 11)
                                                   .include(:version)
                                                   .first
-      assert sub.version == "3.0"
+      assert_equal sub.version, "3.0"
     end
 
     #This one has resources wih accents.
@@ -457,7 +457,7 @@ SELECT DISTINCT * WHERE {
                      "./test/data/ontology_files/BRO_v3.5.owl", 1,
                      process_rdf: true, extract_metadata: false, index_properties: true)
     res = LinkedData::Models::Class.search("*:*", {:fq => "submissionAcronym:\"BRO\"", :start => 0, :rows => 80}, :property)
-    assert_equal 83 , res["response"]["numFound"]
+    assert_equal 84, res["response"]["numFound"]
     found = 0
 
     res["response"]["docs"].each do |doc|
@@ -1232,5 +1232,75 @@ eos
     assert Dir.exist? data_folder
     sub.delete
     assert !Dir.exist?(data_folder)
+  end
+
+  def test_copy_file_repository_from_tempfile
+    # Simulate a Rack Tempfile upload from tmpdir;
+    # tmpfile get 0600 permission and we need 660 for the copy to repository
+    fixture = "./test/data/ontology_files/BRO_v3.2.owl"
+    tmp     = Tempfile.new(["upload", ".owl"])
+    begin
+      FileUtils.cp(fixture, tmp.path)
+      tmp.close
+
+      # Assert the source Tempfile has default 0600 permissions
+      # `& 0o777` is a bitwise AND that out all non-permission bits
+      # convers 0o100600 (regular file with owner rw) to 0600
+      src_mode = File.stat(tmp.path).mode & 0o0777
+      assert_equal 0o0600, src_mode
+
+      dst = LinkedData::Models::OntologySubmission
+        .copy_file_repository("TMPTEST", 99, tmp.path)
+
+      repo_root = LinkedData.settings.repository_folder
+      assert_match(
+        %r{\A#{Regexp.escape(repo_root)}/TMPTEST/99/},
+        dst,
+        "Expected file to be copied into #{repo_root}/TMPTEST/99/"
+      )
+      assert File.exist?(dst), "Destination file should exist"
+
+      mode = File.stat(dst).mode & 0o0777
+      assert_equal 0o0660, mode, format("Expected file mode 0660, got %o", mode)
+    ensure
+      tmp.unlink
+    end
+  end
+
+   # To test extraction of metadata when parsing a submission (we extract the submission attributes that have the
+  # extractedMetadata on true)
+  def test_submission_extract_metadata
+    2.times.each do |i|
+      submission_parse("AGROOE", "AGROOE Test extract metadata ontology",
+                       "./test/data/ontology_files/agrooeMappings-05-05-2016.owl", i + 1,
+                       process_rdf: true, extract_metadata: true, generate_missing_labels: false)
+      ont = LinkedData::Models::Ontology.find("AGROOE").first
+      sub = ont.latest_submission
+      refute_nil sub
+
+      sub.bring_remaining
+      assert_equal false, sub.deprecated
+      assert_equal '2015-09-28', sub.creationDate.to_date.to_s
+      assert_equal '2015-10-01', sub.modificationDate.to_date.to_s
+      assert_equal "description example,  AGROOE is an ontology used to test the metadata extraction,  AGROOE is an ontology to illustrate how to describe their ontologies", sub.description
+      assert_equal [RDF::URI.new('http://agroportal.lirmm.fr')], sub.identifier
+      assert_equal ["http://lexvo.org/id/iso639-3/fra", "http://lexvo.org/id/iso639-3/eng"].sort, sub.naturalLanguage.sort
+      assert_equal [RDF::URI.new("http://lirmm.fr/2015/ontology/door-relation.owl"), RDF::URI.new("http://lirmm.fr/2015/ontology/dc-relation.owl"),
+                    RDF::URI.new("http://lirmm.fr/2015/ontology/dcterms-relation.owl"),
+                    RDF::URI.new("http://lirmm.fr/2015/ontology/voaf-relation.owl"),
+                    RDF::URI.new("http://lirmm.fr/2015/ontology/void-import.owl")
+                   ].sort, sub.ontologyRelatedTo.sort
+
+
+
+
+      # assert_equal ["Agence 007", "Éditions \"La Science en Marche\"", " LIRMM (default name) "].sort, sub.publisher.map { |x| x.bring_remaining.name }.sort
+      # assert_equal ["Alfred DC", "Clement Jonquet", "Gaston Dcterms", "Huguette Doap", "Mirabelle Prov", "Paul Foaf", "Vincent Emonet"].sort, sub.hasCreator.map { |x| x.bring_remaining.name }.sort
+      # assert_equal ["Léontine Dessaiterm", "Anne Toulet", "Benjamine Dessay", "Augustine Doap", "Vincent Emonet"].sort, sub.hasContributor.map { |x| x.bring_remaining.name }.sort
+      # assert_equal 1, LinkedData::Models::Agent.where(name: "Vincent Emonet").count
+
+      sub.description = "test changed value"
+      sub.save
+    end
   end
 end

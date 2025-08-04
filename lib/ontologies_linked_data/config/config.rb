@@ -8,6 +8,8 @@ module LinkedData
   @settings = OpenStruct.new
   @settings_run = false
 
+  DEFAULT_PREFIX = 'http://data.bioontology.org/'.freeze
+
   def config(&block)
     return if @settings_run
     @settings_run = true
@@ -24,17 +26,17 @@ module LinkedData
     @settings.search_server_url             ||= 'http://localhost:8983/solr/term_search_core1'
     @settings.property_search_server_url    ||= 'http://localhost:8983/solr/prop_search_core1'
     @settings.repository_folder             ||= './test/data/ontology_files/repo'
-    @settings.rest_url_prefix               ||= 'http://data.bioontology.org/'
+    @settings.rest_url_prefix               ||= DEFAULT_PREFIX
     @settings.enable_security               ||= false
     @settings.enable_slices                 ||= false
 
     # Java/JVM options
     @settings.java_max_heap_size            ||= '10240M'
 
-    @settings.ui_name                       ||= 'Bioportal'
+    @settings.ui_name                       ||= 'BioPortal'
     @settings.ui_host                       ||= 'bioportal.bioontology.org'
     @settings.replace_url_prefix            ||= false
-    @settings.id_url_prefix                 ||= "http://data.bioontology.org/"
+    @settings.id_url_prefix                 ||= DEFAULT_PREFIX
 
     @settings.queries_debug                 ||= false
     @settings.enable_monitoring             ||= false
@@ -51,8 +53,9 @@ module LinkedData
     @settings.goo_redis_port                ||= 6379
 
     # Ontology Analytics Redis
-    @settings.ontology_analytics_redis_host ||= 'localhost'
-    @settings.ontology_analytics_redis_port ||= 6379
+    @settings.ontology_analytics_redis_host  ||= 'localhost'
+    @settings.ontology_analytics_redis_port  ||= 6379
+    @settings.ontology_analytics_redis_field ||= 'cloudflare_analytics'
 
     # PURL server config parameters
     @settings.enable_purl                   ||= false
@@ -188,7 +191,7 @@ module LinkedData
       conf.add_namespace(:uneskos, RDF::Vocabulary.new("http://purl.org/umu/uneskos#"))
 
 
-      conf.id_prefix = 'http://data.bioontology.org/'
+      conf.id_prefix = DEFAULT_PREFIX
       conf.pluralize_models(true)
     end
   end

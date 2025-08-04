@@ -106,16 +106,41 @@ module LinkedData
 
       def self.obofoundry_sync(missing_onts, obsolete_onts)
         ui_name = LinkedData.settings.ui_name
+        subject = "[#{ui_name}] OBO Foundry synchronization report"
+        recipients = Notifier.ontoportal_admin_emails
+        body = render_template('obofoundry_sync.erb', {
+          ui_name: ui_name,
+          missing_onts: missing_onts,
+          obsolete_onts: obsolete_onts,
+        })
+
+        Notifier.notify_mails_grouped(subject, body, recipients)
+      end
+
+      def self.cloudflare_analytics(result_data)
+        ui_name = LinkedData.settings.ui_name
+        subject = "[#{ui_name}] Cloudflare Analytics daily collection result: #{result_data[:status]}"
+        recipients = Notifier.ontoportal_admin_emails
+        body = render_template('cloudflare_analytics.erb', {
+          result_data: result_data
+        })
+
+        Notifier.notify_mails_grouped(subject, body, recipients)
+      end
+
+      private
+
+      def self.render_template(template_name, locals = {})
         gem_path = Gem.loaded_specs['ontologies_linked_data'].full_gem_path
-        template = File.read(File.join(gem_path, 'views/emails/obofoundry_sync.erb'))
+        template_path = File.join(gem_path, 'views', 'emails', template_name)
+        template = File.read(template_path)
 
         b = binding
-        b.local_variable_set(:ui_name, ui_name)
-        b.local_variable_set(:missing_onts, missing_onts)
-        b.local_variable_set(:obsolete_onts, obsolete_onts)
-        body = ERB.new(template).result(b)
+        locals.each { |k, v| b.local_variable_set(k, v) }
 
-        Notifier.notify_ontoportal_admins("[#{ui_name}] OBO Foundry synchronization report", body)
+        ERB.new(template).result(b)
+      rescue Errno::ENOENT => e
+        raise "Template not found: #{template_path}"
       end
 
       NEW_NOTE = <<EOS

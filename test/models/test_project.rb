@@ -189,6 +189,16 @@ class TestProject < LinkedData::TestCase
     p.creator = @project_params[:creator]
     p.ontologyUsed = @project_params[:ontologyUsed]
     assert p.valid?
+
+    p.name = "Global Collaborative Project for the Standardization, Harmonization, and Federated Analysis of Longitudinal Multi-Center Patient Health Records, Genomic Sequencing Data, and Real-World Evidence to Accelerate Discovery and Deployment of AI-Driven Clinical Decision Support Systems and Therapeutic Innovations"
+    refute p.valid?
+
+    p.name = "Valid name"
+    p.contacts = "Evil contacts text\u202Eevil.com"
+    refute p.valid?
+
+    p.contacts = "Good contacts"
+    assert p.valid?
   end
 
   def test_project_lifecycle

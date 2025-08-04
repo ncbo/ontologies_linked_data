@@ -13,7 +13,7 @@ module LinkedData
 
     class OWLAPICommand
       def initialize(input_file, output_repo, opts = {})
-        @owlapi_wrapper_jar_path = LinkedData.bindir + "/owlapi-wrapper-1.4.2.jar"
+        @owlapi_wrapper_jar_path = LinkedData.bindir + "/owlapi-wrapper-1.5.0.jar"
         @input_file = input_file
         @output_repo = output_repo
         @master_file = opts[:master_file]

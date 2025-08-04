@@ -10,6 +10,10 @@ module LinkedData
     end
 
     class Class < LinkedData::Models::Base
+      include LinkedData::Concerns::Concept::Sort
+      include LinkedData::Concerns::Concept::Tree
+      include LinkedData::Concerns::Concept::InScheme
+      include LinkedData::Concerns::Concept::InCollection
 
       model :class, name_with: :id, collection: :submission,
             namespace: :owl, :schemaless => :true,
@@ -41,6 +45,9 @@ module LinkedData
 
       attribute :label, namespace: :rdfs, enforce: [:list]
       attribute :prefLabel, namespace: :skos, enforce: [:existence], alias: true
+      attribute :prefLabelXl, property: :prefLabel, namespace: :skosxl, enforce: [:label, :list], alias: true
+      attribute :altLabelXl, property: :altLabel, namespace: :skosxl, enforce: [:label, :list], alias: true
+      attribute :hiddenLabelXl, property: :hiddenLabel, namespace: :skosxl, enforce: [:label, :list], alias: true
       attribute :synonym, namespace: :skos, enforce: [:list], property: :altLabel, alias: true
       attribute :definition, namespace: :skos, enforce: [:list], alias: true
       attribute :obsolete, namespace: :owl, property: :deprecated, alias: true
@@ -77,18 +84,22 @@ module LinkedData
 
       attribute :notes,
                 inverse: { on: :note, attribute: :relatedClass }
+      attribute :inScheme, enforce: [:list, :uri], namespace: :skos
+      attribute :memberOf, namespace: :uneskos, inverse: { on: :collection , :attribute => :member }
       attribute :created, namespace:  :dcterms
       attribute :modified, namespace:  :dcterms
 
       # Hypermedia settings
-      embed :children, :ancestors, :descendants, :parents
-      serialize_default :prefLabel, :synonym, :definition, :cui, :semanticType, :obsolete, :matchType, :ontologyType, :provisional # an attribute used in Search (not shown out of context)
+      embed :children, :ancestors, :descendants, :parents, :prefLabelXl, :altLabelXl, :hiddenLabelXl
+      serialize_default :prefLabel, :synonym, :definition, :cui, :semanticType, :obsolete, :matchType,
+                        :ontologyType, :provisional, # an attribute used in Search (not shown out of context)
+                        :created, :modified, :memberOf, :inScheme
       serialize_methods :properties, :childrenCount, :hasChildren
       serialize_never :submissionAcronym, :submissionId, :submission, :descendants
       aggregates childrenCount: [:count, :children]
       links_load submission: [ontology: [:acronym]]
       do_not_load :descendants, :ancestors
-      prevent_serialize_when_nested :properties, :parents, :children, :ancestors, :descendants
+      prevent_serialize_when_nested :properties, :parents, :children, :ancestors, :descendants, :memberOf
       link_to LinkedData::Hypermedia::Link.new("self", lambda {|s| "ontologies/#{s.submission.ontology.acronym}/classes/#{CGI.escape(s.id.to_s)}"}, self.uri_type),
               LinkedData::Hypermedia::Link.new("ontology", lambda {|s| "ontologies/#{s.submission.ontology.acronym}"}, Goo.vocabulary["Ontology"]),
               LinkedData::Hypermedia::Link.new("children", lambda {|s| "ontologies/#{s.submission.ontology.acronym}/classes/#{CGI.escape(s.id.to_s)}/children"}, self.uri_type),
@@ -352,23 +363,13 @@ module LinkedData
         properties
       end
 
-      def paths_to_root()
-        self.bring(parents: [:prefLabel, :synonym, :definition]) if self.bring?(:parents)
-        return [] if self.parents.nil? or self.parents.length == 0
-        paths = [[self]]
-        traverse_path_to_root(self.parents.dup, paths, 0)
-        paths.each do |p|
-          p.reverse!
-        end
-        paths
-      end
-
       def self.partially_load_children(models, threshold, submission)
         ld = [:prefLabel, :definition, :synonym]
         ld << :subClassOf if submission.hasOntologyLanguage.obo?
+        ld += LinkedData::Models::Class.concept_is_in_attributes if submission.skos?
+
         single_load = []
-        query = self.in(submission)
-              .models(models)
+        query = self.in(submission).models(models)
         query.aggregate(:count, :children).all
 
         models.each do |cls|
@@ -377,13 +378,10 @@ module LinkedData
           end
           if cls.aggregates.first.value > threshold
             #too many load a page
-            self.in(submission)
-                .models(single_load)
-                .include(children: [:prefLabel]).all
             page_children = LinkedData::Models::Class
-                                     .where(parents: cls)
-                                     .include(ld)
-                                     .in(submission).page(1,threshold).all
+                              .where(parents: cls)
+                              .include(ld)
+                              .in(submission).page(1,threshold).all
 
             cls.instance_variable_set("@children",page_children.to_a)
             cls.loaded_attributes.add(:children)
@@ -392,109 +390,17 @@ module LinkedData
           end
         end
 
-        if single_load.length > 0
-          self.in(submission)
-                .models(single_load)
-                .include(ld << {children: [:prefLabel]}).all
-        end
+        self.in(submission).models(single_load).include({children: ld}).all if single_load.length > 0
       end
 
-      def tree()
-        self.bring(parents: [:prefLabel]) if self.bring?(:parents)
-        return self if self.parents.nil? or self.parents.length == 0
-        paths = [[self]]
-        traverse_path_to_root(self.parents.dup, paths, 0, tree=true)
-        roots = self.submission.roots(extra_include=[:hasChildren])
-        threshhold = 99
-
-        #select one path that gets to root
-        path = nil
-        paths.each do |p|
-          if (p.map { |x| x.id.to_s } & roots.map { |x| x.id.to_s }).length > 0
-            path = p
-            break
-          end
-        end
-
-        if path.nil?
-          # do one more check for root classes that don't get returned by the submission.roots call
-          paths.each do |p|
-            root_node = p.last
-            root_parents = root_node.parents
-
-            if root_parents.empty?
-              path = p
-              break
-            end
-          end
-          return self if path.nil?
-        end
-
-        items_hash = {}
-        path.each do |t|
-          items_hash[t.id.to_s] = t
-        end
-
-        attrs_to_load = [:prefLabel,:synonym,:obsolete]
-        attrs_to_load << :subClassOf if submission.hasOntologyLanguage.obo?
-        self.class.in(submission)
-              .models(items_hash.values)
-              .include(attrs_to_load).all
-
-        LinkedData::Models::Class
-          .partially_load_children(items_hash.values,threshhold,self.submission)
-
-        path.reverse!
-        path.last.instance_variable_set("@children",[])
-        childrens_hash = {}
-        path.each do |m|
-          next if m.id.to_s["#Thing"]
-          m.children.each do |c|
-            childrens_hash[c.id.to_s] = c
-          end
-        end
-
-        LinkedData::Models::Class.partially_load_children(childrens_hash.values,threshhold, self.submission)
-
-        #build the tree
-        root_node = path.first
-        tree_node = path.first
-        path.delete_at(0)
-        while tree_node &&
-              !tree_node.id.to_s["#Thing"] &&
-              tree_node.children.length > 0 and path.length > 0 do
-
-          next_tree_node = nil
-          tree_node.load_has_children
-          tree_node.children.each_index do |i|
-            if tree_node.children[i].id.to_s == path.first.id.to_s
-              next_tree_node = path.first
-              children = tree_node.children.dup
-              children[i] = path.first
-              tree_node.instance_variable_set("@children",children)
-              children.each do |c|
-                  c.load_has_children
-              end
-            else
-              tree_node.children[i].instance_variable_set("@children",[])
-            end
-          end
-
-          if path.length > 0 && next_tree_node.nil?
-            tree_node.children << path.shift
-          end
-
-          tree_node = next_tree_node
-          path.delete_at(0)
-        end
-
-        root_node
+      def load_computed_attributes(to_load:, options:)
+        self.load_has_children if to_load&.include?(:hasChildren)
+        self.load_is_in_scheme(options[:schemes]) if to_load&.include?(:isInActiveScheme)
+        self.load_is_in_collection(options[:collections]) if to_load&.include?(:isInActiveCollection)
       end
 
-      def tree_sorted()
-        tr = tree
-        self.class.sort_tree_children(tr)
-        tr
+      def self.concept_is_in_attributes
+        [:inScheme, :isInActiveScheme, :memberOf, :isInActiveCollection]
       end
 
       def retrieve_ancestors()
@@ -636,11 +542,11 @@ eos
         path << r
       end
 
-      def traverse_path_to_root(parents, paths, path_i, tree=false)
-        return if (tree and parents.length == 0)
+      def traverse_path_to_root(parents, paths, path_i, tree = false, roots = nil)
+        return if (tree && parents.length == 0)
+
         recursions = [path_i]
         recurse_on_path = [false]
-
         if parents.length > 1 and not tree
           (parents.length-1).times do
             paths << paths[path_i].clone
@@ -651,7 +557,7 @@ eos
           parents.each_index do |i|
             rec_i = recursions[i]
             recurse_on_path[i] = recurse_on_path[i] ||
-                !append_if_not_there_already(paths[rec_i], parents[i]).nil?
+              !append_if_not_there_already(paths[rec_i], parents[i]).nil?
           end
         else
           path = paths[path_i]
@@ -664,60 +570,21 @@ eos
           p = path.last
           next if p.id.to_s["umls/OrphanClass"]
 
-          if p.bring?(:parents)
-            p.bring(parents: [:prefLabel, :synonym, :definition, parents: [:prefLabel, :synonym, :definition]])
-          end
+          if !tree_root?(p, roots) && recurse_on_path[i]
+            if p.bring?(:parents)
+              p.bring(parents: [:prefLabel, :synonym, :definition, :inScheme, parents: [:prefLabel, :synonym, :definition, :inScheme]])
+            end
 
-          if !p.loaded_attributes.include?(:parents)
-            # fail safely
-            logger = LinkedData::Parser.logger || Logger.new($stderr)
-            logger.error("Class #{p.id.to_s} from #{p.submission.id} cannot load parents")
-            return
-          end
+            if !p.loaded_attributes.include?(:parents)
+              # fail safely
+              logger = LinkedData::Parser.logger || Logger.new($stderr)
+              logger.error("Class #{p.id.to_s} from #{p.submission.id} cannot load parents")
+              return
+            end
 
-          if !p.id.to_s["#Thing"] &&\
-              (recurse_on_path[i] && p.parents && p.parents.length > 0)
-            traverse_path_to_root(p.parents.dup, paths, rec_i, tree=tree)
+            traverse_path_to_root(p.parents.dup, paths, rec_i, tree=tree, roots=roots)
           end
         end
-      end
-
-      def self.sort_tree_children(root_node)
-        self.sort_classes!(root_node.children)
-        root_node.children.each { |ch| self.sort_tree_children(ch) }
-      end
-
-      def self.sort_classes(classes)
-        classes.sort { |class_a, class_b| self.compare_classes(class_a, class_b) }
-      end
-
-      def self.sort_classes!(classes)
-        classes.sort! { |class_a, class_b| self.compare_classes(class_a, class_b) }
-        classes
-      end
-
-      def self.compare_classes(class_a, class_b)
-        label_a = ""
-        label_b = ""
-        class_a.bring(:prefLabel) if class_a.bring?(:prefLabel)
-        class_b.bring(:prefLabel) if class_b.bring?(:prefLabel)
-
-        begin
-          label_a = class_a.prefLabel unless (class_a.prefLabel.nil? || class_a.prefLabel.empty?)
-        rescue Goo::Base::AttributeNotLoaded
-          label_a = ""
-        end
-
-        begin
-          label_b = class_b.prefLabel unless (class_b.prefLabel.nil? || class_b.prefLabel.empty?)
-        rescue Goo::Base::AttributeNotLoaded
-          label_b = ""
-        end
-
-        label_a = class_a.id if label_a.empty?
-        label_b = class_b.id if label_b.empty?
-
-        [label_a.downcase] <=> [label_b.downcase]
       end
 
     end

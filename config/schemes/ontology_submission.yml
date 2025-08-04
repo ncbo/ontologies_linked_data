@@ -56,7 +56,7 @@ version:
     "PAV: The version number of a resource.",
     "DOAP: A project release",
     "SCHEMA: The version of the CreativeWork embodied by a specified resource."]
-  extractedMetadata: true
+  extractedMetadata: false
   metadataMappings: [ "omv:version", "mod:version", "owl:versionInfo", "pav:version", "doap:release", "schema:version", "oboInOwl:data-version", "oboInOwl:version" ]
 
 #Status

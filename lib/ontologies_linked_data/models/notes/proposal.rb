@@ -14,8 +14,8 @@ module LinkedData
 
         model :base, name_with: lambda { |inst| uuid_uri_generator(inst) }
         attribute :type, enforce: [LinkedData::Models::Notes::ProposalType, :existence]
-        attribute :contactInfo
-        attribute :reasonForChange, enforce: [:existence]
+        attribute :contactInfo, enforce: [:safe_text_256]
+        attribute :reasonForChange, enforce: [:existence, :safe_text_256]
 
         # ProposalChangeHierarchy
         attribute :newTarget, enforce: [lambda {|inst, attr| existence(inst, attr, "ProposalChangeHierarchy")}]
