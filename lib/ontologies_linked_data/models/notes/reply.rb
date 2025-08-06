@@ -14,6 +14,8 @@ module LinkedData
         serialize_filter lambda {|inst| serialize_filter(inst)}
         embed :children
 
+        system_controlled :creator, :created
+
         def self.serialize_filter(inst)
           attributes = inst.class.hypermedia_settings[:serialize_default].dup
           children_loaded = inst.loaded_attributes.include?(:children)

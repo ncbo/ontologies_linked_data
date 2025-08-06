@@ -182,6 +182,9 @@ module LinkedData
       # Link to ontology
       attribute :ontology, type: :ontology, enforce: [:existence]
 
+      # System-controlled attributes that should not be set by API clients
+      system_controlled :submissionId, :uploadFilePath, :diffFilePath, :missingImports
+
       def self.agents_attrs
         return [] #TODO implement agent separately
         %i[hasCreator publisher copyrightHolder hasContributor
@@ -381,7 +384,7 @@ module LinkedData
         elsif self.pullLocation
           if self.uploadFilePath.nil?
             remote_exists = remote_file_exists?(self.pullLocation.to_s)
-            self.errors[:pullLocation] = ["File at #{self.pullLocation.to_s} does not exist"] unless remote_exists
+            self.errors[:pullLocation] = ["The provided File Pull Location at #{self.pullLocation.to_s} does not point to a valid file."] unless remote_exists
             return remote_exists
           end
           return true

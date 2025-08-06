@@ -9,6 +9,7 @@ module LinkedData
       attribute :ontologies, inverse: { on: :ontology, attribute: :group }
 
       serialize_default :acronym, :name, :description, :created, :ontologies
+      system_controlled :created
 
       cache_timeout 86400
     end
