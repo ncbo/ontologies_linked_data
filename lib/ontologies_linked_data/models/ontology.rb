@@ -285,18 +285,23 @@ module LinkedData
       end
 
       # A static method for retrieving Analytics for a combination of ontologies, year, month
-      def self.analytics(year=nil, month=nil, acronyms=nil)
+      def self.analytics(year = nil, month = nil, acronyms = nil)
         analytics = self.load_analytics_data
 
-        unless analytics.empty?
-          analytics.delete_if { |acronym, _| !acronyms.include? acronym } unless acronyms.nil?
-          analytics.values.each do |ont_analytics|
-            ont_analytics.delete_if { |key, _| key != year.to_s } unless year.nil?
-            ont_analytics.each { |_, val| val.delete_if { |key, __| key != month.to_s } } unless month.nil?
-          end
-          # sort results by the highest traffic values
-          analytics = Hash[analytics.sort_by {|_, v| v[year.to_s][month.to_s]}.reverse] if year && month
+        return analytics if analytics.empty?
+
+        # Filter by acronyms
+        analytics = analytics.select { |acronym, _| acronyms.include?(acronym) } if acronyms
+
+        # Filter by year and month safely
+        analytics.each_value do |ont_analytics|
+          ont_analytics.select! { |key, _| key == year.to_s } if year
+          ont_analytics.each_value { |val| val.select! { |key, _| key == month.to_s } } if month
         end
+
+        # Sort by highest traffic values
+        analytics = analytics.sort_by { |_, v| v.dig(year.to_s, month.to_s) || 0 }.reverse.to_h if year && month
+
         analytics
       end
 

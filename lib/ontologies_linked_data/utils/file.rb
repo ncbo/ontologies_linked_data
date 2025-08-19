@@ -3,122 +3,144 @@ require 'uri'
 require 'zip'
 require 'zlib'
 require 'tmpdir'
+require 'fileutils'
 
 module LinkedData
   module Utils
     module FileHelpers
-      
-      class GzipFile
-        attr_accessor :name
-        def initialize(gz)
-          self.name = gz.orig_name
-        end
-      end
-
+      # --- Magic-byte detection helpers (avoid shelling out to `file`) ---
+      MAGIC_ZIP  = "\x50\x4B\x03\x04".b # PK header. we do not support empty/spanned/SFX zip files
+      MAGIC_GZIP = "\x1F\x8B".b
 
       def self.zip?(file_path)
-        file_path = file_path.to_s
-        raise ArgumentError, "File path #{file_path} not found" unless File.exist? file_path
-
-        file_type = `file --mime -b #{Shellwords.escape(file_path)}`
-        file_type.split(';')[0] == 'application/zip'
+        File.open(file_path, 'rb') { |f| f.read(4) } == MAGIC_ZIP
+      rescue Errno::ENOENT, Errno::EISDIR
+        false
       end
 
       def self.gzip?(file_path)
-        file_path = file_path.to_s
-        raise ArgumentError, "File path #{file_path} not found" unless File.exist? file_path
+        base_name = File.basename(file_path).downcase
+        # Exclude .tar.gz and .tgz files by filename extension (we don’t support tarballs yet).
+        # Note: this is a filename-based check only — a misnamed tarball without these suffixes
+        # will still pass the GZIP magic check and be treated as a single .gz payload.
+        return false if base_name.end_with?('.tar.gz', '.tgz')
 
-        file_type = `file --mime -b #{Shellwords.escape(file_path)}`
-        file_type.split(';')[0] == 'application/gzip' || file_type.split(';')[0] == 'application/x-gzip'
+        File.open(file_path, 'rb') { |f| f.read(2) } == MAGIC_GZIP
+      rescue Errno::ENOENT, Errno::EISDIR
+        false
       end
 
-      def self.files_from_zip(file_path)
+      def self.filenames_in_archive(file_path)
         file_path = file_path.to_s
-        unless File.exist? file_path
-          raise ArgumentError, "File path #{file_path} not found"
-        end
+        raise ArgumentError, "File path #{file_path} not found" unless File.exist?(file_path)
 
-        files = []
+        filenames = []
         if gzip?(file_path)
-          Zlib::GzipReader.open(file_path) do |file|
-            files << file.orig_name unless File.directory?(file) || file.orig_name.split('/')[-1].start_with?('.') # a hidden file in __MACOSX or .DS_Store
+          Zlib::GzipReader.open(file_path) do |gzip_reader|
+            filenames << resolve_gzip_name(file_path, gzip_reader)
           end
         elsif zip?(file_path)
-          Zip::File.open(file_path) do |zip_files|
-            zip_files.each do |file|
-              unless file.directory? || file.name.split('/')[-1].start_with?('.') # a hidden file in __MACOSX or .DS_Store
-                files << file.name
-              end
+          Zip::File.open(file_path) do |zip_file|
+            zip_file.each do |entry|
+              next if entry.directory?
+              next if entry.symlink?
+              next if macos_metadata?(entry.name)
+              next if entry.name.split('/').last.start_with?('.')
+
+              filenames << entry.name
             end
           end
         else
           raise StandardError, "Unsupported file format: #{File.extname(file_path)}"
         end
-
-        return files
+        filenames
       end
 
-      def self.unzip(file_path, dst_folder)
+      def self.unzip(file_path, dst_directory)
         file_path = file_path.to_s
-        dst_folder = dst_folder.to_s
-        raise ArgumentError, "File path #{file_path} not found" unless File.exist? file_path
-        raise ArgumentError, "Folder path #{dst_folder} not found" unless Dir.exist? dst_folder
+        dst_directory = dst_directory.to_s
+        raise ArgumentError, "File path #{file_path} not found" unless File.exist?(file_path)
+        raise ArgumentError, "Folder path #{dst_directory} not found" unless Dir.exist?(dst_directory)
 
         extracted_files = []
+
         if gzip?(file_path)
-          Zlib::GzipReader.open(file_path) do |gz|
-            File.open([dst_folder, gz.orig_name].join('/'), "w") { |file| file.puts(gz.read) }
-            extracted_files << gz
+          Zlib::GzipReader.open(file_path) do |gzip_reader|
+            name = resolve_gzip_name(file_path, gzip_reader)
+            dest = safe_join(dst_directory, name)
+            FileUtils.mkdir_p(File.dirname(dest))
+
+            begin
+              File.open(dest, 'wb') { |f| IO.copy_stream(gzip_reader, f) }
+            rescue StandardError
+              FileUtils.rm_f(dest) # remove partial file on any failure
+              raise
+            end
+
+            extracted_files << dest
           end
+
         elsif zip?(file_path)
-          Zip::File.open(file_path) do |zipfile|
-            zipfile.each do |file|
-              if file.name.split('/').length > 1
-                sub_folder = File.join(dst_folder, file.name.split('/')[0..-2].join('/'))
-                FileUtils.mkdir_p sub_folder unless Dir.exist?(sub_folder)
+          Zip::File.open(file_path) do |zip_file|
+            zip_file.each do |entry|
+              next if entry.directory?
+              next if entry.symlink?
+              next if macos_metadata?(entry.name)
+              next if entry.name.split('/').last.start_with?('.')
+
+              dest = safe_join(dst_directory, entry.name)
+              FileUtils.mkdir_p(File.dirname(dest))
+
+              begin
+                entry.get_input_stream do |input|
+                  File.open(dest, 'wb') { |f| IO.copy_stream(input, f) }
+                end
+              rescue StandardError
+                FileUtils.rm_f(dest) # clean up partial file on any error
+                raise
               end
-              extracted_files << file.extract(File.join(dst_folder, file.name))
+
+              extracted_files << dest
             end
           end
+
         else
           raise StandardError, "Unsupported file format: #{File.extname(file_path)}"
         end
+
         extracted_files
       end
 
       def self.zip_file(file_path)
-        return file_path if self.zip?(file_path)
+        file_path = file_path.to_s
+        return file_path if zip?(file_path)
 
         zip_file_path = "#{file_path}.zip"
-        Zip::File.open(zip_file_path, Zip::File::CREATE) do |zipfile|
-          # Add the file to the zip
-          begin
-            zipfile.add(File.basename(file_path), file_path)
-          rescue Zip::EntryExistsError
-          end
-
+        Zip::File.open(zip_file_path, create: true) do |zip_file|
+          base = File.basename(file_path)
+          zip_file.add(base, file_path) unless zip_file.find_entry(base)
         end
         zip_file_path
       end
 
       def self.automaster?(path, format)
-        self.automaster(path, format) != nil
+        automaster(path, format) != nil
       end
 
       def self.automaster(path, format)
-        files = self.files_from_zip(path)
+        filenames = filenames_in_archive(path)
         basename = File.basename(path, '.zip')
         basename = File.basename(basename, format)
-        files.select {|f| File.basename(f, format).downcase.eql?(basename.downcase)}.first
+        filenames.find { |f| File.basename(f, format).casecmp?(basename) }
       end
 
       def self.repeated_names_in_file_list(file_list)
-        return file_list.group_by {|x| x.split('/')[-1]}.select { |k,v| v.length > 1}
+        file_list.group_by { |x| x.split('/').last }.select { |_k, v| v.length > 1 }
       end
 
       def self.exists_and_file(path)
         path = path.to_s
-        return (File.exist?(path) and (not File.directory?(path)))
+        File.exist?(path) && !File.directory?(path)
       end
 
       def self.download_file(uri, limit = 10)
@@ -190,6 +212,42 @@ module LinkedData
         ftp.getbinaryfile(url.path, temp_file_path)
         file = File.new(temp_file_path)
         return file, filename
+      end
+
+      # --- Utility guards / filters ---
+      def self.safe_join(base, *paths)
+        target = File.expand_path(File.join(base, *paths))
+        base_expanded = File.expand_path(base)
+        prefix = (base_expanded == File::SEPARATOR) ? File::SEPARATOR : (base_expanded + File::SEPARATOR)
+        raise SecurityError, "Path traversal: #{target}" unless target == base_expanded || target.start_with?(prefix)
+
+        target
+      end
+
+      def self.macos_metadata?(entry_name)
+        base = entry_name.split('/').last
+        entry_name.start_with?('__MACOSX/') || base == '.DS_Store' || base.start_with?('._')
+      end
+
+      # Resolve the output filename for a .gz:
+      # - Prefer header's orig_name when present
+      # - Otherwise use the source filename without its .gz
+      # - Always collapse to a basename (strip any embedded path)
+      # - Sanitize odd header bytes and control chars
+      def self.resolve_gzip_name(file_path, gzip_reader)
+        name = gzip_reader.orig_name
+        name = File.basename(file_path, File.extname(file_path)) if name.nil? || name.empty?
+        name = File.basename(name.to_s)
+
+        # Strip NULs and other control chars to avoid filesystem weirdness
+        name = name.gsub(/[\x00-\x1F]/, '')
+        # Ensure non-empty
+        if name.empty?
+          base = File.basename(file_path, File.extname(file_path))
+          name = "#{base}_unnamed"
+        end
+
+        name[0, 255]
       end
 
     end

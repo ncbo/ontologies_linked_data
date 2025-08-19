@@ -51,7 +51,7 @@ module LinkedData
     #   diff              = false
     #   delete            = true  # delete any existing submissions
     ##############################################
-    def submission_parse(acronym, name, ontologyFile, id, parse_options={})
+    def submission_parse(acronym, name, ontologyFile, id, parse_options={}, set_attributes={})
       return if ENV["SKIP_PARSING"]
       parse_options[:process_rdf].nil? && parse_options[:process_rdf] = true
       parse_options[:index_search].nil? && parse_options[:index_search] = false
@@ -94,6 +94,10 @@ module LinkedData
 
       if masterFileName
         ont_submission.masterFileName = masterFileName
+      end
+
+      set_attributes.each do |attr, val|
+        ont_submission.send("#{attr}=", val) if ont_submission.respond_to?("#{attr}=")
       end
 
       if ont_submission.valid?

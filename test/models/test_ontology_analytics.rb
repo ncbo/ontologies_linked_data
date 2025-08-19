@@ -42,13 +42,18 @@ class TestOntologyAnalytics < LinkedData::TestCase
     refute_includes result.keys, 'SNOMEDCT'
   end
 
+  def test_analytics_no_data_for_requested_year
+    result = LinkedData::Models::Ontology.analytics('2044', '1')
+    assert_equal 6, result.size
+  end
+
   def test_filter_analytics_by_year
     result = LinkedData::Models::Ontology.analytics('2014')
 
     assert_equal 6, result.size
     assert_equal @analytics['NCIT']['2014'], result['NCIT']['2014']
     assert_equal 17_212, result['SNOMEDCT']['2014']['2']
-    assert_empty result['NCIT'].keys.map(&:to_s) & %w[2013 2015 2016 2017 2018 2019 2020 2021 2022]
+    assert_empty result['NCIT'].keys.map(&:to_s) & %w[2013 2015 2016 2017 2018 2019 2020 2021 2022 2033]
   end
 
   def test_filter_analytics_by_year_and_month_and_sort_results

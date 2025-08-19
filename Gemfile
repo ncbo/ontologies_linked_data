@@ -14,11 +14,10 @@ gem 'omni_logger'
 gem 'pony'
 gem 'rack'
 gem 'rake', '~> 10.0'
+gem 'request_store'
 gem 'rest-client'
 gem 'rsolr'
-gem 'rubyzip', '~> 1.0'
-gem 'thin'
-gem 'request_store'
+gem 'thin', '~> 1.0' # compatibility version pin. thin should be replaced with webmoc
 
 
 # Testing

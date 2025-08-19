@@ -27,7 +27,7 @@ class TestOWLApi < LinkedData::TestCase
 
     # raise error when creatting a directory on a read only file system
     output_repo = "/sys/cant_create_such_dir_on_a_read_only_file_system"
-    input_file = "test/data/ontology_files/"
+    input_file = "test/data/ontology_files/BRO_v3.1.owl"
     owlapi = LinkedData::Parser::OWLAPICommand.new(input_file, output_repo)
     assert_raises(LinkedData::Parser::MkdirException) { owlapi.parse }
   end
