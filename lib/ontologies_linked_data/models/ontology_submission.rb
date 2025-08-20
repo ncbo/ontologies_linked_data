@@ -217,12 +217,12 @@ module LinkedData
       link_to LinkedData::Hypermedia::Link.new("metrics", ->(s) { "#{self.ontology_link(s)}/submissions/#{s.submissionId}/metrics" }, self.type_uri)
       LinkedData::Hypermedia::Link.new("download", ->(s) { "#{self.ontology_link(s)}/submissions/#{s.submissionId}/download" }, self.type_uri)
 
-
       # Hypermedia settings
       embed :contact, :ontology
       embed_values :submissionStatus => [:code], :hasOntologyLanguage => [:acronym]
       serialize_default :contact, :ontology, :hasOntologyLanguage, :released, :creationDate, :homepage,
                         :publication, :documentation, :version, :description, :status, :submissionId
+      serialize_never :uploadFilePath, :diffFilePath
 
       # HTTP Cache settings
       cache_timeout 3600
