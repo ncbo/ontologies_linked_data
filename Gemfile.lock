@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/ncbo/goo.git
-  revision: 87a21a76bc61392d0629a19c8a18593f606b52e5
+  revision: ca5f9d858eef89923903236fe6f76c78271e538d
   branch: develop
   specs:
     goo (0.0.2)
@@ -69,6 +69,8 @@ GEM
     date (3.4.1)
     docile (1.4.1)
     domain_name (0.6.20240107)
+    down (5.4.2)
+      addressable (~> 2.8)
     email_spec (2.3.0)
       htmlentities (~> 4.3.3)
       launchy (>= 2.1, < 4.0)
@@ -111,7 +113,7 @@ GEM
     mime-types (3.7.0)
       logger
       mime-types-data (~> 3.2025, >= 3.2025.0507)
-    mime-types-data (3.2025.0812)
+    mime-types-data (3.2025.0826)
     mini_mime (1.1.5)
     minitest (4.7.5)
     minitest-reporters (0.14.24)
@@ -199,7 +201,7 @@ GEM
       prism (~> 1.4)
     ruby-progressbar (1.13.0)
     ruby2_keywords (0.0.5)
-    rubyzip (3.0.1)
+    rubyzip (3.0.2)
     simplecov (0.22.0)
       docile (~> 1.1)
       simplecov-html (~> 0.11)
@@ -238,6 +240,7 @@ DEPENDENCIES
   addressable (~> 2.8)
   bcrypt (~> 3.0)
   cube-ruby
+  down (~> 5.0)
   email_spec
   ffi
   goo!

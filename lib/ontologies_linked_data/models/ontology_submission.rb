@@ -3,7 +3,7 @@ require 'net/http'
 require 'uri'
 require 'open-uri'
 require 'cgi'
-require 'benchmark'
+# require 'benchmark'
 require 'csv'
 require 'fileutils'
 
@@ -59,12 +59,8 @@ module LinkedData
       # Description metadata
       attribute :description, namespace: :omv, enforce: %i[concatenate], fuzzy_search: true
 
-      # attribute :homepage
-      # attribute :documentation, namespace: :omv
-      # attribute :publication
-      # attribute :uri, namespace: :omv
-      attribute :homepage, namespace: :foaf, type: :uri
-      attribute :documentation, namespace: :omv, type: :uri
+      attribute :homepage, namespace: :foaf, type: :url
+      attribute :documentation, namespace: :omv, type: :url
       attribute :publication, type: %i[uri list]
       attribute :uri, namespace: :omv, type: :uri, enforce: %i[distinct_of_identifier], fuzzy_search: true
 
@@ -124,7 +120,7 @@ module LinkedData
       attribute :wasInvalidatedBy, namespace: :prov, type: :list
 
       # Links
-      attribute :pullLocation, type: :uri # URI for pulling ontology
+      attribute :pullLocation, type: :url # URL for pulling ontology
       attribute :isFormatOf, namespace: :dct, type: :uri
       attribute :hasFormat, namespace: :dct, type: %i[uri list]
       attribute :dataDump, namespace: :void, type: :uri, default: -> (s) { data_dump_default(s) }

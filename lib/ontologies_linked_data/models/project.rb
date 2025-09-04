@@ -7,7 +7,7 @@ module LinkedData
       attribute :created, enforce: [:date_time], :default => lambda {|x| DateTime.now }
       attribute :updated, enforce: [:date_time], :default => lambda {|x| DateTime.now }
       attribute :name, enforce: [:existence, :safe_text_256]
-      attribute :homePage, enforce: [:uri, :existence]
+      attribute :homePage, enforce: [:url, :existence]
       attribute :description, enforce: [:existence, :safe_text]
       attribute :contacts, enforce: [:safe_text_256]
       attribute :institution, enforce: [:safe_text_256]
