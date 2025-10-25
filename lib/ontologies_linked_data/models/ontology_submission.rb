@@ -282,37 +282,42 @@ module LinkedData
       end
 
       def self.copy_file_repository(acronym, submission_id, src, filename = nil)
-        path_to_repo = File.join(
-          LinkedData.settings.repository_folder,
-          acronym.to_s,
-          submission_id.to_s
-        )
+        repo_root = LinkedData.settings.repository_folder
+        dst_dir = File.join(repo_root.to_s, acronym.to_s, submission_id.to_s)
+
+        src_path = src.respond_to?(:path) ? src.path.to_s : src.to_s
+        raise ArgumentError, "Source file does not exist: #{src_path}" unless ::File.exist?(src_path)
 
         name = filename || File.basename(src)
-        dst  = File.join(path_to_repo, name)
+        name = LinkedData::Utils::FileHelpers.sanitize_filename(name)
+
+        dst_final = File.join(dst_dir, name)
+        dst_tmp   = "#{dst_final}.tmp-#{Process.pid}-#{rand(1_000_000)}"
 
         begin
-          FileUtils.mkdir_p(path_to_repo)
-          FileUtils.chmod(REPOSITORY_DIR_MODE, path_to_repo)
+          FileUtils.mkdir_p(dst_dir)
+          FileUtils.chmod(REPOSITORY_DIR_MODE, dst_dir)
 
-          FileUtils.copy(src, dst)
+          FileUtils.copy(src, dst_tmp)
           # Uploaded files are initially written to a Tempfile in tmpdir with
           # permissions 0600 (owner read/write only) for security. To ensure
           # repository files are also accessible by the service group as intended,
           # we explicitly chmod the destination file to REPOSITORY_FILE_MODE.
-          FileUtils.chmod(REPOSITORY_FILE_MODE, dst)
+          FileUtils.chmod(REPOSITORY_FILE_MODE, dst_tmp)
+          FileUtils.mv(dst_tmp, dst_final)
         rescue StandardError => e
+          FileUtils.rm_f(dst_tmp)
           raise e.class, "Failed to copy #{src} to #{dst}: #{e.message}", e.backtrace
         end
 
         # Sanity check: ensure the file actually exists after copy and chmod
         # This guards against rare cases like silent file storage failures or
         # race conditions
-        unless File.exist?(dst)
+        unless File.exist?(dst_final)
           raise IOError, "Copy operation completed without error, but file '#{dst}' does not exist"
         end
 
-        dst
+        dst_final
       end
 
       def valid?

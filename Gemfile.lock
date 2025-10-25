@@ -30,6 +30,7 @@ PATH
     ontologies_linked_data (0.0.1)
       activesupport
       bcrypt
+      down (~> 5.0)
       goo
       json
       libxml-ruby
@@ -240,7 +241,6 @@ DEPENDENCIES
   addressable (~> 2.8)
   bcrypt (~> 3.0)
   cube-ruby
-  down (~> 5.0)
   email_spec
   ffi
   goo!
