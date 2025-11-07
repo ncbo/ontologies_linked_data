@@ -28,18 +28,18 @@ PATH
   remote: .
   specs:
     ontologies_linked_data (0.0.1)
-      activesupport
-      bcrypt
+      activesupport (~> 4)
+      bcrypt (~> 3.0)
       goo
       json
       libxml-ruby
       multi_json
       net-ftp
-      oj
+      oj (~> 3.0)
       omni_logger
       pony
       rack
-      rack-test
+      request_store
       rsolr
       rubyzip (~> 3.0)
 
