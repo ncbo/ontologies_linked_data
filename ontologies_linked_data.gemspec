@@ -18,26 +18,22 @@ Gem::Specification.new do |gem|
 
   gem.required_ruby_version = ">= 3.1"
 
-  gem.add_dependency("activesupport", "~> 4")
-  gem.add_dependency("request_store")
-  gem.add_dependency("bcrypt", "~> 3.0")
+  gem.add_dependency("activesupport")
+  gem.add_dependency("bcrypt")
   gem.add_dependency("goo")
   gem.add_dependency("json")
   gem.add_dependency("libxml-ruby")
   gem.add_dependency("multi_json")
   gem.add_dependency("net-ftp")
-  gem.add_dependency("oj", "~> 3.0")
+  gem.add_dependency("oj")
   gem.add_dependency("omni_logger")
   gem.add_dependency("pony")
   gem.add_dependency("rack")
+  gem.add_dependency("rack-test")
   gem.add_dependency("rsolr")
   gem.add_dependency("rubyzip", "~> 3.0")
 
   gem.add_development_dependency("email_spec")
-  gem.add_development_dependency("minitest", "~> 4")
-  gem.add_development_dependency("rack-test", "~> 0.6")
-  gem.add_development_dependency("rest-client")
-  gem.add_development_dependency("thin", "~>1")
 
   # gem.executables = %w()
 end
