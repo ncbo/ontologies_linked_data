@@ -1,4 +1,3 @@
-require 'net/ftp'
 require 'net/http'
 require 'uri'
 require 'open-uri'
@@ -813,18 +812,6 @@ module LinkedData
         RDF::URI.new(self.uri)
       end
 
-
-
-
-
-
-
-
-
-
-
-
-
       def roots_sorted(extra_include=nil)
         classes = roots(extra_include)
         LinkedData::Models::Class.sort_classes(classes)
@@ -838,17 +825,7 @@ module LinkedData
       end
 
       def remote_file_exists?(url)
-        begin
-          url = URI.parse(url)
-          if url.kind_of?(URI::FTP)
-            check = check_ftp_file(url)
-          else
-            check = check_http_file(url)
-          end
-        rescue Exception
-          check = false
-        end
-        check
+        LinkedData::Utils::FileHelpers.remote_file_exists?(url)
       end
 
       def download_ontology_file
@@ -910,33 +887,6 @@ module LinkedData
                  self.uploadFilePath
                end
         File.expand_path(path)
-      end
-
-      def check_http_file(url)
-        session = Net::HTTP.new(url.host, url.port)
-        session.use_ssl = true if url.port == 443
-        session.start do |http|
-          response_valid = http.head(url.request_uri).code.to_i < 400
-          return response_valid
-        end
-      end
-
-      def check_ftp_file(uri)
-        ftp = Net::FTP.new(uri.host, uri.user, uri.password)
-        ftp.login
-        begin
-          file_exists = ftp.size(uri.path) > 0
-        rescue Exception => e
-          # Check using another method
-          path = uri.path.split("/")
-          filename = path.pop
-          path = path.join("/")
-          ftp.chdir(path)
-          files = ftp.dir
-          # Dumb check, just see if the filename is somewhere in the list
-          files.each { |file| return true if file.include?(filename) }
-        end
-        file_exists
       end
 
       def self.loom_transform_literal(lit)

@@ -680,8 +680,6 @@ SELECT DISTINCT * WHERE {
       sub.pullLocation = RDF::IRI.new(server_url)
       file, filename = sub.download_ontology_file
       sleep 2
-      p "filename is"
-      p filename
       assert_equal "unnamed", filename, "Expected fallback filename to be 'unnamed'"
       assert_kind_of Tempfile, file
       file.open

@@ -144,7 +144,7 @@ module LinkedData
         File.exist?(path) && !File.directory?(path)
       end
 
-      def self.download_file(uri, limit: 10, open_timeout: 15, read_timeout: 1800, headers: {}, max_size: 512 * 1024 * 1024)
+      def self.download_file(uri, max_redirects: 10, open_timeout: 15, read_timeout: 1800, headers: {}, max_size: 512 * 1024 * 1024)
         uri = URI(uri) unless uri.is_a?(URI)
         unless %w[http https].include?(uri.scheme)
           raise ArgumentError, "Unsupported URI scheme #{uri.scheme.inspect} (only http/https are supported)"
@@ -152,7 +152,7 @@ module LinkedData
 
         tmpfile = Down::NetHttp.download(
           uri.to_s,
-          max_redirects: limit,
+          max_redirects: max_redirects,
           open_timeout: open_timeout,
           read_timeout: read_timeout,
           max_size: max_size,
@@ -166,6 +166,27 @@ module LinkedData
         tmpfile.rewind
 
         [tmpfile, filename]
+      end
+
+      def self.remote_file_exists?(url, max_redirects: 10, open_timeout: 15, read_timeout: 10, headers: {})
+        uri = url.is_a?(URI) ? url : URI.parse(url.to_s)
+
+        # only http/https are supported
+        return false unless %w[http https].include?(uri.scheme)
+
+        Down::NetHttp.open(
+          uri.to_s,
+          max_redirects: max_redirects,
+          open_timeout:  open_timeout,
+          read_timeout:  read_timeout,
+          headers: { "User-Agent" => "OntoPortal" }.merge(headers)
+        ) do |io|
+          io.close
+        end
+
+        true
+      rescue Down::Error, URI::InvalidURIError
+        false
       end
 
       # --- Utility guards / filters ---

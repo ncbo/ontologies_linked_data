@@ -17,7 +17,6 @@ gem 'rake', '~> 10.0'
 gem 'request_store'
 gem 'rest-client'
 gem 'rsolr'
-gem 'thin', '~> 1.0' # compatibility version pin. thin should be replaced with webmoc
 
 # Testing
 group :test do
@@ -30,6 +29,7 @@ group :test do
   gem 'rack-test', '~> 0.6'
   gem 'simplecov'
   gem 'simplecov-cobertura' # for codecov.io
+  gem 'webrick'
 end
 
 group :development do
