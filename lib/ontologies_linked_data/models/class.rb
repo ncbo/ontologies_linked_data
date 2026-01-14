@@ -118,6 +118,96 @@ module LinkedData
       cache_segment_keys [:class]
       cache_load submission: [ontology: [:acronym]]
 
+
+
+
+
+
+
+
+
+      # Index settings
+      def self.index_schema(schema_generator)
+        schema_generator.add_field(:prefLabel, 'text_general', indexed: true, stored: true, multi_valued: true)
+        schema_generator.add_field(:synonym, 'text_general', indexed: true, stored: true, multi_valued: true)
+        schema_generator.add_field(:notation, 'text_general', indexed: true, stored: true, multi_valued: false)
+
+        schema_generator.add_field(:definition, 'string', indexed: true, stored: true, multi_valued: true)
+        schema_generator.add_field(:submissionAcronym, 'string', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:parents, 'string', indexed: true, stored: true, multi_valued: true)
+        schema_generator.add_field(:ontologyType, 'string', indexed: true, stored: true, multi_valued: false)
+        # schema_generator.add_field(:ontologyType, 'ontologyType', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:ontologyId, 'string', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:submissionId, 'pint', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:childCount, 'pint', indexed: true, stored: true, multi_valued: false)
+
+        schema_generator.add_field(:cui, 'text_general', indexed: true, stored: true, multi_valued: true)
+        schema_generator.add_field(:semanticType, 'text_general', indexed: true, stored: true, multi_valued: true)
+
+        schema_generator.add_field(:property, 'text_general', indexed: true, stored: true, multi_valued: true)
+        schema_generator.add_field(:propertyRaw, 'text_general', indexed: false, stored: true, multi_valued: false)
+
+        schema_generator.add_field(:obsolete, 'boolean', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:provisional, 'boolean', indexed: true, stored: true, multi_valued: false)
+
+        # Copy fields for term search
+        schema_generator.add_copy_field('notation', '_text_')
+
+        %w[prefLabel synonym].each do |field|
+
+          schema_generator.add_field("#{field}Exact", 'string', indexed: true, stored: false, multi_valued: true)
+          schema_generator.add_field("#{field}Suggest", 'text_suggest', indexed: true, stored: false, multi_valued: true, omit_norms: true)
+          schema_generator.add_field("#{field}SuggestEdge", 'text_suggest_edge', indexed: true, stored: false, multi_valued: true)
+          schema_generator.add_field("#{field}SuggestNgram", 'text_suggest_ngram', indexed: true, stored: false, multi_valued: true, omit_norms: true)
+
+          schema_generator.add_copy_field(field, '_text_')
+          schema_generator.add_copy_field(field, "#{field}Exact")
+          schema_generator.add_copy_field(field, "#{field}Suggest")
+          schema_generator.add_copy_field(field, "#{field}SuggestEdge")
+          schema_generator.add_copy_field(field, "#{field}SuggestNgram")
+
+          schema_generator.add_dynamic_field("#{field}_*", 'text_general', indexed: true, stored: true, multi_valued: true)
+          schema_generator.add_dynamic_field("#{field}Exact_*", 'string', indexed: true, stored: false, multi_valued: true)
+          schema_generator.add_dynamic_field("#{field}Suggest_*", 'text_suggest', indexed: true, stored: false, multi_valued: true, omit_norms: true)
+          schema_generator.add_dynamic_field("#{field}SuggestEdge_*", 'text_suggest_edge', indexed: true, stored: false, multi_valued: true)
+          schema_generator.add_dynamic_field("#{field}SuggestNgram_*", 'text_suggest_ngram', indexed: true, stored: false, multi_valued: true, omit_norms: true)
+
+          schema_generator.add_copy_field("#{field}_*", "#{field}Exact_*")
+          schema_generator.add_copy_field("#{field}_*", "#{field}Suggest_*")
+          schema_generator.add_copy_field("#{field}_*", "#{field}SuggestEdge_*")
+          schema_generator.add_copy_field("#{field}_*", "#{field}SuggestNgram_*")
+        end
+
+        schema_generator.add_dynamic_field('definition_*', 'text_general', indexed: true, stored: true, multi_valued: true)
+
+      end
+
+      enable_indexing(:term_search_core1) do |schema_generator|
+        index_schema(schema_generator)
+      end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       def self.tree_view_property(*args)
         submission = args.first
         unless submission.loaded_attributes.include?(:hasOntologyLanguage)

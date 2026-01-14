@@ -285,11 +285,11 @@ class TestProvisionalClass < LinkedData::TestOntologyCommon
     pc = @@provisional_class
     pc.ontology = @@ontology
     pc.unindex
-    resp = LinkedData::Models::Ontology.search("\"#{pc.label}\"", params)
+    resp = LinkedData::Models::ProvisionalClass.search("\"#{pc.label}\"", params)
     assert_equal 0, resp["response"]["numFound"]
 
     pc.index
-    resp = LinkedData::Models::Ontology.search("\"#{pc.label}\"", params)
+    resp = LinkedData::Models::ProvisionalClass.search("\"#{pc.label}\"", params)
     assert_equal 1, resp["response"]["numFound"]
     assert_equal pc.label, resp["response"]["docs"][0]["prefLabel"].first
     pc.unindex
@@ -312,18 +312,18 @@ class TestProvisionalClass < LinkedData::TestOntologyCommon
     pc3.save
     pc3 = LinkedData::Models::ProvisionalClass.find(pc3.id).include(:label).first
 
-    resp = LinkedData::Models::Ontology.search("\"#{pc1.label}\"", params)
+    resp = LinkedData::Models::ProvisionalClass.search("\"#{pc1.label}\"", params)
     assert_equal 1, resp["response"]["numFound"]
     assert_equal pc1.label, resp["response"]["docs"][0]["prefLabel"].first
     par_len = resp["response"]["docs"][0]["parents"].length
     assert_equal 5, par_len
     assert_equal 1, (resp["response"]["docs"][0]["parents"].select { |x| x == class_id.to_s }).length
 
-    resp = LinkedData::Models::Ontology.search("\"#{pc2.label}\"", params)
+    resp = LinkedData::Models::ProvisionalClass.search("\"#{pc2.label}\"", params)
     assert_equal par_len + 1, resp["response"]["docs"][0]["parents"].length
     assert_equal 1, (resp["response"]["docs"][0]["parents"].select { |x| x == pc1.id.to_s }).length
 
-    resp = LinkedData::Models::Ontology.search("\"#{pc3.label}\"", params)
+    resp = LinkedData::Models::ProvisionalClass.search("\"#{pc3.label}\"", params)
     assert_equal par_len + 2, resp["response"]["docs"][0]["parents"].length
     assert_equal 1, (resp["response"]["docs"][0]["parents"].select { |x| x == pc1.id.to_s }).length
     assert_equal 1, (resp["response"]["docs"][0]["parents"].select { |x| x == pc2.id.to_s }).length

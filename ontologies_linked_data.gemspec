@@ -32,6 +32,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency("rack-test")
   gem.add_dependency("rsolr")
   gem.add_dependency("rubyzip", "~> 3.0")
+  gem.add_dependency("down", "~> 5.0")
 
   gem.add_development_dependency("email_spec")
 

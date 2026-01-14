@@ -13,12 +13,10 @@ gem 'oj', '~> 3.0'
 gem 'omni_logger'
 gem 'pony'
 gem 'rack'
-gem 'rake', '~> 10.0'
+gem 'rake'
 gem 'request_store'
 gem 'rest-client'
 gem 'rsolr'
-gem 'thin', '~> 1.0' # compatibility version pin. thin should be replaced with webmoc
-gem "down", "~> 5.0"
 
 # Testing
 group :test do
@@ -31,14 +29,15 @@ group :test do
   gem 'rack-test', '~> 0.6'
   gem 'simplecov'
   gem 'simplecov-cobertura' # for codecov.io
+  gem "thin", "~> 1.8.2"
 end
 
 group :development do
   gem 'rubocop', require: false
 end
 # NCBO gems (can be from a local dev path or from rubygems/git)
-gem 'goo', github: 'ncbo/goo', branch: 'develop'
-gem 'sparql-client', github: 'ncbo/sparql-client', tag: 'v6.3.0'
+gem 'goo', github: 'ncbo/goo', branch: 'ontoportal-lirmm-development'
+gem 'sparql-client', github: 'ncbo/sparql-client', branch: 'ontoportal-lirmm-development'
 
 gem 'public_suffix', '~> 5.1.1'
 gem 'net-imap', '~> 0.4.18'

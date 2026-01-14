@@ -42,7 +42,7 @@ module LinkedData
 
         def roots_by_has_top_concept(concept_schemes, page, paged, pagesize)
           query_body = <<-eos
-            ?x #{RDF::SKOS[:hasTopConcept].to_ntriples} ?root .
+            ?x #{RDF::Vocab::SKOS[:hasTopConcept].to_ntriples} ?root .
             #{concept_schemes_filter(concept_schemes)}
           eos
           roots_by_query query_body, page, paged, pagesize
@@ -50,7 +50,7 @@ module LinkedData
 
         def roots_by_top_concept_of(concept_schemes, page, paged, pagesize)
           query_body = <<-eos
-            ?root #{RDF::SKOS[:topConceptOf].to_ntriples}  ?x.
+            ?root #{RDF::Vocab::SKOS[:topConceptOf].to_ntriples}  ?x.
             #{concept_schemes_filter(concept_schemes)}
           eos
           roots_by_query query_body, page, paged, pagesize

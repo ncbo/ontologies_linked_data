@@ -43,7 +43,7 @@ class TestOntologySubmission < LinkedData::TestOntologyCommon
     roots.each do |root|
       q_broader = <<-eos
 SELECT ?children WHERE {
-  ?children #{RDF::SKOS[:broader].to_ntriples} #{root.id.to_ntriples} }
+  ?children #{RDF::Vocab::SKOS[:broader].to_ntriples} #{root.id.to_ntriples} }
       eos
       children_query = []
       Goo.sparql_query_client.query(q_broader).each_solution do |sol|
