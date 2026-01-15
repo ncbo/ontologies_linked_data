@@ -118,20 +118,13 @@ module LinkedData
       cache_segment_keys [:class]
       cache_load submission: [ontology: [:acronym]]
 
-
-
-
-
-
-
-
-
       # Index settings
       def self.index_schema(schema_generator)
         schema_generator.add_field(:prefLabel, 'text_general', indexed: true, stored: true, multi_valued: true)
         schema_generator.add_field(:synonym, 'text_general', indexed: true, stored: true, multi_valued: true)
-        schema_generator.add_field(:notation, 'text_general', indexed: true, stored: true, multi_valued: false)
-
+        schema_generator.add_field(:notation, 'string_ci', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:oboId, 'string_ci', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:idAcronymMatch, 'boolean', indexed: true, stored: true, multi_valued: false, default: false)
         schema_generator.add_field(:definition, 'string', indexed: true, stored: true, multi_valued: true)
         schema_generator.add_field(:submissionAcronym, 'string', indexed: true, stored: true, multi_valued: false)
         schema_generator.add_field(:parents, 'string', indexed: true, stored: true, multi_valued: true)
@@ -152,9 +145,9 @@ module LinkedData
 
         # Copy fields for term search
         schema_generator.add_copy_field('notation', '_text_')
+        schema_generator.add_copy_field('oboId', '_text_')
 
         %w[prefLabel synonym].each do |field|
-
           schema_generator.add_field("#{field}Exact", 'string', indexed: true, stored: false, multi_valued: true)
           schema_generator.add_field("#{field}Suggest", 'text_suggest', indexed: true, stored: false, multi_valued: true, omit_norms: true)
           schema_generator.add_field("#{field}SuggestEdge", 'text_suggest_edge', indexed: true, stored: false, multi_valued: true)
@@ -179,34 +172,11 @@ module LinkedData
         end
 
         schema_generator.add_dynamic_field('definition_*', 'text_general', indexed: true, stored: true, multi_valued: true)
-
       end
 
       enable_indexing(:term_search_core1) do |schema_generator|
         index_schema(schema_generator)
       end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
       def self.tree_view_property(*args)
         submission = args.first
