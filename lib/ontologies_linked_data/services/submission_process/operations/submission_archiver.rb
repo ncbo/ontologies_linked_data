@@ -6,21 +6,23 @@ module LinkedData
       FOLDERS_TO_DELETE = ['unzipped']
       FILE_SIZE_ZIPPING_THRESHOLD = 100 * 1024 * 1024 # 100MB
 
-      def process
-        archive_submission
+      def process(force: false)
+        archive_submission(force: force)
       end
 
       private
 
-      def archive_submission
+      def archive_submission(force: false)
         @submission.ontology.bring(:submissions)
         submissions = @submission.ontology.submissions
         return if submissions.nil?
 
         submissions.each { |s| s.bring(:submissionId) }
         submission = submissions.sort { |a, b| b.submissionId <=> a.submissionId }.first
+        latest_submission_id = submission&.submissionId || 0
+        @submission.bring(:submissionId) if @submission.bring?(:submissionId)
 
-        return unless @submission.submissionId < submission.submissionId
+        return if (@submission.submissionId >= latest_submission_id) && !force
 
         @submission.submissionStatus = nil
         status = LinkedData::Models::SubmissionStatus.find("ARCHIVED").first
@@ -29,6 +31,7 @@ module LinkedData
         @submission.unindex
 
         # Delete everything except for original ontology file.
+        delete_old_graph
         delete_old_submission_files
         @submission.uploadFilePath = zip_submission_uploaded_file
       end
@@ -55,6 +58,10 @@ module LinkedData
         FileUtils.rm(submission_files, force: true)
         submission_folders = FOLDERS_TO_DELETE.map { |f| File.join(path_to_repo, f) }
         submission_folders.each { |d| FileUtils.remove_dir(d) if File.directory?(d) }
+      end
+
+      def delete_old_graph
+        Goo.sparql_data_client.delete_graph(@submission.id)
       end
 
     end
