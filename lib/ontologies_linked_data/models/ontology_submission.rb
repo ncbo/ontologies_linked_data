@@ -13,10 +13,10 @@ module LinkedData
     class OntologySubmission < LinkedData::Models::Base
 
       include LinkedData::Concerns::SubmissionProcessable
-      include LinkedData::Concerns::OntologySubmission::MetadataExtractor
       include LinkedData::Concerns::OntologySubmission::Validators
+      include LinkedData::Concerns::OntologySubmission::UpdateCallbacks
       extend LinkedData::Concerns::OntologySubmission::DefaultCallbacks
-
+      include LinkedData::Concerns::SubmissionDiffParser
       include SKOS::ConceptSchemes
       include SKOS::RootsFetcher
 
@@ -229,6 +229,8 @@ module LinkedData
       # Access control
       read_restriction_based_on lambda { |sub| sub.ontology }
       access_control_load ontology: [:administeredBy, :acl, :viewingRestriction]
+
+      enable_indexing(:ontology_metadata)
 
       def initialize(*args)
         super(*args)

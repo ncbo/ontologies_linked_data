@@ -23,9 +23,6 @@ module LinkedData
       def process_submission(logger, options = {})
         # Wrap the whole process so we can email results
         begin
-          archive, diff, index_commit, index_properties,
-            index_search, process_rdf, reasoning, run_metrics = get_options(options)
-
           @submission.bring_remaining
           @submission.ontology.bring_remaining
 
@@ -33,41 +30,35 @@ module LinkedData
           logger.flush
           LinkedData::Parser.logger = logger
 
-          if archive
+          if process_archive?(options)
             @submission.archive
           else
-            @submission.generate_rdf(logger, reasoning: reasoning) if process_rdf
-            parsed = @submission.ready?(status: [:rdf, :rdf_labels])
 
-            if index_search
-              unless parsed
-                raise StandardError, "The submission #{@submission.ontology.acronym}/submissions/#{@submission.submissionId}
+            @submission.generate_rdf(logger, reasoning: process_reasoning?(options)) if process_rdf?(options)
+
+            parsed = @submission.ready?(status: %i[rdf])
+
+            @submission = @submission.extract_metadata(logger, user_params: options[:params], heavy_extraction: extract_metadata?(options))
+
+            @submission.generate_missing_labels(logger) if generate_missing_labels?(options)
+
+            @submission.generate_obsolete_classes(logger) if generate_obsolete_classes?(options)
+
+            if !parsed && (index_search?(options) || index_properties?(options) || index_all_data?(options))
+              raise StandardError, "The submission #{@submission.ontology.acronym}/submissions/#{@submission.submissionId}
                                 cannot be indexed because it has not been successfully parsed"
-              end
-              @submission.index(logger, commit: index_commit)
             end
 
-            if index_properties
-              unless parsed
-                raise Exception, "The properties for the submission #{@submission.ontology.acronym}/submissions/#{@submission.submissionId}
-                                cannot be indexed because it has not been successfully parsed"
+            @submission.index_all(logger, commit: process_index_commit?(options)) if index_all_data?(options)
 
-              end
-              @submission.index_properties(logger, commit: index_commit)
-            end
+            @submission.index_terms(logger, commit: process_index_commit?(options)) if index_search?(options)
 
-            @submission.generate_diff(logger) if diff
+            @submission.index_properties(logger, commit: process_index_commit?(options)) if index_properties?(options)
 
-            if run_metrics
-              unless parsed
-                raise StandardError, "Metrics cannot be generated on the submission
-                        #{@submission.ontology.acronym}/submissions/#{@submission.submissionId}
-                        because it has not been successfully parsed"
-              end
-              @submission.generate_metrics(logger)
-            end
+            @submission.generate_metrics(logger) if process_metrics?(options)
+
+            @submission.generate_diff(logger) if process_diff?(options)
           end
-
           @submission.save
           logger.info("Submission processing of #{@submission.id} completed successfully")
           logger.flush
@@ -79,45 +70,59 @@ module LinkedData
       end
 
       def notify_submission_processed(logger)
-        LinkedData::Utils::Notifications.submission_processed(@submission) unless @submission.archived?
+        LinkedData::Utils::Notifications.submission_processed(@submission)
       rescue StandardError => e
         logger.error("Email sending failed: #{e.message}\n#{e.backtrace.join("\n\t")}"); logger.flush
       end
 
-      def get_options(options)
-
-        if options.empty?
-          process_rdf = true
-          index_search = true
-          index_properties = true
-          index_commit = true
-          run_metrics = true
-          reasoning = true
-          diff = true
-          archive = false
-        else
-          process_rdf = options[:process_rdf] == true
-          index_search = options[:index_search] == true
-          index_properties = options[:index_properties] == true
-          run_metrics = options[:run_metrics] == true
-
-          reasoning = if !process_rdf || options[:reasoning] == false
-                        false
-                      else
-                        true
-                      end
-
-          index_commit = if (!index_search && !index_properties) || options[:index_commit] == false
-                           false
-                         else
-                           true
-                         end
-
-          diff = options[:diff] == true
-          archive = options[:archive] == true
-        end
-        [archive, diff, index_commit, index_properties, index_search, process_rdf, reasoning, run_metrics]
+      def process_archive?(options)
+        options[:archive].eql?(true)
       end
+
+      def process_rdf?(options)
+        options.empty? || options[:process_rdf].eql?(true)
+      end
+
+      def generate_missing_labels?(options)
+        options[:generate_missing_labels].nil? && process_rdf?(options) || options[:generate_missing_labels].eql?(true)
+      end
+
+      def generate_obsolete_classes?(options)
+        options[:generate_obsolete_classes].nil? && process_rdf?(options) || options[:generate_obsolete_classes].eql?(true)
+      end
+
+      def index_all_data?(options)
+        options.empty? || options[:index_all_data].eql?(true)
+      end
+
+      def index_search?(options)
+        options.empty? || options[:index_search].eql?(true)
+      end
+
+      def index_properties?(options)
+        options.empty? || options[:index_properties].eql?(true)
+      end
+
+      def process_index_commit?(options)
+        index_search?(options) || index_properties?(options) || index_all_data?(options)
+      end
+
+      def process_diff?(options)
+        options.empty? || options[:diff].eql?(true)
+      end
+
+      def process_metrics?(options)
+        options.empty? || options[:run_metrics].eql?(true)
+      end
+
+      def process_reasoning?(options)
+        options.empty? && options[:reasoning].eql?(true)
+      end
+
+      def extract_metadata?(options)
+        options.empty? || options[:extract_metadata].eql?(true)
+      end
+
     end
   end
 end

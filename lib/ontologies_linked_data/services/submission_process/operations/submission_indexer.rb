@@ -26,7 +26,7 @@ module LinkedData
 
       def index(logger, commit = true, optimize = true)
         page = 0
-        size = 1000
+        size = 2500
         count_classes = 0
 
         time = Benchmark.realtime do

@@ -33,8 +33,8 @@ if ENV['OVERRIDE_CONFIG'] == 'true'
     config.goo_redis_port             = ENV['REDIS_PORT']
     config.http_redis_host            = ENV['REDIS_HOST']
     config.http_redis_port            = ENV['REDIS_PORT']
-    config.search_server_url          = "http://#{SOLR_HOST}:8983/solr/term_search_core1"
-    config.property_search_server_url = "http://#{SOLR_HOST}:8983/solr/prop_search_core1"
+    config.search_server_url          = "http://#{SOLR_HOST}:8983/solr"
+    config.property_search_server_url = "http://#{SOLR_HOST}:8983/solr"
   end
 end
 

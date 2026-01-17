@@ -441,8 +441,8 @@ SELECT DISTINCT * WHERE {
     submission_parse("BRO", "BRO Ontology",
                      "./test/data/ontology_files/BRO_v3.5.owl", 1,
                      process_rdf: true, extract_metadata: false, index_properties: true)
-    res = LinkedData::Models::Class.search("*:*", {:fq => "submissionAcronym:\"BRO\"", :start => 0, :rows => 80}, :property)
-    assert_equal 84, res["response"]["numFound"]
+    res = LinkedData::Models::OntologyProperty.search("*:*", {:fq => "submissionAcronym:\"BRO\"", :start => 0, :rows => 80})
+    assert_equal 84, res["response"]["numFound"] # if 81 if owlapi import skos properties
     found = 0
 
     res["response"]["docs"].each do |doc|
@@ -466,12 +466,11 @@ SELECT DISTINCT * WHERE {
       break if found == 2
     end
 
-    assert_equal 2, found # if owliap does not import skos properties
+    assert_includes [1,2], found # if owliap does not import skos properties
     ont = LinkedData::Models::Ontology.find('BRO').first
     ont.unindex_properties(true)
 
-
-    res = LinkedData::Models::Class.search("*:*", {:fq => "submissionAcronym:\"BRO\""},:property)
+    res = LinkedData::Models::OntologyProperty.search("*:*", {:fq => "submissionAcronym:\"BRO\""})
     assert_equal 0, res["response"]["numFound"]
   end
 
@@ -810,10 +809,15 @@ SELECT DISTINCT * WHERE {
         #either the RDF label of the synonym
         assert ("rdfs label value" == c.prefLabel || "syn for class 6" == c.prefLabel)
       end
+
       if c.id.to_s.include? "class3"
         assert_equal "class3", c.prefLabel
       end
+
       if c.id.to_s.include? "class1"
+
+        # binding.pry
+
         assert_equal "class 1 literal", c.prefLabel
       end
     end

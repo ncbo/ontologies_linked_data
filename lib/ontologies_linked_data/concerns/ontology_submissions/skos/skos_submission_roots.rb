@@ -33,7 +33,7 @@ module LinkedData
           #needs to get cached
           class_ids = []
 
-          Goo.sparql_query_client.query(root_skos, { graphs: [self.id] }).each_solution do |s|
+          Goo.sparql_query_client.query(root_skos, graphs: [self.id]).each_solution do |s|
             class_ids << s[:root]
           end
 
