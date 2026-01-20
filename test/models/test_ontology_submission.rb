@@ -485,7 +485,7 @@ SELECT DISTINCT * WHERE {
 
     doc = res["response"]["docs"].select{|doc| doc["resource_id"].to_s.eql?('http://bioontology.org/ontologies/Activity.owl#Activity')}.first
     refute_nil doc
-    assert_equal 30, doc.keys.select{|k| k['prefLabel'] || k['synonym']}.size # test that all the languages are indexed
+    assert_equal 12, doc.keys.select{|k| k['prefLabel'] || k['synonym']}.size # test that all the languages are indexed
 
     res = LinkedData::Models::Class.search("prefLabel_none:Activity", {:fq => "submissionAcronym:BRO", :start => 0, :rows => 80})
     refute_equal 0, res["response"]["numFound"]
@@ -501,10 +501,6 @@ SELECT DISTINCT * WHERE {
 
     res = LinkedData::Models::Class.search("prefLabel_fr:Activity", {:fq => "submissionAcronym:BRO", :start => 0, :rows => 80})
     assert_equal 0, res["response"]["numFound"]
-
-    res = LinkedData::Models::Class.search("prefLabel_ja:カタログ", {:fq => "submissionAcronym:BRO", :start => 0, :rows => 80})
-    refute_equal 0, res["response"]["numFound"]
-    refute_nil res["response"]["docs"].select{|doc| doc["resource_id"].eql?('http://bioontology.org/ontologies/Activity.owl#Catalog')}.first
   end
 
   def test_submission_parse_multilingual

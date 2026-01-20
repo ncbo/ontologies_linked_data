@@ -196,15 +196,19 @@ module LinkedData
         if prefLabel_lang.nil? || no_default_prefLabel
           lang_rdfs_labels = c.label(include_languages: true)
 
-          if lang_rdfs_labels.to_a.empty? ||
-            lang_rdfs_labels.is_a?(Array) ||
-            (no_default_prefLabel && lang_rdfs_labels.is_a?(Hash) && (lang_rdfs_labels.keys & [portal_lang, :none]).empty?)
+          if lang_rdfs_labels.is_a?(Array)
+            lang_rdfs_labels = lang_rdfs_labels.empty? ? { none: [] } : { none: lang_rdfs_labels }
+          elsif lang_rdfs_labels.to_a.empty? ||
+            (no_default_prefLabel && lang_rdfs_labels.is_a?(Hash) && (lang_rdfs_labels.keys & [portal_lang, :none, '@none']).empty?)
             lang_rdfs_labels = lang_rdfs_labels.is_a?(Hash) ? lang_rdfs_labels : {}
             lang_rdfs_labels[:none] = []
           end
 
           lang_rdfs_labels.each do |lang, rdfs_labels|
-            if rdfs_labels && rdfs_labels.length > 1 && c.synonym.length > 0
+            synonyms = c.synonym
+            synonyms_present = !(synonyms.nil? || (synonyms.respond_to?(:empty?) && synonyms.empty?))
+
+            if rdfs_labels && rdfs_labels.length > 1 && synonyms_present
               rdfs_labels = (Set.new(c.label) - Set.new(c.synonym)).to_a.first
               rdfs_labels = c.label if rdfs_labels.nil? || rdfs_labels.length == 0
             end
@@ -219,8 +223,10 @@ module LinkedData
               label = LinkedData::Utils::Triples.last_iri_fragment c.id.to_s
             end
 
-            lang = nil if lang === :none
-            prefLabel = label
+            # Set language to nil for :none and assign pref_label
+            lang = nil if lang.eql?(:none) || lang.to_s.eql?('@none')
+            prefLabel = label if lang.nil? || lang.eql?(portal_lang)
+            prefLabel ||= label
 
             artifacts[:label_triples] << LinkedData::Utils::Triples.label_for_class_triple(
               c.id, Goo.vocabulary(:metadata_def)[:prefLabel], prefLabel, lang)

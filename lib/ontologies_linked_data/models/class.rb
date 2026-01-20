@@ -263,14 +263,15 @@ module LinkedData
             path_ids.select! { |x| !x["owl#Thing"] }
             doc[:parents] = path_ids
           rescue Exception => e
-            doc[:parents] = Set.new
+            doc[:parents] = []
             puts "Exception getting paths to root for search for #{class_id}: #{e.class}: #{e.message}\n#{e.backtrace.join("\n")}"
           end
 
           acronym = self.submission.ontology.acronym
+          self.submission.ontology.bring(:ontologyType) if self.submission.ontology.bring?(:ontologyType)
 
           doc[:ontologyId] = self.submission.id.to_s
-          doc[:submissionAcronym] = self.submission.ontology.acronym
+          doc[:submissionAcronym] = acronym
           doc[:submissionId] = self.submission.submissionId
           doc[:ontologyType] = self.submission.ontology.ontologyType.get_code_from_id
           doc[:obsolete] = self.obsolete.to_s
@@ -287,7 +288,10 @@ module LinkedData
             if cur_val.is_a?(Hash) # Multi language
               if multi_language_fields.include?(att)
                 doc[att] = cur_val.values.flatten # index all values of each language
-                cur_val.each { |lang, values| doc["#{att}_#{lang}".to_sym] = values } # index values per language
+                cur_val.each do |lang, values|
+                  lang_key = lang.to_s.gsub('@', '')
+                  doc["#{att}_#{lang_key}".to_sym] = values
+                end # index values per language
               else
                 doc[att] = cur_val.values.flatten.first
               end
