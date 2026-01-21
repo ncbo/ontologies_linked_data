@@ -125,8 +125,7 @@ class TestNotifications < LinkedData::TestCase
     ont.latest_submission(status: :any).process_submission(Logger.new(TestLogFile.new))
     admin_mails = LinkedData::Utils::Notifier.ontology_admin_emails(ont)
     assert_equal 1, all_emails.size, 'number of send emails'
-
-    refute_match @@support_mails, last_email_sent.to.sort
+    assert_empty(last_email_sent.to & @@support_mails)
     assert_equal admin_mails, last_email_sent.to.sort
     assert_match 'Parsing Success', all_emails.last.subject
     LinkedData.settings.enable_administrative_notifications = true
