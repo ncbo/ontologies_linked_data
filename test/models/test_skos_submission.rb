@@ -92,7 +92,7 @@ SELECT ?children WHERE {
     roots.each do |r|
       selected_schemes = r.inScheme.select { |s| concept_schemes.include?(s) }
       refute_empty selected_schemes
-      assert_equal r.isInActiveScheme, selected_schemes
+      assert_equal r.isInActiveScheme.sort, selected_schemes.sort
       assert_equal r.isInActiveCollection, []
     end
     roots = roots.map { |r| r.id.to_s } unless roots.nil?
