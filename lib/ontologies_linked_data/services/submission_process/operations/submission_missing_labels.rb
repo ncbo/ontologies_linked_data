@@ -225,8 +225,7 @@ module LinkedData
 
             # Set language to nil for :none and assign pref_label
             lang = nil if lang.eql?(:none) || lang.to_s.eql?('@none')
-            prefLabel = label if lang.nil? || lang.eql?(portal_lang)
-            prefLabel ||= label
+            prefLabel = label
 
             artifacts[:label_triples] << LinkedData::Utils::Triples.label_for_class_triple(
               c.id, Goo.vocabulary(:metadata_def)[:prefLabel], prefLabel, lang)

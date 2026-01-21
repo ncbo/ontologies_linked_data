@@ -1180,6 +1180,8 @@ eos
 
   # See https://github.com/ncbo/ncbo_cron/issues/82#issuecomment-3104054081
   def test_disappearing_values
+    skip "This issue no longer occurs with the latest goo/sparql-client from AgroPortal"
+
     acronym = "ONTOMATEST"
     name = "ONTOMA Test Ontology"
     ontologyFile = "./test/data/ontology_files/OntoMA.1.1_vVersion_1.1_Date__11-2011.OWL"
