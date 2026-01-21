@@ -1,8 +1,8 @@
 LinkedData.config do |config|
   config.goo_port          = 9000
   config.goo_host          = "localhost"
-  config.search_server_url = "http://localhost:8983/solr/term_search_core1"
-  config.property_search_server_url = "http://localhost:8983/solr/prop_search_core1"
+  config.search_server_url = "http://localhost:8983/solr"
+  config.property_search_server_url = "http://localhost:8983/solr"
   config.repository_folder = "./test/data/ontology_files/repo"
   config.rest_url_prefix   = "http://data.bioontology.org/"
   config.enable_security   = false
