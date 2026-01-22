@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/ncbo/goo.git
-  revision: 027268491b095a13efe288790f16557d49c7bb1d
+  revision: edddd813a857446314a00d283d162c5ce53f945d
   branch: ontoportal-lirmm-development
   specs:
     goo (0.0.2)
@@ -127,7 +127,7 @@ GEM
     mime-types (3.7.0)
       logger
       mime-types-data (~> 3.2025, >= 3.2025.0507)
-    mime-types-data (3.2025.0924)
+    mime-types-data (3.2026.0113)
     mini_mime (1.1.5)
     minitest (4.7.5)
     minitest-reporters (0.14.24)
@@ -164,14 +164,14 @@ GEM
       logger
     ostruct (0.6.3)
     parallel (1.27.0)
-    parser (3.3.10.0)
+    parser (3.3.10.1)
       ast (~> 2.4.1)
       racc
     pony (1.13.1)
       mail (>= 2.0)
     powerbar (2.0.1)
       hashie (>= 1.1.0)
-    prism (1.7.0)
+    prism (1.8.0)
     pry (0.16.0)
       coderay (~> 1.1)
       method_source (~> 1.0)
@@ -179,8 +179,8 @@ GEM
     public_suffix (5.1.1)
     racc (1.8.1)
     rack (2.2.21)
-    rack-test (0.6.3)
-      rack (>= 1.0)
+    rack-test (0.8.3)
+      rack (>= 1.0, < 3)
     rainbow (3.1.1)
     rake (13.3.1)
     rdf (3.3.4)
@@ -364,7 +364,7 @@ CHECKSUMS
   mail (2.9.0) sha256=6fa6673ecd71c60c2d996260f9ee3dd387d4673b8169b502134659ece6d34941
   method_source (1.1.0) sha256=181301c9c45b731b4769bc81e8860e72f9161ad7d66dd99103c9ab84f560f5c5
   mime-types (3.7.0) sha256=dcebf61c246f08e15a4de34e386ebe8233791e868564a470c3fe77c00eed5e56
-  mime-types-data (3.2025.0924) sha256=f276bca15e59f35767cbcf2bc10e023e9200b30bd6a572c1daf7f4cc24994728
+  mime-types-data (3.2026.0113) sha256=8c88fa7b1af91c87098f666b7ffbd4794799a71c05765be2c1f6df337d41b04c
   mini_mime (1.1.5) sha256=8681b7e2e4215f2a159f9400b5816d85e9d8c6c6b491e96a12797e798f8bccef
   minitest (4.7.5) sha256=3e0ac720a6d0787b4c822514739319493e187400e993fba96397bd64d58ae60e
   minitest-reporters (0.14.24) sha256=25df8dcc6432be2d91dcb8f6e30e82b5241193178fe60817c46174883fbe645b
@@ -384,15 +384,15 @@ CHECKSUMS
   ontologies_linked_data (0.0.1)
   ostruct (0.6.3) sha256=95a2ed4a4bd1d190784e666b47b2d3f078e4a9efda2fccf18f84ddc6538ed912
   parallel (1.27.0) sha256=4ac151e1806b755fb4e2dc2332cbf0e54f2e24ba821ff2d3dcf86bf6dc4ae130
-  parser (3.3.10.0) sha256=ce3587fa5cc55a88c4ba5b2b37621b3329aadf5728f9eafa36bbd121462aabd6
+  parser (3.3.10.1) sha256=06f6a725d2cd91e5e7f2b7c32ba143631e1f7c8ae2fb918fc4cebec187e6a688
   pony (1.13.1) sha256=ab507c8ade8b35de96f1e75c0ae4566a3c40ac8a0d5101433969b6fd29c718a7
   powerbar (2.0.1) sha256=2e0a24b995ef3be163303b34aa238623eb83f35ab75a9a40d58c368bed63eb37
-  prism (1.7.0) sha256=10062f734bf7985c8424c44fac382ac04a58124ea3d220ec3ba9fe4f2da65103
+  prism (1.8.0) sha256=84453a16ef5530ea62c5f03ec16b52a459575ad4e7b9c2b360fd8ce2c39c1254
   pry (0.16.0) sha256=d76c69065698ed1f85e717bd33d7942c38a50868f6b0673c636192b3d1b6054e
   public_suffix (5.1.1) sha256=250ec74630d735194c797491c85e3c6a141d7b5d9bd0b66a3fa6268cf67066ed
   racc (1.8.1) sha256=4a7f6929691dbec8b5209a0b373bc2614882b55fc5d2e447a21aaa691303d62f
   rack (2.2.21) sha256=14e2f72f0765455fe424ff601588ac5ce84e95784f59e99251ffe1527152f739
-  rack-test (0.6.3) sha256=ff60b122e2940e32e94a2e4a61bceb8d9c99a97c1817ecc47e535522b02cdd40
+  rack-test (0.8.3) sha256=2fec9a98d366017788dbcddb60430d58c4fec9733d6a695c8a216fee7f1a3292
   rainbow (3.1.1) sha256=039491aa3a89f42efa1d6dec2fc4e62ede96eb6acd95e52f1ad581182b79bc6a
   rake (13.3.1) sha256=8c9e89d09f66a26a01264e7e3480ec0607f0c497a861ef16063604b1b08eb19c
   rdf (3.3.4) sha256=a77fa0821e5b4e2bea9fdbb7c9d980564c89d27e81979690ce5c9e6bc80859c1
