@@ -39,8 +39,43 @@ if ENV['OVERRIDE_CONFIG'] == 'true'
 end
 
 require_relative '../config/config'
-require 'minitest/unit'
-MiniTest::Unit.autorun
+require 'minitest/autorun'
+
+# Minitest 5+ no longer supports `MiniTest::Unit.runner=`. We emulate the old
+# custom runner behavior using Minitest hooks and a small patch around suite runs.
+module LinkedData
+  module MinitestSuiteHooks
+    def run(*args, &block)
+      before_suite if respond_to?(:before_suite)
+      super
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace.join("\n\t")
+      puts 'Traced from:'
+      raise
+    ensure
+      after_suite if respond_to?(:after_suite)
+    end
+  end
+end
+
+# Apply per-suite before/after hooks around every runnable (test class).
+Minitest::Runnable.singleton_class.prepend(LinkedData::MinitestSuiteHooks)
+
+# Emulate the old Unit runner's before/after suites behavior.
+# (Not all Minitest versions expose `before_run` / `after_run`.)
+module LinkedData
+  module MinitestRunHooks
+    def run(*args)
+      LinkedData::TestCase.backend_4s_delete
+      super
+    ensure
+      LinkedData::TestCase.backend_4s_delete
+    end
+  end
+end
+
+Minitest.singleton_class.prepend(LinkedData::MinitestRunHooks)
 
 # Check to make sure you want to run if not pointed at localhost
 safe_hosts = Regexp.new(/localhost|-ut|ncbo-dev*|ncbo-unittest*/)
@@ -69,40 +104,8 @@ unless LinkedData.settings.goo_host.match(safe_hosts) &&
 end
 
 module LinkedData
-  class Unit < MiniTest::Unit
-    def before_suites
-      # code to run before the first test (gets inherited in sub-tests)
-    end
 
-    def after_suites
-      # code to run after the last test (gets inherited in sub-tests)
-    end
-
-    def _run_suites(suites, type)
-      TestCase.backend_4s_delete
-      before_suites
-      super(suites, type)
-    ensure
-      TestCase.backend_4s_delete
-      after_suites
-    end
-
-    def _run_suite(suite, type)
-      suite.before_suite if suite.respond_to?(:before_suite)
-      super(suite, type)
-    rescue Exception => e
-      puts e.message
-      puts e.backtrace.join("\n\t")
-      puts 'Traced from:'
-      raise e
-    ensure
-      suite.after_suite if suite.respond_to?(:after_suite)
-    end
-  end
-
-  MiniTest::Unit.runner = LinkedData::Unit.new
-
-  class TestCase < MiniTest::Unit::TestCase
+  class TestCase < Minitest::Test
 
     # Ensure all threads exit on any exception
     Thread.abort_on_exception = true

@@ -21,7 +21,7 @@ gem 'rsolr'
 # Testing
 group :test do
   gem 'email_spec'
-  gem 'minitest', '~> 4'
+  gem 'minitest'
   gem 'minitest-reporters', '>= 0.5.0'
   gem 'mocha', '~> 2.7'
   gem 'mock_redis', '~> 0.5'
