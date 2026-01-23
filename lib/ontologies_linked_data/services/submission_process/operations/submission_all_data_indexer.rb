@@ -22,9 +22,10 @@ module LinkedData
         size = Goo.backend_vo? ? 100 : 1000
         count_ids = 0
 
-        ontology = @submission.bring(:ontology).ontology
+        ontology_acronym = @submission.bring(:ontology).ontology
                               .bring(:acronym).acronym
-        conn = init_search_collection(ontology)
+
+        conn = init_search_collection(ontology_acronym)
         r = Goo.sparql_query_client.query("SELECT (COUNT(DISTINCT ?id) as ?count) WHERE { GRAPH <#{@submission.id}> { ?id ?p ?v } }")
         total_ids = r.each_solution.first[:count].to_i
         logger.info "Total ids count: #{total_ids}"
@@ -37,7 +38,7 @@ module LinkedData
         total_triples_indexed = 0
         total_time = Benchmark.realtime do
           results = Parallel.map((1..chunk_size).to_a, in_threads: 10) do |p|
-            index_all_data_page(logger, p, size, ontology, conn, commit)
+            index_all_data_page(logger, p, size, ontology_acronym, conn, commit)
           end
           results.each do |x|
             next if x.nil?
@@ -50,7 +51,7 @@ module LinkedData
         logger.info("Completed indexing all ontology data in #{total_time} sec. (#{count_ids} ids / #{total_triples} triples)")
       end
 
-      def index_all_data_page(logger, page, size, ontology, conn, commit = true)
+      def index_all_data_page(logger, page, size, ontology_acronym, conn, commit = true)
         ids = []
         time = Benchmark.realtime do
           ids = fetch_ids(size, page)
@@ -63,7 +64,7 @@ module LinkedData
         documents = []
         triples_count = 0
         time = Benchmark.realtime do
-          documents, triples_count = fetch_triples(ids, ontology)
+          documents, triples_count = fetch_triples(ids, ontology_acronym)
         end
         total_time += time
         logger.info("Page #{page} - Fetch IDs triples: #{triples_count}  in #{time} sec.")
@@ -108,19 +109,19 @@ module LinkedData
         doc
       end
 
-      def init_search_collection(ontology)
-        @submission.class.clear_indexed_content(ontology)
+      def init_search_collection(ontology_acronym)
+        @submission.class.clear_indexed_content(ontology_acronym)
       end
 
-      def fetch_triples(ids_slice, ontology)
+      def fetch_triples(ids_slice, ontology_acronym)
         documents = {}
         count = 0
         fetch_paginated_triples(ids_slice).each do |sol|
           count += 1
           doc = documents[sol[:id].to_s]
           doc ||= {
-            id: "#{sol[:id]}_#{ontology}", submission_id_t: @submission.id.to_s,
-            ontology_t: ontology, resource_model: @submission.class.model_name,
+            id: "#{sol[:id]}_#{ontology_acronym}", submission_id_t: @submission.id.to_s,
+            ontology_t: ontology_acronym, resource_model: @submission.class.model_name,
             resource_id: sol[:id].to_s
           }
           property = sol[:p].to_s

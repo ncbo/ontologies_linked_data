@@ -135,7 +135,7 @@ module LinkedData
         file_path = options[:file_path]
         file_path = "../../../../test/data/ontology_files/umls_semantictypes.ttl" if file_path.nil?
 
-        count, acronyms, sty = create_ontologies_and_submissions({
+        _, _, sty = create_ontologies_and_submissions({
                                                                    ont_count: 1,
                                                                    submission_count: 1,
                                                                    process_submission: true,
@@ -179,7 +179,7 @@ module LinkedData
 
       def self.sample_owl_ontologies(process_submission: false, process_options: nil)
         process_options ||= {process_rdf: true, extract_metadata: false, index_search: false}
-        count, acronyms, bro = create_ontologies_and_submissions({
+        _, _, bro = create_ontologies_and_submissions({
                                                                    process_submission: process_submission,
                                                                    process_options: process_options,
                                                                    acronym: "BROTEST",
@@ -190,7 +190,7 @@ module LinkedData
                                                                  })
 
         # This one has some nasty looking IRIS with slashes in the anchor
-        count, acronyms, mccl = create_ontologies_and_submissions({
+        _, _, mccl = create_ontologies_and_submissions({
                                                                     process_submission: process_submission,
                                                                     process_options: process_options,
                                                                     acronym: "MCCLTEST",
@@ -201,7 +201,7 @@ module LinkedData
                                                                   })
 
         # This one has resources wih accents.
-        count, acronyms, onto_matest = create_ontologies_and_submissions({
+        _, _, onto_matest = create_ontologies_and_submissions({
                                                                            process_submission: process_submission,
                                                                            process_options: process_options,
                                                                            acronym: "ONTOMATEST",

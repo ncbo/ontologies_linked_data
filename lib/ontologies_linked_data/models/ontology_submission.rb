@@ -317,6 +317,18 @@ module LinkedData
         dst
       end
 
+      def self.clear_indexed_content(ontology_acronym, logger=nil)
+        logger ||= LinkedData::Parser.logger || Logger.new($stderr)
+        conn = Goo.init_search_connection(:ontology_data)
+        begin
+          conn.delete_by_query("ontology_t:\"#{ontology_acronym}\"")
+        rescue StandardError => e
+          logger.error("Unable to clear search index for #{ontology_acronym} - #{e.class}: #{e.message}\n" + e.backtrace.join("\n\t"))
+          logger.flush
+        end
+        conn
+      end
+
       def valid?
         valid_result = super
         return false unless valid_result
