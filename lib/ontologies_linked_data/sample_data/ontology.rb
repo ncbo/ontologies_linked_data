@@ -25,7 +25,7 @@ module LinkedData
         acronym = options[:acronym] || "TEST-ONT"
         pref_label_property = options[:pref_label_property] || false
         synonym_property = options[:synonym_property] || false
-        definition_property = options[:synonym_property] || false
+        definition_property = options[:definition_property] || false
         name = options[:name]
         # set ontology type
         ontology_type = nil
@@ -72,7 +72,10 @@ module LinkedData
               submissionId: o.next_submission_id,
               definitionProperty: (RDF::IRI.new "http://bioontology.org/ontologies/biositemap.owl#definition"),
               contact: [contact],
-              released: DateTime.now - 3
+              released: DateTime.now - 3,
+              uri: RDF::URI.new("https://test-#{o.next_submission_id}.com"),
+              description: "Description #{o.next_submission_id}",
+              status: 'production'
             }
             sub_options[:prefLabelProperty] = RDF::IRI.new(pref_label_property) if pref_label_property
             sub_options[:synonymProperty] = RDF::IRI.new(synonym_property) if synonym_property
