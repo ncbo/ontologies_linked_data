@@ -507,6 +507,7 @@ module LinkedData
               end
             self.save
           end
+          self.masterFileName = File.basename(self.masterFileName.to_s)
 
           if logger
             logger.info("Files extracted from zip #{extracted}")
