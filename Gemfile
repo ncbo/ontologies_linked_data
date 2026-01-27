@@ -17,7 +17,7 @@ gem 'rake', '~> 10.0'
 gem 'request_store'
 gem 'rest-client'
 gem 'rsolr'
-gem 'thin', '~> 1.0' # compatibility version pin. thin should be replaced with webmoc
+gem 'thin', '~> 1.8' # compatibility version pin. thin should be replaced with webmoc
 gem "down", "~> 5.0"
 
 # Testing
