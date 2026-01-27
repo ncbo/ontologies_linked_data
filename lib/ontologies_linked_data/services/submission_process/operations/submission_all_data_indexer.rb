@@ -21,9 +21,9 @@ module LinkedData
       def index_all_data(logger, commit: true)
         size = Goo.backend_vo? ? 100 : 1000
         count_ids = 0
-
-        ontology_acronym = @submission.bring(:ontology).ontology
-                              .bring(:acronym).acronym
+        @submission.bring_remaining
+        @submission.ontology.bring_remaining
+        ontology_acronym = @submission.ontology.acronym
 
         conn = init_search_collection(ontology_acronym)
         r = Goo.sparql_query_client.query("SELECT (COUNT(DISTINCT ?id) as ?count) WHERE { GRAPH <#{@submission.id}> { ?id ?p ?v } }")

@@ -509,9 +509,19 @@ module LinkedData
 
           # Set master file name automatically if there is only one file
           if extracted.length == 1 && self.masterFileName.nil?
-            self.masterFileName = extracted.first.name
+            first = extracted.first
+
+            self.masterFileName =
+              if first.respond_to?(:name)
+                first.name
+              elsif first.is_a?(Hash)
+                first[:name] || first["name"]
+              else
+                first.to_s
+              end
             self.save
           end
+          self.masterFileName = File.basename(self.masterFileName.to_s)
 
           if logger
             logger.info("Files extracted from zip #{extracted}")
