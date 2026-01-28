@@ -49,7 +49,7 @@ module LinkedData
 
       attribute :acl, enforce: [:list, :user]
 
-      attribute :viewOf, enforce: [:ontology]
+      attribute :viewOf, enforce: [:ontology], onUpdate: :update_submissions_has_part
       attribute :views, :inverse => { on: :ontology, attribute: :viewOf }
       attribute :ontologyType, enforce: [:ontology_type], default: lambda { |record| LinkedData::Models::OntologyType.find("ONTOLOGY").include(:code).first }
 
@@ -115,6 +115,53 @@ module LinkedData
         end
 
         return errors.flatten
+      end
+
+      def update_submissions_has_part(inst, attr)
+        inst.bring :viewOf if inst.bring?(:viewOf)
+
+        target_ontology = inst.viewOf
+
+        if target_ontology.nil?
+          previous_value = inst.previous_values ? inst.previous_values[attr] : nil
+          return if previous_value.nil?
+
+          action = :remove
+          target_ontology = previous_value
+        else
+          action = :append
+        end
+
+        sub = target_ontology.latest_submission || target_ontology.bring(:submissions) && target_ontology.submissions.last
+
+        return if sub.nil?
+
+        sub.bring :hasPart if sub.bring?(:hasPart)
+
+        parts = sub.hasPart.dup || []
+        changed = false
+        if action.eql?(:append)
+          unless parts.include?(self.id)
+            changed = true
+            parts << self.id
+          end
+        elsif action.eql?(:remove)
+          if parts.include?(self.id)
+            changed = true
+            parts.delete(self.id)
+            sub.class.model_settings[:attributes][:hasPart][:enforce].delete(:include_ontology_views) #disable validator
+          end
+        end
+
+        return unless changed
+
+        sub.bring_remaining
+        sub.hasPart = parts
+        sub.save if sub.valid?
+
+        return unless changed && action.eql?(:remove)
+
+        sub.class.model_settings[:attributes][:hasPart][:enforce].append(:include_ontology_views)
       end
 
       def latest_submission(options = {})
