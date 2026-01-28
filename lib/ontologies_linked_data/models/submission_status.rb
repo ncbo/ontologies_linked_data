@@ -90,7 +90,7 @@ module LinkedData
 
             begin
               readable_stats = statuses_raw.map { |s| s.bring(:code); s.code }
-            rescue Exception => e
+            rescue Exception
               readable_stats = nil
 
               if i == num_calls

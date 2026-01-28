@@ -124,7 +124,7 @@ module LinkedData
           end
           if not File.exist?(File.join([@output_repo, "owlapi.xrdf"]))
             raise Parser::OWLAPIParserException, "OWLAPI java command exited with"+
-            "  #{w.value.exitstatus}. " +\
+            "  #{w.value.exitstatus}. " + \
             "Output file #{File.join([@output_repo, "owlapi.xrdf"])} cannot be found."
           else
             @file_triples_path = File.join([@output_repo, "owlapi.xrdf"])

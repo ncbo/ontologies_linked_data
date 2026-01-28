@@ -486,8 +486,8 @@ module LinkedData
         total_size = ids.length
         if !page.nil?
           ids = ids.to_a.sort
-          rstart = (page -1) * size
-          rend = (page * size) -1
+          rstart = (page - 1) * size
+          rend = (page * size) - 1
           ids = ids[rstart..rend]
         end
         ids.map! { |x| RDF::URI.new(x) }

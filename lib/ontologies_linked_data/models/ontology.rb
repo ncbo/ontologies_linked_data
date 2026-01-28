@@ -211,7 +211,7 @@ module LinkedData
 
         begin
           subs = self.submissions
-        rescue Exception => e
+        rescue Exception
           i = 0
           num_calls = LinkedData.settings.num_retries_4store
           subs = nil

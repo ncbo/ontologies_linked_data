@@ -118,7 +118,7 @@ module LinkedData
                     begin
                       # this cal is needed for indexing of properties
                       LinkedData::Models::Class.map_attributes(c, paging.equivalent_predicates, include_languages: true)
-                    rescue Exception => e
+                    rescue Exception
                       i = 0
                       num_calls = LinkedData.settings.num_retries_4store
                       success = nil

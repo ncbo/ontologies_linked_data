@@ -772,7 +772,7 @@ WHERE {
     def self.mappings_union_template(class_id, sub1, sub2, predicate, bind)
       class_id_subject = class_id.nil? ? '?s1' : "<#{class_id.to_s}>"
       target_graph = sub2.nil? ? '?g' : "<#{sub2.to_s}>"
-      union_template = <<-eos
+      return <<-eos
 {
   GRAPH <#{sub1.to_s}> {
       #{class_id_subject} <#{predicate}> ?o .

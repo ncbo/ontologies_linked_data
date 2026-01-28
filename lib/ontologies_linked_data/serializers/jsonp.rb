@@ -5,7 +5,7 @@ module LinkedData
         callback = options[:params]["callback"] || options[:params]["jsonp"] || "?"
         variable = options[:params]["variable"]
         json = LinkedData::Serializers::JSON.serialize(obj, options)
-        response = begin
+        begin
           if callback && variable
             "var #{variable} = #{json};\n#{callback}(#{variable});"
           elsif variable

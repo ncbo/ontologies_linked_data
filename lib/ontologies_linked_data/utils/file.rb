@@ -152,7 +152,6 @@ module LinkedData
           file, filename = download_file_ftp(uri)
         else
           file = Tempfile.new('ont-rest-file')
-          file_size = 0
           filename = nil
           http_session = Net::HTTP.new(uri.host, uri.port)
           http_session.verify_mode = OpenSSL::SSL::VERIFY_NONE
