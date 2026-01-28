@@ -181,26 +181,11 @@ module LinkedData
       # System-controlled attributes that should not be set by API clients
       system_controlled :submissionId, :uploadFilePath, :diffFilePath, :missingImports
 
-      def self.agents_attrs
-        return [] #TODO implement agent separately
-        %i[hasCreator publisher copyrightHolder hasContributor
-         translator endorsedBy fundedBy curatedBy]
-      end
-
       # Hypermedia settings
-      embed *%i[contact ontology metrics] + agents_attrs
+      embed *%i[contact ontology metrics]
 
       def self.embed_values_hash
-        out = {
-          submissionStatus: [:code], hasOntologyLanguage: [:acronym]
-        }
-
-        # TODO implement agents separately
-        # agent_attributes = LinkedData::Models::Agent.goo_attrs_to_load +
-        #   [identifiers: LinkedData::Models::AgentIdentifier.goo_attrs_to_load, affiliations: LinkedData::Models::Agent.goo_attrs_to_load]
-        #
-        # agents_attrs.each { |k| out[k] = agent_attributes }
-        out
+        { submissionStatus: [:code], hasOntologyLanguage: [:acronym] }
       end
 
       embed_values self.embed_values_hash
@@ -242,7 +227,7 @@ module LinkedData
       end
 
       def URI=(value)
-        self.uri  = value
+        self.uri = value
       end
 
       def URI
@@ -263,6 +248,24 @@ module LinkedData
           end
         end
         ontology_link
+      end
+
+      # Override the bring_remaining method from Goo::Base::Resource : https://github.com/ncbo/goo/blob/master/lib/goo/base/resource.rb#L383
+      # Because the old way to query the 4store was not working when lots of attributes
+      # Now it is querying attributes 5 by 5 (way faster than 1 by 1)
+      def bring_remaining
+        to_bring = []
+        i = 0
+        self.class.attributes.each do |attr|
+          to_bring << attr if self.bring?(attr)
+          if i == 5
+            self.bring(*to_bring)
+            to_bring = []
+            i = 0
+          end
+          i = i + 1
+        end
+        self.bring(*to_bring)
       end
 
       def self.segment_instance(sub)
@@ -831,18 +834,6 @@ module LinkedData
         self.bring(:uri) if self.bring? :uri
         RDF::URI.new(self.uri)
       end
-
-
-
-
-
-
-
-
-
-
-
-
 
       def roots_sorted(extra_include=nil)
         classes = roots(extra_include)
