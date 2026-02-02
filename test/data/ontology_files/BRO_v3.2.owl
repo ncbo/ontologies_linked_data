@@ -643,7 +643,7 @@
         <rdfs:subClassOf rdf:resource="&activity;Activity"/>
         <desc:definition rdf:datatype="&xsd;string">Activity related to the creation, use, or maintenance of a biorepository (http://en.wikipedia.org/wiki/Biorepository)</desc:definition>
         <rdfs:label xml:lang="fr">Gestion des échantillons biologiques</rdfs:label>
-        <core:prefLabel xml:lang="fr">Biospecimen Management</core:prefLabel>
+        <core:prefLabel xml:lang="fr">Gestion des Bioéchantillons</core:prefLabel>
     </owl:Class>
 
 

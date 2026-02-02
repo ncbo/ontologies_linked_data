@@ -204,6 +204,15 @@ module LinkedData
             lang_rdfs_labels[:none] = []
           end
 
+          # prefLabel (if defined) takes priority over label
+          prefLabel_lang ||= {}
+          prefLabel_lang.each do |lang, value|
+            next if value.nil? || (value.respond_to?(:empty?) && value.empty?)
+
+            lang = :none if lang == :"@none"
+            lang_rdfs_labels[lang] = Array(value)
+          end
+
           lang_rdfs_labels.each do |lang, rdfs_labels|
             synonyms = c.synonym
             synonyms_present = !(synonyms.nil? || (synonyms.respond_to?(:empty?) && synonyms.empty?))
