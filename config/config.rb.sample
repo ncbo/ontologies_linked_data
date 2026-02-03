@@ -4,7 +4,7 @@ LinkedData.config do |config|
   config.search_server_url = "http://localhost:8983/solr"
   config.property_search_server_url = "http://localhost:8983/solr"
   config.repository_folder = "./test/data/ontology_files/repo"
-  config.rest_url_prefix   = "http://data.bioontology.org/"
+  config.rest_url_prefix   = "http://localhost:9393/"
   config.enable_security   = false
   config.java_max_heap_size         = '10240M'
   #PURL server config parameters
