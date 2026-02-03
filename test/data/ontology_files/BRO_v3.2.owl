@@ -719,6 +719,7 @@
     <owl:Class rdf:about="&activity;Gene_Therapy">
         <rdfs:subClassOf rdf:resource="&activity;Therapeutics"/>
         <desc:definition rdf:datatype="&xsd;string">As defined in http://en.wikipedia.org/wiki/Gene_therapy</desc:definition>
+        <rdfs:label xml:lang="en">Gene Therapy</rdfs:label>
         <rdfs:label xml:lang="fr">Thérapie génique</rdfs:label>
     </owl:Class>
     
