@@ -3,6 +3,7 @@ require_relative '../test_case'
 require 'email_spec'
 require 'logger'
 require 'mocha/minitest'
+require 'securerandom'
 
 class TestNotifications < LinkedData::TestCase
   include EmailSpec::Helpers
@@ -141,10 +142,11 @@ class TestNotifications < LinkedData::TestCase
 
     ont = LinkedData::Models::Ontology.find(ontologies[0].id)
                                       .include(:acronym, :administeredBy, :name, :submissions).first
+    suffix = SecureRandom.hex(4)
     ont_admins = Array.new(3) { LinkedData::Models::User.new }
     ont_admins.each_with_index do |user, i|
-      user.username = "Test User #{i}"
-      user.email = "tester_#{i}@example.org"
+      user.username = "notif_test_user_#{suffix}_#{i}"
+      user.email = "notif_test_user_#{suffix}_#{i}@example.org"
       user.password = 'password'
       user.save
       assert user.valid?, user.errors
@@ -165,7 +167,7 @@ class TestNotifications < LinkedData::TestCase
     assert_equal admin_mails, last_email_sent.to.sort
   ensure
     ont_admins.each do |user|
-      user&.delete
+      user.delete if user&.persistent?
     end
   end
 
