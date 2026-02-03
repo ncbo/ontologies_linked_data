@@ -204,6 +204,19 @@ module LinkedData
             lang_rdfs_labels[:none] = []
           end
 
+          # if portal language label exists but no generic prefLabel is defined, copy teh portal language
+          # label into the generic one (lang_rdfs_labels[:none]). Otherwise, this case results in nil
+          # generic prefLabel for a class, even though prefLabels exist for multiple languages.
+          # For Example (portal_lang = :en):
+          #     <owl:Class rdf:about="&activity;Gene_Therapy">
+          #         <rdfs:subClassOf rdf:resource="&activity;Therapeutics"/>
+          #         <desc:definition rdf:datatype="&xsd;string">As defined in http://en.wikipedia.org/wiki/Gene_therapy</desc:definition>
+          #         <rdfs:label xml:lang="en">Gene Therapy</rdfs:label>
+          #         <rdfs:label xml:lang="fr">Thérapie génique</rdfs:label>
+          #     </owl:Class>
+          lang_rdfs_labels[:none] = lang_rdfs_labels[portal_lang].dup if lang_rdfs_labels[:none].blank? &&
+              lang_rdfs_labels.key?(portal_lang)
+
           # prefLabel (if defined) takes priority over label
           prefLabel_lang ||= {}
           prefLabel_lang.each do |lang, value|
@@ -222,7 +235,7 @@ module LinkedData
               rdfs_labels = c.label if rdfs_labels.nil? || rdfs_labels.length == 0
             end
 
-            rdfs_labels = [rdfs_labels] if rdfs_labels and not (rdfs_labels.instance_of? Array)
+            rdfs_labels = [rdfs_labels] if rdfs_labels && !rdfs_labels.instance_of?(Array)
 
             label = nil
             if rdfs_labels && rdfs_labels.length > 0
