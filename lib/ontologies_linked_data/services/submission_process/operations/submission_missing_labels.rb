@@ -204,7 +204,7 @@ module LinkedData
             lang_rdfs_labels[:none] = []
           end
 
-          # if portal language label exists but no generic prefLabel is defined, copy teh portal language
+          # if portal language label exists but no generic prefLabel is defined, copy the portal language
           # label into the generic one (lang_rdfs_labels[:none]). Otherwise, this case results in nil
           # generic prefLabel for a class, even though prefLabels exist for multiple languages.
           # For Example (portal_lang = :en):
