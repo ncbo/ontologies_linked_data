@@ -45,7 +45,9 @@ require 'minitest/autorun'
 # custom runner behavior using Minitest hooks and a small patch around suite runs.
 module LinkedData
   module MinitestSuiteHooks
-    def run(*args, &block)
+    def run_suite(reporter, options = {})
+      return if filter_runnable_methods(options).empty?
+
       before_suite if respond_to?(:before_suite)
       super
     rescue Exception => e

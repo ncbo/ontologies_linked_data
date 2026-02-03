@@ -30,8 +30,8 @@ class TestSubscription < LinkedData::TestCase
   end
 
   def _delete_subscriptions
-    if defined?(@@subscriptions)
-      @@subscriptions.each {|s| s.delete}
+    if self.class.class_variable_defined?(:@@subscriptions)
+      @@subscriptions.each { |s| s.delete }
     end
     @@subscriptions = nil
   end

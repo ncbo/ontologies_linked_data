@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 
 gemspec
 
-gem 'activesupport', '~> 4'
+gem 'activesupport'
 gem 'addressable', '~> 2.8'
 gem 'bcrypt', '~> 3.0'
 gem 'cube-ruby', require: 'cube'

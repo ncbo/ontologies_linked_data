@@ -1,9 +1,9 @@
-require 'minitest/unit'
+require 'minitest/autorun'
 require "rack/test"
 require "multi_json"
 require_relative "../../lib/ontologies_linked_data"
 
-class TestLinkedDataSerializer < MiniTest::Unit::TestCase
+class TestLinkedDataSerializer < Minitest::Test
   include Rack::Test::Methods
 
   def app

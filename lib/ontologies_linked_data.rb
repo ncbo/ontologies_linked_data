@@ -1,4 +1,5 @@
 require 'goo'
+require 'active_support/core_ext/object/blank'
 
 # Make sure we're in the load path
 lib_dir = "#{File.dirname(__FILE__)}/../lib"

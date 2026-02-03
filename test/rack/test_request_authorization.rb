@@ -1,4 +1,4 @@
-require 'minitest/unit'
+require 'minitest/autorun'
 require "rack/test"
 require "json"
 require "logger"
@@ -9,7 +9,7 @@ LOGGER = Logger.new($stdout)
 ENV["rack.test"] = "true"
 
 
-class TestRackAuthorization < MiniTest::Unit::TestCase
+class TestRackAuthorization < Minitest::Test
   include Rack::Test::Methods
 
   def app

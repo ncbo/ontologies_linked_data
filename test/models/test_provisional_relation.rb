@@ -3,13 +3,16 @@ require_relative "../test_case"
 class TestProvisionalRelation < LinkedData::TestCase
 
   def self.before_suite
-    @@user = LinkedData::Models::User.new({username: "Test User", email: "tester@example.org", password: "password"})
+    @@user = LinkedData::Models::User.new({username: "test_user_prov_relation",
+                                           email: "test_user_prov_relation@example.org", password: "password"})
     @@user.save
 
-    ont_count, ont_names, ont_models = self.new('').create_ontologies_and_submissions(ont_count: 1, submission_count: 1,
-                                                                         process_submission: true,
-                                                                         process_options: {process_rdf: true,
-                                                                                           extract_metadata: false})
+    _, _, ont_models = self.new('').create_ontologies_and_submissions(
+      ont_count: 1,
+      submission_count: 1,
+      process_submission: true,
+      process_options: {process_rdf: true, extract_metadata: false}
+    )
 
     @@ontology = ont_models.first
     @@ontology.bring(:name)
@@ -30,6 +33,27 @@ class TestProvisionalRelation < LinkedData::TestCase
     @@provisional_rel2.save
   end
 
+  def self.after_suite
+    if defined?(@@provisional_rel1)
+      rel = LinkedData::Models::ProvisionalRelation.find(@@provisional_rel1.id).first
+      rel.delete unless rel.nil?
+    end
+
+    if defined?(@@provisional_rel2)
+      rel = LinkedData::Models::ProvisionalRelation.find(@@provisional_rel2.id).first
+      rel.delete unless rel.nil?
+    end
+
+    if defined?(@@provisional_class)
+      pc = LinkedData::Models::ProvisionalClass.find(@@provisional_class.id).first
+      pc.delete unless pc.nil?
+    end
+
+    LinkedData::SampleData::Ontology.delete_ontologies_and_submissions
+
+    user = LinkedData::Models::User.find("test_user_prov_relation").first
+    user.delete unless user.nil?
+  end
 
   def test_create_provisional_relation
     rel1 = LinkedData::Models::ProvisionalRelation.find(@@provisional_rel1.id).first
@@ -67,7 +91,5 @@ class TestProvisionalRelation < LinkedData::TestCase
     target_class.submission.bring(ontology: [:acronym]) if target_class.submission.bring?(:ontology)
     assert_equal @@ontology.acronym, target_class.submission.ontology.acronym
   end
-
-
 
 end
