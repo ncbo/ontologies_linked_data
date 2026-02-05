@@ -2,15 +2,15 @@ x-app: &app
     build:
       context: .
       args:
-        RUBY_VERSION: '3.1'
+        RUBY_VERSION: '3.2'
     # Increase the version number in the image tag every time Dockerfile or its arguments is changed
     image: ontologies_ld-dev:0.0.4
     environment: &env
       COVERAGE: 'true' # enable simplecov code coverage
       REDIS_HOST: redis-ut
       REDIS_PORT: 6379
-      SOLR_TERM_SEARCH_URL: http://solr-term-ut:8983/solr/term_search_core1
-      SOLR_PROP_SEARCH_URL: http://solr-prop-ut:8983/solr/prop_search_core1
+      SOLR_TERM_SEARCH_URL: http://solr-term-ut:8983/solr
+      SOLR_PROP_SEARCH_URL: http://solr-prop-ut:8983/solr
     stdin_open: true
     tty: true
     command: /bin/bash
