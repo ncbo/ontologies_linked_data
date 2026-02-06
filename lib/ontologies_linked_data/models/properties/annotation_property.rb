@@ -18,11 +18,12 @@ module LinkedData
       attribute :children, namespace: :rdfs, inverse: { on: :annotation_property, :attribute => :parents }
       attribute :ancestors, namespace: :rdfs, property: :subPropertyOf, handler: :retrieve_ancestors
       attribute :descendants, namespace: :rdfs, property: :subPropertyOf, handler: :retrieve_descendants
-      # attribute :domain
-      # attribute :range
+      attribute :domain, namespace: :rdfs
+      attribute :range, namespace: :rdfs
 
-      serialize_default :label, :labelGenerated, :definition, :matchType, :ontologyType, :propertyType, :parents, :children, :hasChildren # some of these attributes are used in Search (not shown out of context)
+      serialize_default :label, :labelGenerated, :definition, :matchType, :ontologyType, :propertyType, :parents, :children, :hasChildren,:domain, :range # some of these attributes are used in Search (not shown out of context)
       aggregates childrenCount: [:count, :children]
+      serialize_methods :properties
       # this command allows the children to be serialized in the output
       embed :children
 

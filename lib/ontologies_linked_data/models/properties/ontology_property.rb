@@ -161,9 +161,9 @@ module LinkedData
         pattern = "?c <#{property_tree.to_s}> <#{safe_class_id_uri}> . "
         query = <<eos
 SELECT ?c WHERE {
-GRAPH <#{submission_id}> {
-  #{pattern}
-}
+  GRAPH <#{submission_id}> {
+    #{pattern}
+  }
 }
 LIMIT 1
 eos
@@ -264,7 +264,7 @@ eos
         }
 
         all_attrs = self.to_hash
-        std = [:id, :label, :definition, :parents]
+        std = %i[id label definition parents]
 
         std.each do |att|
           cur_val = all_attrs[att]
@@ -318,7 +318,7 @@ eos
           rec_i = recursions[i]
           path = paths[rec_i]
           p = path.last
-          p.bring(parents: [:label, :definition]) if p.bring?(:parents)
+          p.bring(parents: %i[label definition]) if p.bring?(:parents)
 
           unless p.loaded_attributes.include?(:parents)
             # fail safely
@@ -343,7 +343,7 @@ eos
       end
 
       def self.partially_load_children(models, threshold, submission)
-        ld = [:label, :definition]
+        ld = %i[label definition]
         single_load = []
         query = self.in(submission).models(models)
         query.aggregate(:count, :children).all
@@ -424,8 +424,7 @@ eos
 
         [label_a.downcase] <=> [label_b.downcase]
       end
-
     end
-
   end
+
 end

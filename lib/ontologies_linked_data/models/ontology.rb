@@ -302,7 +302,7 @@ module LinkedData
         LinkedData::Models::OntologyProperty.sort_properties(all_roots)
       end
 
-      def property(prop_id, sub=nil)
+      def property(prop_id, sub=nil, display_all_attributes: false)
         p = nil
         sub ||= latest_submission(status: [:rdf])
         self.bring(:acronym) if self.bring?(:acronym)
@@ -310,9 +310,10 @@ module LinkedData
         prop_classes = [LinkedData::Models::ObjectProperty, LinkedData::Models::DatatypeProperty, LinkedData::Models::AnnotationProperty]
 
         prop_classes.each do |c|
-          p = c.find(prop_id).in(sub).include(:label, :definition, :parents).first
+          p = c.find(prop_id).in(sub).include(:label, :definition, :parents,:domain, :range).first
 
           unless p.nil?
+            p.bring(:unmapped) if display_all_attributes
             p.load_has_children
             parents = p.parents.nil? ? [] : p.parents.dup
             c.in(sub).models(parents).include(:label, :definition).all()
