@@ -16,6 +16,7 @@ gem 'rake'
 gem 'request_store'
 gem 'rest-client'
 gem 'rsolr'
+gem 'json-ld', '~> 3.2.0'
 
 # Testing
 group :test do
