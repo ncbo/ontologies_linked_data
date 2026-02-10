@@ -40,6 +40,8 @@ end
 
 require_relative '../config/config'
 require 'minitest/autorun'
+require 'webmock/minitest'
+WebMock.allow_net_connect!
 
 # Minitest 5+ no longer supports `MiniTest::Unit.runner=`. We emulate the old
 # custom runner behavior using Minitest hooks and a small patch around suite runs.

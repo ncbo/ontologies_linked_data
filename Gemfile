@@ -16,6 +16,7 @@ gem 'rake'
 gem 'request_store'
 gem 'rest-client'
 gem 'rsolr'
+gem 'jwt'
 gem 'json-ld', '~> 3.2.0'
 
 # Testing
@@ -30,6 +31,7 @@ group :test do
   gem 'simplecov'
   gem 'simplecov-cobertura' # for codecov.io
   gem "thin", "~> 1.8.2"
+  gem 'webmock'
 end
 
 group :development do
