@@ -52,7 +52,7 @@ module LinkedData
       epr = Goo.sparql_query_client(:main)
 
       latest.each do |acro, sub|
-        self.handle_triple_store_downtime(logger) if LinkedData.settings.goo_backend_name === '4store'
+        self.handle_triple_store_downtime(logger) if Goo.backend_4s?
         t0 = Time.now
         s_counts = self.mapping_ontologies_count(sub, nil, reload_cache=reload_cache)
         s_total = 0
@@ -280,7 +280,7 @@ module LinkedData
                   .latest_submission
         end
         graph_delete = RDF::Graph.new
-        graph_delete << [c.id, RDF::URI.new(rest_predicate), mapping.id]
+        graph_delete << [RDF::URI.new(c.id), RDF::URI.new(rest_predicate), mapping.id]
         Goo.sparql_update_client.delete_data(graph_delete, graph: sub.id)
       end
       mapping.process.delete
@@ -579,6 +579,7 @@ module LinkedData
       self.delete_zombie_submission_count(persistent_counts, all_latest_submissions)
 
       latest_submissions.each do |acr, sub|
+        self.handle_triple_store_downtime(logger) if Goo.backend_4s?
         new_counts = nil
 
         time = Benchmark.realtime do
