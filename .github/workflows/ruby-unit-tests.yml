@@ -35,7 +35,7 @@ jobs:
       run: cp config/config.test.rb config/config.rb
     - name: Run unit tests
       run: |
-        test:docker:${{ matrix.triplestore }}:linux TESTOPTS="-v"
+        rake test:docker:${{ matrix.triplestore }}:linux TESTOPTS="-v"
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
       with:
