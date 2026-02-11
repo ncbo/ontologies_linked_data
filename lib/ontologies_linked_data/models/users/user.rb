@@ -79,7 +79,7 @@ module LinkedData
       end
 
       def embedded_doc
-        "#{self.firstName} #{self.lastName} #{self.username}"
+        self.to_s
       end
 
       def initialize(attributes = {})
@@ -154,12 +154,13 @@ module LinkedData
       end
 
       def to_s
-        if bring?(:username)
-          self.id.to_s
+        if self.bring?(:username)
+          LinkedData::Utils::Triples.last_iri_fragment(self.id.to_s)
         else
           self.username.to_s
         end
       end
+
       def self.analytics_redis_key
         ANALYTICS_REDIS_FIELD
       end
