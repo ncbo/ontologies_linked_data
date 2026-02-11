@@ -19,6 +19,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y raptor2-utils
+    - name: Set up Java 11
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '11'
     - name: create config.rb file
       run: cp config/config.test.rb config/config.rb
     - name: Run unit tests
