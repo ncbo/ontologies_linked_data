@@ -85,6 +85,8 @@ module LinkedData
     # ontology creation to OntoPortal site admins
     @settings.enable_administrative_notifications ||= true
 
+    @settings.oauth_providers               ||= {}
+
     # number of times to retry a query when empty records are returned
     @settings.num_retries_4store            ||= 10
 
@@ -161,7 +163,7 @@ module LinkedData
       conf.add_namespace(:adms, RDF::Vocabulary.new("http://www.w3.org/ns/adms#"))
       conf.add_namespace(:voaf, RDF::Vocabulary.new("http://purl.org/vocommons/voaf#"))
       conf.add_namespace(:dcat, RDF::Vocabulary.new("http://www.w3.org/ns/dcat#"))
-      conf.add_namespace(:mod, RDF::Vocabulary.new("http://www.isibang.ac.in/ns/mod#"))
+      conf.add_namespace(:mod, RDF::Vocabulary.new("https://w3id.org/mod#"))
       conf.add_namespace(:prov, RDF::Vocabulary.new("http://www.w3.org/ns/prov#"))
       conf.add_namespace(:cc, RDF::Vocabulary.new("http://creativecommons.org/ns#"))
       conf.add_namespace(:schema, RDF::Vocabulary.new("http://schema.org/"))
