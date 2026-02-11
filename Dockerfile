@@ -1,4 +1,4 @@
-ARG RUBY_VERSION=3.1
+ARG RUBY_VERSION=3.2
 ARG DISTRO=bullseye
 
 FROM ruby:$RUBY_VERSION-$DISTRO
@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     libxml2 \
     libxslt-dev \
+    libxslt1-dev zlib1g-dev \
     openjdk-11-jre-headless \
     raptor2-utils \
     && rm -rf /var/lib/apt/lists/*

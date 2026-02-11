@@ -1,0 +1,13 @@
+services:
+  test-linux:
+    environment:
+      GOO_BACKEND_NAME: '4store'
+      GOO_HOST: 4store-ut
+      GOO_PORT: 9000
+    depends_on:
+      solr-ut:
+        condition: service_healthy
+      redis-ut:
+        condition: service_healthy
+      4store-ut:
+        condition: service_healthy
