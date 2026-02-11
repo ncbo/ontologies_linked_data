@@ -51,6 +51,14 @@ module LinkedData
         raise ArgumentError, "Metrics id needs to be set"
         #return RDF::URI.new(m.submission.id.to_s + "/metrics")
       end
+
+      def embedded_doc
+        doc = indexable_object
+        doc.delete(:resource_model)
+        doc.delete(:resource_id)
+        doc.delete(:id)
+        doc
+      end
     end
   end
 end
