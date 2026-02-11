@@ -159,6 +159,20 @@ class TestOntology < LinkedData::TestOntologyCommon
     assert_equal "http://bioontology.org/ontologies/BiomedicalResourceOntology.owl#AlgorithmPurpose", props[0].id.to_s
     assert_equal "http://www.w3.org/2004/02/skos/core#altLabel", props[1].id.to_s
 
+    props[2].bring(*[:domain,:range])
+    props[2].bring(:unmapped)
+
+    assert_equal "http://bioontology.org/ontologies/biositemap.owl#biositemap_author", props[2].id.to_s
+    assert_equal "http://bioontology.org/ontologies/biositemap.owl#Resource_Description", props[2].domain
+    assert_equal "http://www.w3.org/2001/XMLSchema#string", props[2].range
+    refute_empty props[2].properties
+
+    p = ont.property(props[2].id.to_s, display_all_attributes: true)
+    assert_equal "http://bioontology.org/ontologies/biositemap.owl#biositemap_author", p.id.to_s
+    assert_equal "http://bioontology.org/ontologies/biositemap.owl#Resource_Description", p.domain
+    assert_equal "http://www.w3.org/2001/XMLSchema#string", p.range
+    refute_empty p.properties
+
     datatype_props = []
     object_props = []
     annotation_props = []
@@ -353,13 +367,13 @@ class TestOntology < LinkedData::TestOntologyCommon
     })
 
     # Create
-    assert_equal false, o.exist?
+    assert_equal false, o.exist?(reload=true)
     o.save
-    assert_equal true, o.exist?
+    assert_equal true, o.exist?(reload=true)
 
     # Delete
     o.delete
-    assert_equal false, o.exist?
+    assert_equal false, o.exist?(reload=true)
   end
 
   def test_next_submission_id
@@ -425,6 +439,68 @@ class TestOntology < LinkedData::TestOntologyCommon
     ont.bring(submissions: [:contact])
     sub = ont.submissions.first
     assert sub.contact.length == 1
+  end
+
+  # A test to benchmark the time taken by bring_remaining (query not optimized, can take a long time if a lot of value in the list attributes)
+  def test_ontology_bring_remaining
+    # Creating the users
+    user1 = LinkedData::Models::User.new(:username => "user1", :email => "some1@email.org" )
+    user1.passwordHash = "some random pass hash"
+    user1.save
+    user2 = LinkedData::Models::User.new(:username => "user2", :email => "some2@email.org" )
+    user2.passwordHash = "some random pass hash"
+    user2.save
+    user3 = LinkedData::Models::User.new(:username => "user3", :email => "some3@email.org" )
+    user3.passwordHash = "some random pass hash"
+    user3.save
+    user4 = LinkedData::Models::User.new(:username => "user4", :email => "some4@email.org" )
+    user4.passwordHash = "some random pass hash"
+    user4.save
+    user5 = LinkedData::Models::User.new(:username => "user5", :email => "some5@email.org" )
+    user5.passwordHash = "some random pass hash"
+    user5.save
+    user6 = LinkedData::Models::User.new(:username => "user6", :email => "some6@email.org" )
+    user6.passwordHash = "some random pass hash"
+    user6.save
+    user7 = LinkedData::Models::User.new(:username => "user7", :email => "some7@email.org" )
+    user7.passwordHash = "some random pass hash"
+    user7.save
+
+    # Creating the categories
+    category1 = LinkedData::Models::Category.new({:name => "Test Category", :description => "This is a test category", :acronym => "TCG"})
+    category1.save
+    category2 = LinkedData::Models::Category.new({:name => "Test2 Category", :description => "This is a test category", :acronym => "TCG2"})
+    category2.save
+    category3 = LinkedData::Models::Category.new({:name => "Test2 Category", :description => "This is a test category", :acronym => "TCG3"})
+    category3.save
+    category4 = LinkedData::Models::Category.new({:name => "Test2 Category", :description => "This is a test category", :acronym => "TCG4"})
+    category4.save
+    category5 = LinkedData::Models::Category.new({:name => "Test2 Category", :description => "This is a test category", :acronym => "TCG5"})
+    category5.save
+    category6 = LinkedData::Models::Category.new({:name => "Test2 Category", :description => "This is a test category", :acronym => "TCG6"})
+    category6.save
+
+    # Creating the groups
+    group1 = LinkedData::Models::Group.new({:name => "Test1 Group", :description => "This is a test group", :acronym => "TESTG1"})
+    group1.save
+    group2 = LinkedData::Models::Group.new({:name => "Test2 Group", :description => "This is a test group", :acronym => "TESTG2"})
+    group2.save
+    o = LinkedData::Models::Ontology.new({
+                                           acronym: "TEST1",
+                                           administeredBy: [user1, user2, user3, user4, user5, user6, user7],
+                                           name: "test 1",
+                                           hasDomain: [category1, category2, category3, category4, category5, category6],
+                                           group: [group1, group2]
+                                         })
+    o.save
+
+    otest = LinkedData::Models::Ontology.find("TEST1").first
+
+    Benchmark.bm do |x|
+      x.report { otest.bring_remaining }
+    end
+
+    assert_equal "test 1", otest.name
   end
 
 end
