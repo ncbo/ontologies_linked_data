@@ -254,7 +254,7 @@ module LinkedData
         def default_sparql_endpoint(sub)
           url = LinkedData.settings.sparql_endpoint_url || ''
 
-          url.strip.blank? ? [] :  [RDF::URI.new(url)]
+          url.strip.blank? ? [] : [RDF::URI.new(url)]
         end
         def open_search_default(sub)
           RDF::URI.new("#{LinkedData.settings.rest_url_prefix}search?ontologies=#{sub.ontology.acronym}&q=")

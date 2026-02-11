@@ -128,8 +128,7 @@ module LinkedData
       attribute :uriLookupEndpoint, namespace: :void, type: :uri, default: -> (s) { uri_lookup_default(s) }
       attribute :openSearchDescription, namespace: :void, type: :uri, default: -> (s) { open_search_default(s) }
       attribute :source, namespace: :dct, type: :list
-      attribute :endpoint, namespace: :sd, type: %i[uri list],
-                default: ->(s) { default_sparql_endpoint(s) }
+      attribute :endpoint, namespace: :sd, type: %i[uri list], default: ->(s) { default_sparql_endpoint(s) }
       attribute :includedInDataCatalog, namespace: :schema, type: %i[list uri]
 
       # Relations
