@@ -10,25 +10,28 @@ on:
 
 jobs:
   test:
+    env:
+      RUBY_VERSION: '3.2'
+      COMPOSE_CMD: >
+        docker compose -f docker-compose.yml
+        -f dev/compose/linux/${{ matrix.triplestore }}.yml
+        --profile linux
+        --profile ${{ matrix.triplestore }}
     strategy:
       fail-fast: false
       matrix:
-        backend: ['ruby', 'ruby-agraph'] # ruby runs tests with 4store backend and ruby-agraph runs with AllegroGraph backend
+          #triplestore: [ 'fs', 'ag', 'vo', 'gd' ]
+         triplestore: [ 'fs', 'ag' ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Set up solr configsets
-      run: ./test/solr/generate_ncbo_configsets.sh
-    - name: create config.rb file
-      run: cp config/config.test.rb config/config.rb
-    - name: Build docker compose
-      run: docker compose --profile 4store build # profile flag is set in order to build all containers in this step
+    - name: Build docker container
+      run: >
+        $COMPOSE_CMD build
     - name: Run unit tests
-      # unit tests are run inside a container
-      # http://docs.codecov.io/docs/testing-with-docker
-      run: |
-        ci_env=`bash <(curl -s https://codecov.io/env)`
-        docker compose run $ci_env -e CI --rm ${{ matrix.backend }} bundle exec rake test TESTOPTS='-v'
+      run: >
+        $COMPOSE_CMD run -v "$PWD/coverage:/app/coverage" -e CI=true
+        test-linux bundle exec rake test TESTOPTS="-v"
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
       with:

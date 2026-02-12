@@ -1,0 +1,16 @@
+services:
+  test-linux:
+    environment:
+      GOO_BACKEND_NAME: graphdb
+      GOO_PORT: 7200
+      GOO_HOST: graphdb-ut
+      GOO_PATH_QUERY: /repositories/ontoportal_test
+      GOO_PATH_DATA: /repositories/ontoportal_test/statements
+      GOO_PATH_UPDATE: /repositories/ontoportal_test/statements
+    depends_on:
+      solr-ut:
+        condition: service_healthy
+      redis-ut:
+        condition: service_healthy
+      graphdb-ut:
+        condition: service_healthy
