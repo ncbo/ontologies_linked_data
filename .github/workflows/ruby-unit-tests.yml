@@ -18,24 +18,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    # - name: Install system dependencies
-    #   run: |
-    #     sudo apt-get update
-    #     sudo apt-get install -y raptor2-utils
-    # - name: Set up Java 11
-    #   uses: actions/setup-java@v5
-    #   with:
-    #     distribution: temurin
-    #     java-version: '11'
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        bundler-cache: true
     - name: create config.rb file
       run: cp config/config.test.rb config/config.rb
     - name: Run unit tests
+    - name: Build docker container
+      run: docker compose  -f dev/compose/linux/${{ matrix.triplestore }}.yml --profile linux build
+    - name: Run unit tests
       run: |
-        rake test:docker:${{ matrix.triplestore }}:linux TESTOPTS="-v"
+        ci_env=`bash <(curl -s https://codecov.io/env)`
+        docker compose -f docker-compose.yml \
+        -f dev/compose/linux/${{ matrix.triplestore }}.yml \
+        --profile linux \
+        --profile ${{ matrix.triplestore }} \
+        run $ci_env -e CI=true --build test-linux bundle exec rake test TESTOPTS="-v"
+        # docker compose rake test:docker:${{ matrix.triplestore }}:linux TESTOPTS="-v"
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
       with:
