@@ -3,9 +3,27 @@ require_relative "../../test_case"
 class TestSubscription < LinkedData::TestCase
 
   def self.before_suite
-    @@ont = LinkedData::SampleData::Ontology.create_ontologies_and_submissions(ont_count: 1, submission_count: 1)[2].first
-    @@ont.bring_remaining
-    @@user = @@ont.administeredBy.first
+    @@ont = LinkedData::SampleData::Ontology
+              .create_ontologies_and_submissions(ont_count: 1, submission_count: 1)[2].first
+    @@ont.bring(:administeredBy)
+
+    candidate = @@ont.administeredBy&.first
+    @@user = candidate && LinkedData::Models::User.find(candidate.id)
+                                                  .include(:username, :email, :passwordHash, :subscription)
+                                                  .first
+
+    unless @@user&.valid?
+      suffix = SecureRandom.hex(4)
+      @@user = LinkedData::Models::User.new(
+        username: "subscription_user_#{suffix}",
+        email: "subscription_user_#{suffix}@example.org",
+        password: "password"
+      )
+      @@user.save
+      @@ont.administeredBy = [@@user]
+      @@ont.save
+    end
+
     @@user.bring_remaining
   end
 

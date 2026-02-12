@@ -135,11 +135,9 @@ class TestNotifications < LinkedData::TestCase
   end
 
   def test_remote_ontology_pull_notification
-    recipients = ['test@example.org']
     _ont_count, _acronyms, ontologies = LinkedData::SampleData::Ontology.create_ontologies_and_submissions(
-      ont_count: 1, submission_count: 1, process_submission: false
+      ont_count: 1, submission_count: 1, acronym: "PULL-NOTIF-ONT", process_submission: false
     )
-
     ont = LinkedData::Models::Ontology.find(ontologies[0].id)
                                       .include(:acronym, :administeredBy, :name, :submissions).first
     suffix = SecureRandom.hex(4)
