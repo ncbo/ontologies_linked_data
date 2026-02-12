@@ -14,7 +14,6 @@ jobs:
       RUBY_VERSION: '3.2'
       COMPOSE_CMD: >
         docker compose -f docker-compose.yml
-        -f dev/compose/linux/docker-compose.ci.yml
         -f dev/compose/linux/${{ matrix.triplestore }}.yml
         --profile linux
         --profile ${{ matrix.triplestore }}
@@ -26,24 +25,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    - name: create config.rb file
-      run: cp config/config.test.rb config/config.rb
-    - name: Build test image with cache
-      uses: docker/bake-action@v6
-      with:
-        files: |
-          docker-compose.yml
-          dev/compose/linux/docker-compose.ci.yml
-          dev/compose/linux/${{ matrix.triplestore }}.yml
-        targets: test-linux
-        set: |
-          test-linux.args.RUBY_VERSION=${{ env.RUBY_VERSION }}
-          test-linux.cache-from=type=gha,scope=test-linux-ruby-${{ env.RUBY_VERSION }}
-          test-linux.cache-to=type=gha,mode=max,scope=test-linux-ruby-${{ env.RUBY_VERSION }}
-          test-linux.output=type=docker
-          test-linux.tags=ontologies_linked_data-test-linux:ci
+    - name: Build docker container
+      run: >
+        $COMPOSE_CMD build
     - name: Run unit tests
       run: >
         $COMPOSE_CMD run -v "$PWD/coverage:/app/coverage" -e CI=true
