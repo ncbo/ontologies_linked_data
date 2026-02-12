@@ -10,6 +10,12 @@ on:
 
 jobs:
   test:
+    env:
+      COMPOSE_CMD: >
+        docker compose -f docker-compose.yml
+        -f dev/compose/linux/${{ matrix.triplestore }}.yml
+        --profile linux
+        --profile ${{ matrix.triplestore }}
     strategy:
       fail-fast: false
       matrix:
@@ -22,20 +28,11 @@ jobs:
       run: cp config/config.test.rb config/config.rb
     - name: Build docker container
       run: >
-        docker compose -f docker-compose.yml
-        -f dev/compose/linux/${{ matrix.triplestore }}.yml
-        --profile linux
-        --profile ${{ matrix.triplestore }}
-        build
+        $COMPOSE_CMD build
     - name: Run unit tests
       run: >
-        docker compose -f docker-compose.yml
-        -f dev/compose/linux/${{ matrix.triplestore }}.yml
-        --profile linux
-        --profile ${{ matrix.triplestore }}
-        run -v "$PWD/coverage:/app/coverage" -e CI=true
+        $COMPOSE_CMD run -v "$PWD/coverage:/app/coverage" -e CI=true
         test-linux bundle exec rake test TESTOPTS="-v"
-        # docker compose rake test:docker:${{ matrix.triplestore }}:linux TESTOPTS="-v"
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
       with:
