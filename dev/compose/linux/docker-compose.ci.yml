@@ -1,0 +1,3 @@
+services:
+  test-linux:
+    image: ontologies_linked_data-test-linux:ci

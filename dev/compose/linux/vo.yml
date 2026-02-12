@@ -1,0 +1,16 @@
+services:
+  test-linux:
+    environment:
+      GOO_BACKEND_NAME: 'virtuoso'
+      GOO_HOST: virtuoso-ut
+      GOO_PORT: 8890
+      GOO_PATH_QUERY: /sparql
+      GOO_PATH_DATA: /sparql
+      GOO_PATH_UPDATE: /sparql
+    depends_on:
+      solr-ut:
+        condition: service_healthy
+      redis-ut:
+        condition: service_healthy
+      virtuoso-ut:
+        condition: service_healthy
