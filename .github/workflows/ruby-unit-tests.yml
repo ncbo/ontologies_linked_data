@@ -46,7 +46,7 @@ jobs:
           test-linux.tags=ontologies_linked_data-test-linux:ci
     - name: Run unit tests
       run: >
-        $COMPOSE_CMD run --no-build -v "$PWD/coverage:/app/coverage" -e CI=true
+        $COMPOSE_CMD run -v "$PWD/coverage:/app/coverage" -e CI=true
         test-linux bundle exec rake test TESTOPTS="-v"
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
