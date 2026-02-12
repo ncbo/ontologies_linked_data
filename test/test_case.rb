@@ -23,16 +23,16 @@ if ENV['OVERRIDE_CONFIG'] == 'true'
   SOLR_HOST = ENV.include?('SOLR_HOST') ? ENV['SOLR_HOST'] : 'localhost'
 
   LinkedData.config do |config|
-    config.goo_backend_name           = ENV['GOO_BACKEND_NAME']
-    config.goo_port                   = ENV['GOO_PORT'].to_i
-    config.goo_host                   = ENV['GOO_HOST']
-    config.goo_path_query             = ENV['GOO_PATH_QUERY']
-    config.goo_path_data              = ENV['GOO_PATH_DATA']
-    config.goo_path_update            = ENV['GOO_PATH_UPDATE']
-    config.goo_redis_host             = ENV['REDIS_HOST']
-    config.goo_redis_port             = ENV['REDIS_PORT']
-    config.http_redis_host            = ENV['REDIS_HOST']
-    config.http_redis_port            = ENV['REDIS_PORT']
+    config.goo_backend_name           = ENV['GOO_BACKEND_NAME'] || '4store'
+    config.goo_host                   = ENV['GOO_HOST']         || 'localhost'
+    config.goo_port                   = ENV['GOO_PORT'].to_i    || 9000
+    config.goo_path_query             = ENV['GOO_PATH_QUERY']   || '/sparql/'
+    config.goo_path_data              = ENV['GOO_PATH_DATA']    || '/data/'
+    config.goo_path_update            = ENV['GOO_PATH_UPDATE']  || '/update/'
+    config.goo_redis_host             = ENV['REDIS_HOST']       || 'localhost'
+    config.goo_redis_port             = ENV['REDIS_PORT']       || 6379
+    config.http_redis_host            = ENV['REDIS_HOST']       || 'localhost'
+    config.http_redis_port            = ENV['REDIS_PORT']       || 6379
     config.search_server_url          = "http://#{SOLR_HOST}:8983/solr"
     config.property_search_server_url = "http://#{SOLR_HOST}:8983/solr"
   end
