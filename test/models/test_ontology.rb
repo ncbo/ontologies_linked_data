@@ -5,7 +5,7 @@ require 'rack'
 class TestOntology < LinkedData::TestOntologyCommon
 
   def self.before_suite
-    url , @@thread, @@port= self.new('').start_server
+    _, @@thread, @@port = self.new('').start_server
   end
 
   def self.after_suite
