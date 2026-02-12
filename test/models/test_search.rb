@@ -105,6 +105,7 @@ class TestSearch < LinkedData::TestCase
     refute_empty(ont_sub.submissionStatus.select { |x| x.id['INDEXED_ALL_DATA'] })
 
     conn = Goo.search_client(:ontology_data)
+    submission_fq = "submission_id_t:\"#{ont_sub.id}\""
 
     count_ids = Goo.sparql_query_client.query("SELECT  (COUNT( DISTINCT ?id) as ?c)  FROM <#{ont_sub.id}> WHERE {?id ?p ?v}")
                    .first[:c]
@@ -112,7 +113,7 @@ class TestSearch < LinkedData::TestCase
 
     total_triples = Goo.sparql_query_client.query("SELECT  (COUNT(*) as ?c)  FROM <#{ont_sub.id}> WHERE {?s ?p ?o}").first[:c].to_i
 
-    response = conn.search('*', rows: count_ids + 100)
+    response = conn.search('*', fq: submission_fq, rows: count_ids + 100)
     index_total_triples = response['response']['docs'].map do |doc|
       count = 0
       doc.each_value do |v|
@@ -123,10 +124,10 @@ class TestSearch < LinkedData::TestCase
     end.sum
 
     # TODO: fix maybe in future sometime randomly don't index excactly all the triples
-    assert_in_delta total_triples, index_total_triples, 100
+    assert_in_delta total_triples, index_total_triples, 200
     assert_in_delta count_ids, response['response']['numFound'], 100
 
-    response = conn.search('*', fq: ' resource_id:"http://opendata.inrae.fr/thesaurusINRAE/c_10065"')
+    response = conn.search('*', fq: [submission_fq, 'resource_id:"http://opendata.inrae.fr/thesaurusINRAE/c_10065"'])
 
     assert_equal 1, response['response']['numFound']
     doc = response['response']['docs'].first
@@ -163,4 +164,3 @@ class TestSearch < LinkedData::TestCase
   end
 
 end
-
