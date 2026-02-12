@@ -663,10 +663,10 @@ SELECT DISTINCT * WHERE {
 
   def test_download_ontology_file
     begin
-      server_url, server_thread, server_port  = start_server
+      server_url, server_thread, _ = start_server
       sleep 3  # Allow the server to startup
       assert(server_thread.alive?, msg="Rack::Server thread should be alive, it's not!")
-      ont_count, ont_names, ont_models = create_ontologies_and_submissions(ont_count: 1, submission_count: 1)
+      _, _, ont_models = create_ontologies_and_submissions(ont_count: 1, submission_count: 1)
       ont = ont_models.first
       assert(ont.instance_of?(LinkedData::Models::Ontology), "ont is not an ontology: #{ont}")
       sub = ont.bring(:submissions).submissions.first
