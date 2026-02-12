@@ -25,6 +25,7 @@ jobs:
         docker compose -f docker-compose.yml
         -f dev/compose/linux/${{ matrix.triplestore }}.yml
         --profile linux
+        --profile ${{ matrix.triplestore }}
         build
     - name: Run unit tests
       run: >
