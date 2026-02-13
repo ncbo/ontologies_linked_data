@@ -26,6 +26,7 @@ require "ontologies_linked_data/diff/diff"
 require "ontologies_linked_data/monkeypatches/class" # load before object
 require "ontologies_linked_data/monkeypatches/object"
 require "ontologies_linked_data/monkeypatches/logging"
+require "ontologies_linked_data/monkeypatches/rdf_raptor_ffi"
 require "ontologies_linked_data/sample_data/sample_data"
 require "ontologies_linked_data/mappings/mappings"
 require "ontologies_linked_data/http_cache/cacheable_resource"
