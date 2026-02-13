@@ -2,6 +2,7 @@
 *.swp
 *.gemtags
 .bundle
+.serena
 *.tags*
 .DS_Store
 
