@@ -3,7 +3,7 @@ require "rack/test"
 require "json"
 require "logger"
 require_relative "../../lib/ontologies_linked_data"
-require_relative "../../config/config.rb"
+require_relative "../../config/config.test"
 
 LOGGER = Logger.new($stdout)
 ENV["rack.test"] = "true"
@@ -63,10 +63,12 @@ class TestRackAuthorization < Minitest::Test
     assert_equal 401, last_response.status
     get "/ontologies", {}, {"Authorization" => "bogus auth header"}
     assert_equal 401, last_response.status
+    get "/ontologies", {}, {"Authorization" => 'apikey token=bugutoken'}
+    assert_equal 401, last_response.status
     get "/ontologies", {}, {"Authorization" => 'apikey token="'+@apikey+''+'"'}
     assert_equal 200, last_response.status
     apikey = MultiJson.load(last_response.body)
-    assert @apikey.eql?(apikey)
+    assert_equal @apikey, apikey
     get "/ontologies", {}, {"Authorization" => "apikey token=#{@apikey}"}
     assert_equal 200, last_response.status
     apikey = MultiJson.load(last_response.body)
@@ -75,6 +77,8 @@ class TestRackAuthorization < Minitest::Test
     assert_equal 200, last_response.status
     apikey = MultiJson.load(last_response.body)
     assert_equal @apikey, apikey
+    get "/ontologies", {}, {"Authorization" => "apikey token=#{@apikey}&userapikey=bogusapikey"}
+    assert_equal 401, last_response.status
     get "/ontologies", {}, {"Authorization" => 'apikey token="'+@apikey+'&userapikey='+@userapikey+'"'}
     assert_equal 200, last_response.status
     apikey = MultiJson.load(last_response.body)
