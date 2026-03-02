@@ -1,0 +1,8 @@
+component_name: ontologies_linked_data
+app_service: test-container
+backends:
+  - fs
+  - ag
+  - vo
+  - gd
+dependency_services: {}
