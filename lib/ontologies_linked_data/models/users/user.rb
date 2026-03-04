@@ -20,7 +20,7 @@ module LinkedData
 
       model :user, name_with: :username
       attribute :username, enforce: [:unique, :existence, :safe_text_56]
-      attribute :email, enforce: [:unique, :existence, :email]
+      attribute :email, enforce: [:existence, :email]
       attribute :role, enforce: [:role, :list], :default => lambda {|x| [LinkedData::Models::Users::Role.default]}
       attribute :firstName, enforce: [:safe_text_128]
       attribute :lastName, enforce: [:safe_text_128]
