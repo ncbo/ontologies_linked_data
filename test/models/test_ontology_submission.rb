@@ -411,7 +411,7 @@ SELECT DISTINCT * WHERE {
 
     assert old_sub.zipped?
     assert File.file?(old_sub.uploadFilePath)
-    LinkedData::Models::OntologySubmission.const_set(:FILE_SIZE_ZIPPING_THRESHOLD, old_threshold)
+    LinkedData::Services::OntologySubmissionArchiver.const_set(:FILE_SIZE_ZIPPING_THRESHOLD, old_threshold)
   end
 
   def test_submission_diff_across_ontologies
