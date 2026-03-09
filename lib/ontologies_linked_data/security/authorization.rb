@@ -147,8 +147,8 @@ module LinkedData
       def cookie_apikey(env)
         return unless env["HTTP_COOKIE"]
 
-        cookie = Rack::Utils.parse_query(env['HTTP_COOKIE'])
-        cookie[COOKIE_APIKEY_PARAM] if cookie['ncbo_apikey']
+        cookie = Rack::Utils.parse_cookies(env)
+        cookie[COOKIE_APIKEY_PARAM]
       end
 
       def get_header_auth(env)
