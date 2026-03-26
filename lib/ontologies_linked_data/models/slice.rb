@@ -36,11 +36,11 @@ module LinkedData::Models
       return errors.flatten
     end
 
+    # Check to make sure each group has a corresponding slice (and ontologies match)
     def self.synchronize_groups_to_slices
-      # Check to make sure each group has a corresponding slice (and ontologies match)
       groups = LinkedData::Models::Group.where.include(LinkedData::Models::Group.attributes(:all)).all
       groups.each do |g|
-        slice = self.find(g.acronym).include(LinkedData::Models::Slice.attributes(:all)).first
+        slice = self.find(g.acronym.downcase.gsub(" ", "_")).include(LinkedData::Models::Slice.attributes(:all)).first
         if slice
           slice.ontologies = g.ontologies
           slice.save if slice.valid?
