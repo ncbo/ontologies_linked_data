@@ -1,3 +1,4 @@
+
 module LinkedData
   module Utils
     module Triples
@@ -23,12 +24,12 @@ module LinkedData
         # Add subPropertyOf triples for custom properties
         unless ont_sub.prefLabelProperty.nil?
           unless ont_sub.prefLabelProperty == Goo.vocabulary(:rdfs)[:label] || ont_sub.prefLabelProperty == Goo.vocabulary(:metadata_def)[:prefLabel]
-              triples << triple(ont_sub.prefLabelProperty, subPropertyOf, Goo.vocabulary(:metadata_def)[:prefLabel])
+            triples << triple(ont_sub.prefLabelProperty, subPropertyOf, Goo.vocabulary(:metadata_def)[:prefLabel])
           end
         end
         unless ont_sub.definitionProperty.nil?
           unless ont_sub.definitionProperty == Goo.vocabulary(:rdfs)[:label] || ont_sub.definitionProperty == Goo.vocabulary(:skos)[:definition]
-              triples << triple(ont_sub.definitionProperty, subPropertyOf, Goo.vocabulary(:skos)[:definition])
+            triples << triple(ont_sub.definitionProperty, subPropertyOf, Goo.vocabulary(:skos)[:definition])
           end
         end
         unless ont_sub.synonymProperty.nil?
@@ -75,11 +76,11 @@ module LinkedData
         params = { datatype: RDF::XSD.string }
         lang = language.to_s.downcase
 
-        if !lang.empty? && lang.to_sym != :none
+        if !lang.empty? && lang.to_sym != :none && !lang.to_s.eql?('@none')
           params[:datatype] = RDF.langString
           params[:language] = lang.to_sym
         end
-        return triple(class_id, property, RDF::Literal.new(label, params))
+        triple(class_id, property, RDF::Literal.new(label, **params))
       end
 
       def self.generated_label(class_id, existing_label)

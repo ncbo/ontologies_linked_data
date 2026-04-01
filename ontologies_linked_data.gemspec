@@ -16,7 +16,7 @@ Gem::Specification.new do |gem|
   gem.executables   = gem.files.grep(%r{^bin/}).map { |f| File.basename(f) }
   gem.require_paths = ["lib"]
 
-  gem.required_ruby_version = ">= 3.1"
+  gem.required_ruby_version = ">= 3.2"
 
   gem.add_dependency("activesupport")
   gem.add_dependency("bcrypt")
@@ -32,6 +32,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency("rack-test")
   gem.add_dependency("rsolr")
   gem.add_dependency("rubyzip", "~> 3.0")
+  gem.add_dependency("down", "~> 5.0")
 
   gem.add_development_dependency("email_spec")
 

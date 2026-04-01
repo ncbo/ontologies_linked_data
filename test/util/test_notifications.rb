@@ -3,6 +3,7 @@ require_relative '../test_case'
 require 'email_spec'
 require 'logger'
 require 'mocha/minitest'
+require 'securerandom'
 
 class TestNotifications < LinkedData::TestCase
   include EmailSpec::Helpers
@@ -125,8 +126,7 @@ class TestNotifications < LinkedData::TestCase
     ont.latest_submission(status: :any).process_submission(Logger.new(TestLogFile.new))
     admin_mails = LinkedData::Utils::Notifier.ontology_admin_emails(ont)
     assert_equal 1, all_emails.size, 'number of send emails'
-
-    refute_match @@support_mails, last_email_sent.to.sort
+    assert_empty(last_email_sent.to & @@support_mails)
     assert_equal admin_mails, last_email_sent.to.sort
     assert_match 'Parsing Success', all_emails.last.subject
     LinkedData.settings.enable_administrative_notifications = true
@@ -135,17 +135,16 @@ class TestNotifications < LinkedData::TestCase
   end
 
   def test_remote_ontology_pull_notification
-    recipients = ['test@example.org']
     _ont_count, _acronyms, ontologies = LinkedData::SampleData::Ontology.create_ontologies_and_submissions(
-      ont_count: 1, submission_count: 1, process_submission: false
+      ont_count: 1, submission_count: 1, acronym: "PULL-NOTIF-ONT", process_submission: false
     )
-
     ont = LinkedData::Models::Ontology.find(ontologies[0].id)
                                       .include(:acronym, :administeredBy, :name, :submissions).first
+    suffix = SecureRandom.hex(4)
     ont_admins = Array.new(3) { LinkedData::Models::User.new }
     ont_admins.each_with_index do |user, i|
-      user.username = "Test User #{i}"
-      user.email = "tester_#{i}@example.org"
+      user.username = "notif_test_user_#{suffix}_#{i}"
+      user.email = "notif_test_user_#{suffix}_#{i}@example.org"
       user.password = 'password'
       user.save
       assert user.valid?, user.errors
@@ -166,7 +165,7 @@ class TestNotifications < LinkedData::TestCase
     assert_equal admin_mails, last_email_sent.to.sort
   ensure
     ont_admins.each do |user|
-      user&.delete
+      user.delete if user&.persistent?
     end
   end
 

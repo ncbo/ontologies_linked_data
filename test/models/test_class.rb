@@ -7,7 +7,7 @@ class TestClassModel < LinkedData::TestOntologyCommon
 
     acr = "CSTPROPS"
     init_test_ontology_msotest acr
-    os = LinkedData::Models::OntologySubmission.where(ontology: [ acronym: acr ],
+    os = LinkedData::Models::OntologySubmission.where(ontology: [acronym: acr],
                                                       submissionId: 1).all
     assert(os.length == 1)
     os = os[0]
@@ -16,35 +16,34 @@ class TestClassModel < LinkedData::TestOntologyCommon
 
     cls = LinkedData::Models::Class.find(class_id).in(os).include(:parents).to_a[0]
     pp = cls.parents[0]
-    assert_equal(os.id,pp.submission.id)
+    assert_equal(os.id, pp.submission.id)
     pp.bring(:parents)
     assert pp.parents.length == 1
     assert_equal(os.id, pp.parents.first.submission.id)
 
-    #read_only
+    # read_only
     cls = LinkedData::Models::Class.find(class_id).in(os).include(:parents).read_only.all[0]
     pp = cls.parents[0]
-    assert_equal(os.id,pp.submission.id)
+    assert_equal(os.id, pp.submission.id)
 
     class_id = RDF::IRI.new "http://bioportal.bioontology.org/ontologies/msotes#class_5"
     cls = LinkedData::Models::Class.find(class_id).in(os).include(:parents).first
     parents = cls.parents
     assert_equal(parents, cls.parents)
     assert_equal(3, cls.parents.length)
-    parent_ids = [ "http://bioportal.bioontology.org/ontologies/msotes#class2",
-      "http://bioportal.bioontology.org/ontologies/msotes#class4",
-       "http://bioportal.bioontology.org/ontologies/msotes#class3" ]
+    parent_ids = ["http://bioportal.bioontology.org/ontologies/msotes#class2",
+                  "http://bioportal.bioontology.org/ontologies/msotes#class4",
+                  "http://bioportal.bioontology.org/ontologies/msotes#class3"]
     parent_id_db = cls.parents.map { |x| x.id.to_s }
     assert_equal(parent_id_db.sort, parent_ids.sort)
 
     assert !cls.parents[0].submission.nil?
-    #they should have the same submission
+    # they should have the same submission
     assert_equal(cls.parents[0].submission, os)
 
-    #transitive
-    assert_raises ArgumentError do
-      cls.bring(:ancestors)
-    end
+    # transitive
+    cls.bring(:ancestors)
+    assert_includes cls.loaded_attributes.to_a, :ancestors
     ancestors = cls.ancestors.dup
     ancestors.each do |a|
       assert !a.submission.nil?
@@ -52,9 +51,9 @@ class TestClassModel < LinkedData::TestOntologyCommon
     assert ancestors.length == cls.ancestors.length
     ancestors.map! { |a| a.id.to_s }
     data_ancestors = ["http://bioportal.bioontology.org/ontologies/msotes#class1",
- "http://bioportal.bioontology.org/ontologies/msotes#class2",
- "http://bioportal.bioontology.org/ontologies/msotes#class4",
- "http://bioportal.bioontology.org/ontologies/msotes#class3"]
+                      "http://bioportal.bioontology.org/ontologies/msotes#class2",
+                      "http://bioportal.bioontology.org/ontologies/msotes#class4",
+                      "http://bioportal.bioontology.org/ontologies/msotes#class3"]
     assert ancestors.sort == data_ancestors.sort
 
   end
@@ -63,7 +62,7 @@ class TestClassModel < LinkedData::TestOntologyCommon
 
     acr = "CSTPROPS"
     init_test_ontology_msotest acr
-    os = LinkedData::Models::OntologySubmission.where(ontology: [ acronym: acr ],
+    os = LinkedData::Models::OntologySubmission.where(ontology: [acronym: acr],
                                                       submissionId: 1).all
     assert(os.length == 1)
     os = os[0]
@@ -71,29 +70,27 @@ class TestClassModel < LinkedData::TestOntologyCommon
     class_id = RDF::IRI.new "http://bioportal.bioontology.org/ontologies/msotes#class1"
 
     cls = LinkedData::Models::Class.find(class_id).in(os)
-                .include(:parents)
-                .include(:children)
-                .to_a[0]
+                                   .include(:parents)
+                                   .include(:children)
+                                   .to_a[0]
     children = cls.children
     assert_equal(1, cls.children.length)
     children_id = "http://bioportal.bioontology.org/ontologies/msotes#class2"
-    assert_equal(children_id,cls.children[0].id.to_s)
+    assert_equal(children_id, cls.children[0].id.to_s)
 
-    #they should have the same submission
+    # they should have the same submission
     assert_equal(cls.children[0].submission, os)
 
-    #transitive
-    assert_raises ArgumentError do
-      cls.bring(:descendants)
-    end
+    # transitive
+    cls.bring(:descendants)
+    assert_includes cls.loaded_attributes.to_a, :descendants
     descendants = cls.descendants.dup
     descendants.map! { |a| a.id.to_s }
     data_descendants = ["http://bioportal.bioontology.org/ontologies/msotes#class_5",
- "http://bioportal.bioontology.org/ontologies/msotes#class2",
-    "http://bioportal.bioontology.org/ontologies/msotes#class_7"]
+                        "http://bioportal.bioontology.org/ontologies/msotes#class2",
+                        "http://bioportal.bioontology.org/ontologies/msotes#class_7"]
     assert descendants.sort == data_descendants.sort
-
-    page = cls.retrieve_descendants(page=2,size=2)
+    page = cls.retrieve_descendants(page = 2, size = 2)
     assert page.total_pages == 2
     assert page.prev_page == 1
     assert page.next_page == nil
@@ -101,16 +98,16 @@ class TestClassModel < LinkedData::TestOntologyCommon
     assert page[0].id.to_s == data_descendants[2]
 
     cls = LinkedData::Models::Class.find(class_id).in(os)
-                .to_a[0]
+                                   .to_a[0]
     cls.load_has_children
     has_c = cls.hasChildren
-    assert_equal(has_c,true)
+    assert_equal(has_c, true)
     class_id = RDF::IRI.new "http://bioportal.bioontology.org/ontologies/msotes#class_7"
     cls = LinkedData::Models::Class.find(class_id).in(os)
-                .to_a[0]
+                                   .to_a[0]
     cls.load_has_children
     has_c = cls.hasChildren
-    assert_equal(has_c,false)
+    assert_equal(has_c, false)
   end
 
   def test_path_to_root

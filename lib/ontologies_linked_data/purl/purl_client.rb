@@ -63,7 +63,7 @@ module LinkedData::Purl
     def delete_purl(acronym)
       headers = purl_server_login()
       http = get_http()
-      res, data = http.delete(PURL_ADMIN_PATH.call(acronym), headers)
+      res, _ = http.delete(PURL_ADMIN_PATH.call(acronym), headers)
 
       return res.code == "200"
     end

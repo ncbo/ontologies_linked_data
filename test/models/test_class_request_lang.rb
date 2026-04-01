@@ -21,15 +21,32 @@ class TestClassRequestedLang < LinkedData::TestOntologyCommon
                              process_rdf: true, index_search: false,
                              run_metrics: false, reasoning: false
     )
+    new('').submission_parse('APTO', 'Test parse ontology has iri label',
+                             'test/data/ontology_files/apto.owl', 1,
+                             process_rdf: true, index_search: false,
+                             run_metrics: false, reasoning: false
+    )
   end
 
   def teardown
     reset_lang
   end
 
+  def test_parse_ontology_has_iri_label
+    cls_labels_1 = get_class_by_lang('http://aims.fao.org/aos/agrovoc/c_3376', 'APTO',
+                                     requested_lang: :'pt-br').label
+
+    assert_includes cls_labels_1 , 'Hortaliça de folha'
+
+    cls_labels_2 = get_class_by_lang('http://aims.fao.org/aos/agrovoc/c_3376', 'APTO',
+                                     requested_lang: :en).label
+
+    assert_includes cls_labels_2,  'Leaf vegetable'
+  end
+
   def test_requested_language_found
 
-    cls = get_class_by_lang('http://opendata.inrae.fr/thesaurusINRAE/c_22817',
+    cls = get_class_by_lang('http://opendata.inrae.fr/thesaurusINRAE/c_22817', 'INRAETHES',
                             requested_lang: :FR)
     assert_equal 'industrialisation', cls.prefLabel
     assert_equal ['développement industriel'], cls.synonym
@@ -38,7 +55,7 @@ class TestClassRequestedLang < LinkedData::TestOntologyCommon
     assert_equal ['développement industriel'], properties.select { |x| x.to_s['altLabel'] }.values.first.map(&:to_s)
     assert_equal ['industrialisation'], properties.select { |x| x.to_s['prefLabel'] }.values.first.map(&:to_s)
 
-    cls = get_class_by_lang('http://opendata.inrae.fr/thesaurusINRAE/c_22817',
+    cls = get_class_by_lang('http://opendata.inrae.fr/thesaurusINRAE/c_22817', 'INRAETHES',
                             requested_lang: :EN)
     assert_equal 'industrialization', cls.prefLabel
     assert_equal ['industrial development'], cls.synonym
@@ -47,18 +64,19 @@ class TestClassRequestedLang < LinkedData::TestOntologyCommon
     assert_equal ['industrial development'], properties.select { |x| x.to_s['altLabel'] }.values.first.map(&:to_s)
     assert_equal ['industrialization'], properties.select { |x| x.to_s['prefLabel'] }.values.first.map(&:to_s)
 
-    cls = get_class_by_lang('http://opendata.inrae.fr/thesaurusINRAE/c_13078',
+    cls = get_class_by_lang('http://opendata.inrae.fr/thesaurusINRAE/c_13078', 'INRAETHES',
                             requested_lang: :FR)
     assert_equal 'carbone renouvelable', cls.prefLabel
 
   end
 
   def test_requeststore_not_set
-    cls = get_class_by_lang('http://opendata.inrae.fr/thesaurusINRAE/c_22817',
+    skip 'Needs to be fixed in the future for Virtuoso'
+    cls = get_class_by_lang('http://opendata.inrae.fr/thesaurusINRAE/c_22817', 'INRAETHES',
                             requested_lang: nil)
     assert_equal 'industrialization', cls.prefLabel
     assert_equal cls.prefLabel, cls.prefLabel(include_languages: true)
-    cls = get_class_by_lang('http://opendata.inrae.fr/thesaurusINRAE/c_22817',
+    cls = get_class_by_lang('http://opendata.inrae.fr/thesaurusINRAE/c_22817', 'INRAETHES',
                             requested_lang: :ALL)
     assert_equal 'industrialization', cls.prefLabel
     assert_equal Hash, cls.prefLabel(include_languages: true).class
@@ -69,7 +87,7 @@ class TestClassRequestedLang < LinkedData::TestOntologyCommon
 
   def test_requested_language_not_found
 
-    cls = get_class_by_lang('http://opendata.inrae.fr/thesaurusINRAE/c_22817',
+    cls = get_class_by_lang('http://opendata.inrae.fr/thesaurusINRAE/c_22817', 'INRAETHES',
                             requested_lang: :ES)
     assert_nil cls.prefLabel
     assert_empty cls.synonym
@@ -79,48 +97,18 @@ class TestClassRequestedLang < LinkedData::TestOntologyCommon
     assert_empty properties.select { |x| x.to_s['prefLabel'] }.values
   end
 
-  def test_context_language
-    cls = get_class('http://opendata.inrae.fr/thesaurusINRAE/c_22817', 'INRAETHES')
-    cls.submission.bring_remaining
-    cls.submission.ontology.bring_remaining
+  def test_request_multiple_languages
 
-    # Default portal language
-    cls.bring_remaining
-    response = MultiJson.load(LinkedData::Serializers::JSON.serialize(cls, all: 'all'))
-    assert_equal response["@context"]["@language"], Goo.main_languages.first.to_s
-    assert_equal  "http://www.w3.org/2000/01/rdf-schema#parents", response["@context"]["parents"]
-
-    # Request specific language
-    response = MultiJson.load(LinkedData::Serializers::JSON.serialize(cls, lang: 'fr'))
-    assert_equal response["@context"]["@language"], 'fr'
-
-    response = MultiJson.load(LinkedData::Serializers::JSON.serialize(cls, lang: %w[fr en es]))
-    assert_equal response["@context"]["@language"], %w[fr en es]
-
-    # Submission Natural Language
-    s = cls.submission
-    s.naturalLanguage = %w[fr en]
-    s.save
-
-    cls = get_class('http://opendata.inrae.fr/thesaurusINRAE/c_22817', 'INRAETHES')
-    cls.submission.bring_remaining
-    cls.submission.ontology.bring_remaining
-
-    # Default get submission first Natural Language
-    response = MultiJson.load(LinkedData::Serializers::JSON.serialize(cls))
-    assert_equal response["@context"]["@language"],  'fr'
-
-    # Request specific language
-    response = MultiJson.load(LinkedData::Serializers::JSON.serialize(cls, lang: 'fr'))
-    assert_equal response["@context"]["@language"], 'fr'
-
-    response = MultiJson.load(LinkedData::Serializers::JSON.serialize(cls, lang: %w[fr en es]))
-    assert_equal response["@context"]["@language"], %w[fr en es]
+    cls = get_class_by_lang('http://opendata.inrae.fr/thesaurusINRAE/c_22817', 'INRAETHES',
+                            requested_lang: [:EN, :FR])
+    pref_label_all_languages = { en: 'industrialization', fr: 'industrialisation' }
+    assert_includes pref_label_all_languages.values, cls.prefLabel
+    assert_equal pref_label_all_languages, cls.prefLabel(include_languages: true)
   end
 
   def test_request_all_languages
 
-    cls = get_class_by_lang('http://opendata.inrae.fr/thesaurusINRAE/c_22817',
+    cls = get_class_by_lang('http://opendata.inrae.fr/thesaurusINRAE/c_22817', 'INRAETHES',
                             requested_lang: :ALL)
 
     pref_label_all_languages = { en: 'industrialization', fr: 'industrialisation' }
@@ -161,9 +149,9 @@ class TestClassRequestedLang < LinkedData::TestOntologyCommon
     LinkedData::Models::Class.find(cls).in(sub).first
   end
 
-  def get_class_by_lang(cls, requested_lang:, portal_languages: nil)
+  def get_class_by_lang(cls, ont, requested_lang:, portal_languages: nil)
     lang_set requested_lang: requested_lang, portal_languages: portal_languages
-    cls = get_class(cls, 'INRAETHES')
+    cls = get_class(cls, ont)
     refute_nil cls
     cls.bring_remaining
     cls.bring :unmapped

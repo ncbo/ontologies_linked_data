@@ -3,6 +3,36 @@ module LinkedData
   module Models
 
     class OntologyProperty < LinkedData::Models::Base
+      model :ontology_property, name_with: ->(p) { uuid_uri_generator(p) }
+
+      def self.index_schema(schema_generator)
+        schema_generator.add_field(:label, 'text_general', indexed: true, stored: true, multi_valued: true)
+        schema_generator.add_field(:labelGenerated, 'text_general', indexed: true, stored: true, multi_valued: true)
+
+        schema_generator.add_field(:definition, 'string', indexed: true, stored: true, multi_valued: true)
+        schema_generator.add_field(:submissionAcronym, 'string', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:parents, 'string', indexed: true, stored: true, multi_valued: true)
+        schema_generator.add_field(:ontologyType, 'string', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:propertyType, 'string', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:ontologyId, 'string', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:submissionId, 'pint', indexed: true, stored: true, multi_valued: false)
+
+        %i[label labelGenerated].each do |field|
+          schema_generator.add_copy_field(field, '_text_')
+          schema_generator.add_copy_field(field, "#{field}Exact")
+          schema_generator.add_copy_field(field, "#{field}Suggest")
+          schema_generator.add_copy_field(field, "#{field}SuggestEdge")
+          schema_generator.add_copy_field(field, "#{field}SuggestNgram")
+        end
+      end
+
+      enable_indexing(:prop_search_core1, :property) do |schema_generator|
+        index_schema(schema_generator)
+      end
+
+      def properties
+        self.unmapped
+      end
 
       def retrieve_ancestors
         retrieve_ancestors_descendants(:ancestors)
@@ -131,9 +161,9 @@ module LinkedData
         pattern = "?c <#{property_tree.to_s}> <#{safe_class_id_uri}> . "
         query = <<eos
 SELECT ?c WHERE {
-GRAPH <#{submission_id}> {
-  #{pattern}
-}
+  GRAPH <#{submission_id}> {
+    #{pattern}
+  }
 }
 LIMIT 1
 eos
@@ -234,7 +264,7 @@ eos
         }
 
         all_attrs = self.to_hash
-        std = [:id, :label, :definition, :parents]
+        std = %i[id label definition parents]
 
         std.each do |att|
           cur_val = all_attrs[att]
@@ -288,7 +318,7 @@ eos
           rec_i = recursions[i]
           path = paths[rec_i]
           p = path.last
-          p.bring(parents: [:label, :definition]) if p.bring?(:parents)
+          p.bring(parents: %i[label definition]) if p.bring?(:parents)
 
           unless p.loaded_attributes.include?(:parents)
             # fail safely
@@ -313,7 +343,7 @@ eos
       end
 
       def self.partially_load_children(models, threshold, submission)
-        ld = [:label, :definition]
+        ld = %i[label definition]
         single_load = []
         query = self.in(submission).models(models)
         query.aggregate(:count, :children).all
@@ -394,8 +424,7 @@ eos
 
         [label_a.downcase] <=> [label_b.downcase]
       end
-
     end
-
   end
+
 end

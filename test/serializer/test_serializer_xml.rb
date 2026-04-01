@@ -1,9 +1,9 @@
-require 'minitest/unit'
+require 'minitest/autorun'
 require "date"
 require "multi_json"
 require_relative "../../lib/ontologies_linked_data"
 
-class TestSerializerXML < MiniTest::Unit::TestCase
+class TestSerializerXML < Minitest::Test
   class Person
     attr_accessor :name
     def initialize(name)

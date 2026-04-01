@@ -24,8 +24,8 @@ module LinkedData
 
       model :ontology, :name_with => :acronym
       attribute :acronym, namespace: :omv,
-        enforce: [:unique, :existence, lambda { |inst,attr| validate_acronym(inst,attr) } ]
-      attribute :name, :namespace => :omv, enforce: [:unique, :existence, :safe_text_256]
+        enforce: [:unique, :existence, lambda { |inst,attr| validate_acronym(inst,attr) } ], fuzzy_search: true
+      attribute :name, :namespace => :omv, enforce: [:unique, :existence, :safe_text_256], fuzzy_search: true
       attribute :submissions,
                   inverse: { on: :ontology_submission, attribute: :ontology }
       attribute :projects,
@@ -49,7 +49,7 @@ module LinkedData
 
       attribute :acl, enforce: [:list, :user]
 
-      attribute :viewOf, enforce: [:ontology]
+      attribute :viewOf, enforce: [:ontology], onUpdate: :update_submissions_has_part
       attribute :views, :inverse => { on: :ontology, attribute: :viewOf }
       attribute :ontologyType, enforce: [:ontology_type], default: lambda { |record| LinkedData::Models::OntologyType.find("ONTOLOGY").include(:code).first }
 
@@ -86,6 +86,10 @@ module LinkedData
       # Cache
       cache_timeout 3600
 
+      enable_indexing(:ontology_metadata)
+
+      after_save :index_latest_submission
+
       def self.validate_acronym(inst, attr)
         inst.bring(attr) if inst.bring?(attr)
         acronym = inst.send(attr)
@@ -111,6 +115,53 @@ module LinkedData
         end
 
         return errors.flatten
+      end
+
+      def update_submissions_has_part(inst, attr)
+        inst.bring :viewOf if inst.bring?(:viewOf)
+
+        target_ontology = inst.viewOf
+
+        if target_ontology.nil?
+          previous_value = inst.previous_values ? inst.previous_values[attr] : nil
+          return if previous_value.nil?
+
+          action = :remove
+          target_ontology = previous_value
+        else
+          action = :append
+        end
+
+        sub = target_ontology.latest_submission || target_ontology.bring(:submissions) && target_ontology.submissions.last
+
+        return if sub.nil?
+
+        sub.bring :hasPart if sub.bring?(:hasPart)
+
+        parts = sub.hasPart.dup || []
+        changed = false
+        if action.eql?(:append)
+          unless parts.include?(self.id)
+            changed = true
+            parts << self.id
+          end
+        elsif action.eql?(:remove)
+          if parts.include?(self.id)
+            changed = true
+            parts.delete(self.id)
+            sub.class.model_settings[:attributes][:hasPart][:enforce].delete(:include_ontology_views) #disable validator
+          end
+        end
+
+        return unless changed
+
+        sub.bring_remaining
+        sub.hasPart = parts
+        sub.save if sub.valid?
+
+        return unless changed && action.eql?(:remove)
+
+        sub.class.model_settings[:attributes][:hasPart][:enforce].append(:include_ontology_views)
       end
 
       def latest_submission(options = {})
@@ -160,7 +211,7 @@ module LinkedData
 
         begin
           subs = self.submissions
-        rescue Exception => e
+        rescue Exception
           i = 0
           num_calls = LinkedData.settings.num_retries_4store
           subs = nil
@@ -251,7 +302,7 @@ module LinkedData
         LinkedData::Models::OntologyProperty.sort_properties(all_roots)
       end
 
-      def property(prop_id, sub=nil)
+      def property(prop_id, sub=nil, display_all_attributes: false)
         p = nil
         sub ||= latest_submission(status: [:rdf])
         self.bring(:acronym) if self.bring?(:acronym)
@@ -259,9 +310,10 @@ module LinkedData
         prop_classes = [LinkedData::Models::ObjectProperty, LinkedData::Models::DatatypeProperty, LinkedData::Models::AnnotationProperty]
 
         prop_classes.each do |c|
-          p = c.find(prop_id).in(sub).include(:label, :definition, :parents).first
+          p = c.find(prop_id).in(sub).include(:label, :definition, :parents,:domain, :range).first
 
           unless p.nil?
+            p.bring(:unmapped) if display_all_attributes
             p.load_has_children
             parents = p.parents.nil? ? [] : p.parents.dup
             c.in(sub).models(parents).include(:label, :definition).all()
@@ -394,8 +446,7 @@ module LinkedData
         end
 
         # remove index entries
-        unindex(index_commit)
-        unindex_properties(index_commit)
+        unindex_all_data(index_commit)
 
         # delete all files
         ontology_dir = File.join(LinkedData.settings.repository_folder, self.acronym.to_s)
@@ -417,19 +468,43 @@ module LinkedData
         self
       end
 
-      def unindex(commit=true)
+      def index_latest_submission
+        last_s = latest_submission(status: :any)
+        return if last_s.nil?
+
+        last_s.ontology = self
+        last_s.index_update([:ontology])
+      end
+
+      def unindex_all_data(commit=true)
         unindex_by_acronym(commit)
+        unindex_properties(commit)
+      end
+
+      def embedded_doc
+        self.administeredBy.map{|x| x.bring_remaining}
+        doc = indexable_object
+        doc.delete(:id)
+        doc.delete(:resource_id)
+        doc.delete('ontology_viewOf_resource_model_t')
+        doc['ontology_viewOf_t'] = self.viewOf.id.to_s  unless self.viewOf.nil?
+        doc[:resource_model_t] = doc.delete(:resource_model)
+        doc
       end
 
       def unindex_properties(commit=true)
-        unindex_by_acronym(commit, :property)
-      end
-
-      def unindex_by_acronym(commit=true, connection_name=:main)
         self.bring(:acronym) if self.bring?(:acronym)
         query = "submissionAcronym:#{acronym}"
-        Ontology.unindexByQuery(query, connection_name)
-        Ontology.indexCommit(nil, connection_name) if commit
+        OntologyProperty.unindexByQuery(query)
+        OntologyProperty.indexCommit(nil) if commit
+      end
+
+      def unindex_by_acronym(commit=true)
+        self.bring(:acronym) if self.bring?(:acronym)
+        query = "submissionAcronym:#{acronym}"
+        Class.unindexByQuery(query)
+        Class.indexCommit(nil) if commit
+        #OntologySubmission.clear_indexed_content(acronym)
       end
 
       def restricted?
