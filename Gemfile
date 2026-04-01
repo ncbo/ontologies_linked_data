@@ -40,7 +40,7 @@ group :development do
 end
 # NCBO gems (can be from a local dev path or from rubygems/git)
 gem 'goo', github: 'ncbo/goo', branch: 'feature/solrcloud-alias-indexing-codex'
-gem 'sparql-client', github: 'ncbo/sparql-client', branch: 'main'
+gem 'sparql-client', github: 'ncbo/sparql-client', branch: 'development'
 
 
 gem 'public_suffix', '~> 5.1.1'
