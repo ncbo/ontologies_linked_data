@@ -10,13 +10,12 @@ module LinkedData
       private
 
       def handle_missing_labels(file_path, logger)
-        status = LinkedData::Models::SubmissionStatus.find('RDF_LABELS').first
         callbacks = {
           include_languages: true,
           missing_labels: {
             op_name: 'Missing Labels Generation',
             required: true,
-            status: status,
+            status: LinkedData::Models::SubmissionStatus.find('RDF_LABELS').first,
             artifacts: {
               file_path: file_path
             },
@@ -30,12 +29,6 @@ module LinkedData
 
         raw_paging = LinkedData::Models::Class.in(@submission).include(:prefLabel, :synonym, :label)
         loop_classes(logger, raw_paging, @submission, callbacks)
-      rescue Exception => e
-        logger.error("#{e.class}: #{e.message}\n#{e.backtrace.join("\n\t")}")
-        logger.flush
-        @submission.add_submission_status(status.get_error_status)
-        @submission.save
-        raise e
       end
 
       def process_callbacks(logger, callbacks, action_name)
@@ -103,18 +96,9 @@ module LinkedData
 
           begin
             t0 = Time.now
-            page_classes = nil
-            total_pages = 0
-
-            begin
-              page_classes = paging.page(page, size).all
-              total_pages = page_classes.total_pages
-              page_len = page_classes.length
-            rescue StandardError => e
-              page_classes = []
-              logger.error("Error retrieving page #{page} for #{acr}: #{e.class}: #{e.message}")
-              logger.flush
-            end
+            page_classes = paging.page(page, size).all
+            total_pages = page_classes.total_pages
+            page_len = page_classes.length
 
             # nothing retrieved even though we're expecting more records
             if total_pages > 0 && page_classes.empty? && (prev_page_len == -1 || prev_page_len == size)
@@ -125,18 +109,10 @@ module LinkedData
                 j += 1
                 logger.error("Empty page encountered. Retrying #{j} times...")
                 sleep(2)
-                begin
-                  page_classes = paging.page(page, size).all
-                  total_pages = page_classes.total_pages
-                  page_len = page_classes.length
-                  unless page_classes.empty?
-                    logger.info("Success retrieving a page of #{page_classes.length} classes after retrying #{j} times...")
-                  end
-                rescue StandardError => e
-                  page_classes = []
-                  logger.error("Retry #{j} failed retrieving page #{page} for #{acr}: #{e.class}: #{e.message}")
+                page_classes = paging.page(page, size).all
+                unless page_classes.empty?
+                  logger.info("Success retrieving a page of #{page_classes.length} classes after retrying #{j} times...")
                 end
-                logger.flush
               end
 
               if page_classes.empty?
@@ -190,7 +166,6 @@ module LinkedData
             @submission.save
           end
         end
-      ensure
         RequestStore.store[:requested_lang] = nil if incl_lang
       end
 
@@ -342,3 +317,4 @@ module LinkedData
 
   end
 end
+
