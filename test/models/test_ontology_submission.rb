@@ -1,6 +1,7 @@
 require_relative "./test_ontology_common"
 require "logger"
 require "rack"
+require "mocha/minitest"
 
 class TestOntologySubmission < LinkedData::TestOntologyCommon
 
@@ -1306,6 +1307,39 @@ eos
     ensure
       tmp.unlink
     end
+  end
+
+  def test_generate_missing_labels_sets_error_status_on_initial_page_fetch_failure
+    submission_parse("BRO-ML-ERR", "BRO labels error", "./test/data/ontology_files/BRO_v3.2.owl", 1,
+                     process_rdf: false, extract_metadata: false, generate_missing_labels: false,
+                     index_search: false, run_metrics: false, diff: false)
+
+    sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: "BRO-ML-ERR"], submissionId: 1).first
+    logger = Logger.new(TestLogFile.new)
+
+    sub.stubs(:class_count).with(logger).returns(-1)
+
+    fake_scope = mock("missing-labels-scope")
+    fake_scope.stubs(:page).with(1, 2500).returns(fake_scope)
+    fake_scope.stubs(:all).raises(StandardError.new("simulated page fetch failure"))
+
+    class_query = mock("class-query")
+    class_query.stubs(:include).with(:prefLabel, :synonym, :label).returns(fake_scope)
+
+    LinkedData::Models::Class.stubs(:in).with(sub).returns(class_query)
+
+    RequestStore.store[:requested_lang] = nil
+
+    assert_raises(StandardError) do
+      sub.generate_missing_labels(logger)
+    end
+
+    sub.bring(:submissionStatus)
+    codes = sub.submissionStatus.map { |status| status.get_code_from_id }
+
+    assert_includes codes, "ERROR_RDF_LABELS"
+    refute_includes codes, "RDF_LABELS"
+    assert_nil RequestStore.store[:requested_lang]
   end
 
 end

@@ -1,4 +1,5 @@
 .bundle/
+vendor/
 *.swp
 *.gemtags
 .bundle
