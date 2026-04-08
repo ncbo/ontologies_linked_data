@@ -30,7 +30,7 @@ module LinkedData
 
         raw_paging = LinkedData::Models::Class.in(@submission).include(:prefLabel, :synonym, :label)
         loop_classes(logger, raw_paging, @submission, callbacks)
-      rescue Exception => e
+      rescue StandardError => e
         logger.error("#{e.class}: #{e.message}\n#{e.backtrace.join("\n\t")}")
         logger.flush
         @submission.add_submission_status(status.get_error_status)
@@ -46,7 +46,7 @@ module LinkedData
               yield(callable, callback)
             end
             false
-          rescue Exception => e
+          rescue StandardError => e
             logger.error("#{e.class}: #{e.message}\n#{e.backtrace.join("\n\t")}")
             logger.flush
 
@@ -103,17 +103,14 @@ module LinkedData
 
           begin
             t0 = Time.now
-            page_classes = nil
-            total_pages = 0
-
             begin
               page_classes = paging.page(page, size).all
               total_pages = page_classes.total_pages
               page_len = page_classes.length
             rescue StandardError => e
-              page_classes = []
               logger.error("Error retrieving page #{page} for #{acr}: #{e.class}: #{e.message}")
               logger.flush
+              raise e
             end
 
             # nothing retrieved even though we're expecting more records
