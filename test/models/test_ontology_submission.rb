@@ -1310,11 +1310,22 @@ eos
   end
 
   def test_generate_missing_labels_sets_error_status_on_initial_page_fetch_failure
-    submission_parse("BRO-ML-ERR", "BRO labels error", "./test/data/ontology_files/BRO_v3.2.owl", 1,
-                     process_rdf: false, extract_metadata: false, generate_missing_labels: false,
-                     index_search: false, run_metrics: false, diff: false)
+    acronym = "BRO-ML-ERR"
+    ontology_file = "./test/data/ontology_files/BRO_v3.2.owl"
+    ont_format, ont, = submission_dependent_objects("OWL", acronym, "test_linked_models", "BRO labels error")
 
-    sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: "BRO-ML-ERR"], submissionId: 1).first
+    sub = LinkedData::Models::OntologySubmission.new(submissionId: 1)
+    sub.uri = RDF::URI.new("https://test.com")
+    sub.description = "description example"
+    sub.status = "beta"
+    sub.released = DateTime.now - 4
+    sub.hasOntologyLanguage = ont_format
+    sub.ontology = ont
+    sub.uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository(acronym, 1, ontology_file)
+    sub.contact = [LinkedData::Models::Contact.where(name: "Peter", email: "peter@example.org").first]
+    assert sub.valid?, sub.errors.inspect
+    sub.save
+
     logger = Logger.new(TestLogFile.new)
 
     sub.stubs(:class_count).with(logger).returns(-1)
@@ -1339,6 +1350,22 @@ eos
 
     assert_includes codes, "ERROR_RDF_LABELS"
     refute_includes codes, "RDF_LABELS"
+    assert_nil RequestStore.store[:requested_lang]
+  end
+
+  def test_skos_submission_without_skos_concept_triggers_current_retry_path
+    # See GH-274: SKOS submissions with no skos:Concept currently enter the retry path and fail
+    # during missing-label generation. Keep this regression test to document the current behavior
+    # until retry-start logic is corrected.
+    error = assert_raises(RuntimeError) do
+      submission_parse("SKOS-NO-CONCEPT",
+                       "SKOS without Concept",
+                       "./test/data/ontology_files/no_concepts.skos.rdf", 1,
+                       process_rdf: true, extract_metadata: false,
+                       index_search: false, run_metrics: false, diff: false)
+    end
+
+    assert_match(/Empty page 1 of 1 persisted after retrying/, error.message)
     assert_nil RequestStore.store[:requested_lang]
   end
 
