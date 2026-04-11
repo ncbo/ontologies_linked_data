@@ -1,6 +1,8 @@
 module LinkedData
   module Metrics
     def self.max_depth_fn(submission, logger, is_flat, rdfsSC)
+      return 0 if is_flat
+
       max_depth = 0
       mx_from_file = submission.metrics_from_file(logger)
       if (mx_from_file && mx_from_file.length == 2 && mx_from_file[0].length >= 4)
