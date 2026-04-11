@@ -63,17 +63,16 @@ module LinkedData
       unless submission.definitionProperty.nil?
         definitionP << submission.definitionProperty
       end
-      t0 = Time.now
-      groupby_children = query_groupby_classes(submission.id,rdfsSC)
-      logger.info("Metrics groupby_children retrieved #{groupby_children.length}" +
-                  " in #{Time.now - t0} sec.")
-      logger.flush
       children_counts = []
-      groupby_children.each do |cls,count|
-        unless cls.start_with?('http')
-          next
-        end
-        unless is_flat
+      unless is_flat
+        t0 = Time.now
+        groupby_children = query_groupby_classes(submission.id,rdfsSC)
+        logger.info("Metrics groupby_children retrieved #{groupby_children.length}" +
+                    " in #{Time.now - t0} sec.")
+        logger.flush
+        groupby_children.each do |cls,count|
+          next unless cls.start_with?('http')
+
           if count > 24
             cls_metrics[:classesWithMoreThan25Children] += 1
           end
