@@ -558,21 +558,10 @@ module LinkedData
             count += mx.individuals
           end
           count_set = true
-        else
-          mx = metrics_from_file(logger)
-
-          unless mx.empty?
-            count = mx[1][0].to_i
-
-            if self.hasOntologyLanguage.skos?
-              count += mx[1][1].to_i
-            end
-            count_set = true
-          end
         end
 
         unless count_set
-          logger.error("No calculated metrics or metrics file was found for #{self.id.to_s}. Unable to return total class count.")
+          logger.error("No calculated metrics found for #{self.id.to_s}. Unable to return total class count.")
           logger.flush
         end
         count
