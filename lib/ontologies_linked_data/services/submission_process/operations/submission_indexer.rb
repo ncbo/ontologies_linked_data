@@ -36,6 +36,8 @@ module LinkedData
           csv_writer = LinkedData::Utils::OntologyCSVWriter.new
           csv_writer.open(@submission.ontology, @submission.csv_path)
 
+          LinkedData::Models::Class.ancestors_cache = compute_ancestors_map(logger)
+
           begin
             logger.info("Indexing ontology terms: #{@submission.ontology.acronym}...")
             t0 = Time.now
@@ -180,6 +182,8 @@ module LinkedData
             logger.error("\n\n#{e.class}: #{e.message}\n")
             logger.error(e.backtrace)
             raise e
+          ensure
+            LinkedData::Models::Class.ancestors_cache = nil
           end
         end
         logger.info("Completed indexing ontology terms: #{@submission.ontology.acronym} in #{time} sec. #{count_classes} classes.")
@@ -192,6 +196,78 @@ module LinkedData
           end
           logger.info("Completed optimizing ontology terms index in #{time} sec.")
         end
+      end
+
+      def compute_ancestors_map(logger)
+        @submission.bring(:hasOntologyLanguage) unless @submission.loaded_attributes.include?(:hasOntologyLanguage)
+        tree_property = LinkedData::Models::Class.tree_view_property(@submission)
+        graph = @submission.id.to_s
+
+        logger.info("Precomputing ancestor hierarchy for indexing...")
+        t0 = Time.now
+
+        direct_parents = fetch_all_parent_edges(graph, tree_property)
+        edge_count = direct_parents.values.sum(&:length)
+        logger.info("Fetched #{edge_count} parent-child edges for #{direct_parents.size} classes in #{Time.now - t0}s")
+
+        ancestors_map = {}
+        direct_parents.each_key do |cls|
+          compute_ancestors_for(cls, direct_parents, ancestors_map)
+        end
+
+        logger.info("Computed ancestor map for #{ancestors_map.size} classes in #{Time.now - t0}s")
+        ancestors_map
+      end
+
+      def fetch_all_parent_edges(graph, tree_property)
+        direct_parents = {}
+        page_size = 50_000
+        offset = 0
+
+        loop do
+          query = "SELECT ?child ?parent WHERE { " \
+                  "GRAPH <#{graph}> { " \
+                  "?child <#{tree_property}> ?parent . " \
+                  "FILTER(isIRI(?parent)) " \
+                  "} } LIMIT #{page_size} OFFSET #{offset}"
+
+          count = 0
+          Goo.sparql_query_client.query(query, query_options: { rules: :NONE }, graphs: [graph]).each do |sol|
+            child = sol[:child].to_s
+            parent = sol[:parent].to_s
+            next unless child.start_with?("http") && parent.start_with?("http")
+            (direct_parents[child] ||= []) << parent
+            count += 1
+          end
+
+          break if count < page_size
+          offset += page_size
+        end
+
+        direct_parents
+      end
+
+      def compute_ancestors_for(cls, direct_parents, ancestors_map)
+        return ancestors_map[cls] if ancestors_map.key?(cls)
+
+        visited = Set.new
+        queue = (direct_parents[cls] || []).dup
+
+        while queue.any?
+          parent = queue.shift
+          next if visited.include?(parent)
+          visited.add(parent)
+
+          if ancestors_map.key?(parent)
+            visited.merge(ancestors_map[parent])
+          else
+            (direct_parents[parent] || []).each do |grandparent|
+              queue.push(grandparent) unless visited.include?(grandparent)
+            end
+          end
+        end
+
+        ancestors_map[cls] = visited
       end
 
     end
