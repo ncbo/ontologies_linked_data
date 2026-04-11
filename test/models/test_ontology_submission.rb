@@ -1178,6 +1178,18 @@ eos
     assert_equal 133, metrics.classes
   end
 
+  def test_class_count_without_metrics
+    acronym = "CLSCNT-NOMETRIC"
+    submission_parse(acronym, "Test class_count without metrics",
+                     "./test/data/ontology_files/BRO_v3.2.owl", 33,
+                     process_rdf: true, extract_metadata: false,
+                     run_metrics: false)
+    sub = LinkedData::Models::Ontology.find(acronym).first.latest_submission(status: [:rdf])
+    logger = Logger.new($stderr)
+    count = sub.class_count(logger)
+    assert_equal(-1, count, "class_count should return -1 when no metrics are available")
+  end
+
   # See https://github.com/ncbo/ncbo_cron/issues/82#issuecomment-3104054081
   def test_disappearing_values
     skip "This issue no longer occurs with the latest goo/sparql-client from AgroPortal"
