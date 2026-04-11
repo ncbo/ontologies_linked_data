@@ -2,53 +2,6 @@ require 'csv'
 
 module LinkedData
   module Metrics
-    def self.metrics_for_submission(submission, logger)
-      metrics = nil
-      logger.info("metrics_for_submission start")
-      logger.flush
-      begin
-        submission.bring(:submissionStatus) if submission.bring?(:submissionStatus)
-        cls_metrics = class_metrics(submission, logger)
-        logger.info("class_metrics finished")
-        logger.flush
-        metrics = LinkedData::Models::Metric.new
-
-        cls_metrics.each do |k,v|
-          unless v.instance_of?(Integer)
-            begin
-              v = Integer(v)
-            rescue ArgumentError
-              v = 0
-            rescue TypeError
-              v = 0
-            end
-          end
-          metrics.send("#{k}=",v)
-        end
-        indiv_count = number_individuals(logger, submission)
-        metrics.individuals = indiv_count
-        logger.info("individuals finished")
-        logger.flush
-        prop_count = number_properties(logger, submission)
-        metrics.properties = prop_count
-        logger.info("properties finished")
-        logger.flush
-
-        # re-generate metrics file
-        submission.generate_metrics_file(cls_metrics[:classes], indiv_count, prop_count, cls_metrics[:maxDepth])
-        logger.info("generation of metrics file finished")
-        logger.flush
-
-      rescue Exception => e
-        logger.error(e.message)
-        logger.error(e)
-        logger.flush
-        metrics = nil
-      end
-      metrics
-    end
-
-
     def self.max_depth_fn(submission, logger, is_flat, rdfsSC)
       max_depth = 0
       mx_from_file = submission.metrics_from_file(logger)
