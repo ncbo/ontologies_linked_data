@@ -59,43 +59,36 @@ module LinkedData
       def metrics_for_submission(logger)
         logger.info('metrics_for_submission start')
         logger.flush
-        begin
-          @submission.bring(:submissionStatus) if @submission.bring?(:submissionStatus)
-          cls_metrics = LinkedData::Metrics.class_metrics(@submission, logger)
-          logger.info('class_metrics finished')
-          logger.flush
-          metrics = LinkedData::Models::Metric.new
+        @submission.bring(:submissionStatus) if @submission.bring?(:submissionStatus)
+        cls_metrics = LinkedData::Metrics.class_metrics(@submission, logger)
+        logger.info('class_metrics finished')
+        logger.flush
+        metrics = LinkedData::Models::Metric.new
 
-          cls_metrics.each do |k,v|
-            unless v.instance_of?(Integer)
-              begin
-                v = Integer(v)
-              rescue ArgumentError
-                v = 0
-              rescue TypeError
-                v = 0
-              end
+        cls_metrics.each do |k,v|
+          unless v.instance_of?(Integer)
+            begin
+              v = Integer(v)
+            rescue ArgumentError
+              v = 0
+            rescue TypeError
+              v = 0
             end
-            metrics.send("#{k}=",v)
           end
-          indiv_count = LinkedData::Metrics.number_individuals(logger, @submission)
-          metrics.individuals = indiv_count
-          logger.info('individuals finished')
-          logger.flush
-          prop_count = LinkedData::Metrics.number_properties(logger, @submission)
-          metrics.properties = prop_count
-          logger.info('properties finished')
-          logger.flush
-          # re-generate metrics file
-          generate_metrics_file(cls_metrics[:classes], indiv_count, prop_count, cls_metrics[:maxDepth])
-          logger.info('generation of metrics file finished')
-          logger.flush
-        rescue StandardError => e
-          logger.error(e.message)
-          logger.error(e)
-          logger.flush
-          metrics = nil
+          metrics.send("#{k}=",v)
         end
+        indiv_count = LinkedData::Metrics.number_individuals(logger, @submission)
+        metrics.individuals = indiv_count
+        logger.info('individuals finished')
+        logger.flush
+        prop_count = LinkedData::Metrics.number_properties(logger, @submission)
+        metrics.properties = prop_count
+        logger.info('properties finished')
+        logger.flush
+        # re-generate metrics file
+        generate_metrics_file(cls_metrics[:classes], indiv_count, prop_count, cls_metrics[:maxDepth])
+        logger.info('generation of metrics file finished')
+        logger.flush
         metrics
       end
 
