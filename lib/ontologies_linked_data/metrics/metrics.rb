@@ -110,6 +110,10 @@ module LinkedData
       return cls_metrics
     end
 
+    # TODO: This method appears to be unused — no external callers found in this repo
+    # or dependent projects (ontologies_api, ncbo_cron, ncbo_annotator).
+    # Was likely superseded by max_depth_fn which uses SPARQL hierarchy_depth? queries.
+    # Consider removing after further validation.
     def self.recursive_depth(cls,classes,depth,visited)
       if depth > 60
         #safety for cycles.
