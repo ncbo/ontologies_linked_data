@@ -1,5 +1,3 @@
-require 'csv'
-
 module LinkedData
   module Metrics
     def self.max_depth_fn(submission, logger, is_flat, rdfsSC)
