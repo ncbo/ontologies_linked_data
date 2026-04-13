@@ -147,7 +147,7 @@ module LinkedData
                     end
 
                     # TODO: Remove once precomputed ancestors are validated against production data
-                    validate_class_ancestors(c, logger)
+                    validate_class_ancestors(c, logger) if ENV['OP_VALIDATE_ANCESTORS']
 
                     @submission.synchronize do
                       csv_writer.write_class(c)
