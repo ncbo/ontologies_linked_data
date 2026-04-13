@@ -146,6 +146,9 @@ module LinkedData
                       end
                     end
 
+                    # TODO: Remove once precomputed ancestors are validated against production data
+                    validate_class_ancestors(c, logger)
+
                     @submission.synchronize do
                       csv_writer.write_class(c)
                     end
@@ -268,6 +271,25 @@ module LinkedData
         end
 
         ancestors_map[cls] = visited
+      end
+
+      # TODO: Remove once precomputed ancestors are validated against production data
+      def validate_class_ancestors(cls, logger)
+        cls_id = cls.id.to_s
+        ancestors_cache = LinkedData::Models::Class.ancestors_cache
+        return unless ancestors_cache
+
+        old_ancestors = cls.retrieve_hierarchy_ids(:ancestors)
+        old_ancestors.select! { |x| !x["owl#Thing"] }
+        new_ancestors = (ancestors_cache[cls_id] || Set.new).reject { |x| x["owl#Thing"] }.to_set
+
+        unless old_ancestors == new_ancestors
+          only_old = old_ancestors - new_ancestors
+          only_new = new_ancestors - old_ancestors
+          logger.warn("Ancestor mismatch for #{cls_id}: old=#{old_ancestors.size} new=#{new_ancestors.size} only_in_old=#{only_old.to_a.first(5)} only_in_new=#{only_new.to_a.first(5)}")
+        end
+      rescue StandardError => e
+        logger.warn("Ancestor validation failed for #{cls_id}: #{e.class}: #{e.message}")
       end
 
     end
