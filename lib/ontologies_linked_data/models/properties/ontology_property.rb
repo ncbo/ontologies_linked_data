@@ -26,7 +26,7 @@ module LinkedData
         end
       end
 
-      enable_indexing(:prop_search_core1, :property) do |schema_generator|
+      enable_indexing(:prop_search, :property, bootstrap_collection: :prop_search_bootstrap) do |schema_generator|
         index_schema(schema_generator)
       end
 
