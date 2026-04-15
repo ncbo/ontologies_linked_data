@@ -1,4 +1,4 @@
-require 'xml'
+require 'libxml'
 
 module LinkedData
   module Serializers
@@ -30,9 +30,9 @@ module LinkedData
       end
 
       def self.to_xml(object, type, links = {})
-        doc = ::XML::Document.new
+        doc = LibXML::XML::Document.new
         if object.nil? || object.respond_to?("empty?") && object.empty?
-          doc.root = ::XML::Node.new("empty")
+          doc.root = LibXML::XML::Node.new("empty")
           return doc
         end
 
@@ -41,7 +41,7 @@ module LinkedData
         elsif object.kind_of?(Array)
           root = convert_array(object, type, links)
         else
-          root = ::XML::Node.new(object.to_s)
+          root = LibXML::XML::Node.new(object.to_s)
         end
 
         doc.root = root
@@ -55,9 +55,9 @@ module LinkedData
         return {} if !current_cls.ancestors.include?(LinkedData::Hypermedia::Resource) || current_cls.hypermedia_settings[:link_to].empty?
 
         links = current_cls.hypermedia_settings[:link_to]
-        links_output = ::XML::Node.new("links")
+        links_output = LibXML::XML::Node.new("links")
         links.each do |link|
-          link_xml = ::XML::Node.new(link.type)
+          link_xml = LibXML::XML::Node.new(link.type)
           expanded_link = LinkedData::Hypermedia.expand_link(link, object)
           prefix = expanded_link.start_with?("http") ? "" : LinkedData.settings.rest_url_prefix
           link_xml['href'] = prefix + expanded_link
@@ -68,7 +68,7 @@ module LinkedData
       end
 
       def self.convert_hash(hash, type, links = {})
-        hash_container = ::XML::Node.new(clean_name(type))
+        hash_container = LibXML::XML::Node.new(clean_name(type))
         element = nil
         hash.each do |key, value|
           # If this is for a page element, use the actual type for the top-level collection
@@ -80,7 +80,7 @@ module LinkedData
             collection_name = hash[:page] && hash[:pageCount] ? "collection" : nil
             element = convert_array(value, key, links, collection_name)
           else
-            element = ::XML::Node.new(clean_name(key))
+            element = LibXML::XML::Node.new(clean_name(key))
             element << value.to_s
           end
           hash_container << element
@@ -94,9 +94,9 @@ module LinkedData
       def self.convert_array(array, type, links = {}, collection_name = nil)
         collection_name ||= type.to_s
         suffix = collection_name.downcase.eql?("collection") ? "" : "Collection"
-        root = ::XML::Node.new(clean_name(collection_name) + suffix)
+        root = LibXML::XML::Node.new(clean_name(collection_name) + suffix)
         array.each do |item|
-          element = ::XML::Node.new(clean_name(type))
+          element = LibXML::XML::Node.new(clean_name(type))
           element.attributes["type"] = type.to_s unless element.name.eql?(type.to_s)
           if item.kind_of?(Hash)
             element = convert_hash(item, type, links)
