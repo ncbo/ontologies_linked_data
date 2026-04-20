@@ -1365,19 +1365,24 @@ eos
     assert_nil RequestStore.store[:requested_lang]
   end
 
-  def test_skos_submission_without_skos_concept_triggers_current_retry_path
-    # See GH-274: SKOS submissions with no skos:Concept currently enter the retry path and fail
-    # during missing-label generation. Keep this regression test to document the current behavior
-    # until retry-start logic is corrected.
-    error = assert_raises(RuntimeError) do
-      submission_parse("SKOS-NO-CONCEPT",
-                       "SKOS without Concept",
-                       "./test/data/ontology_files/no_concepts.skos.rdf", 1,
-                       process_rdf: true, extract_metadata: false,
-                       index_search: false, run_metrics: false, diff: false)
-    end
+  def test_skos_submission_without_skos_concept_processes_without_error
+    # Regression for GH-274: SKOS submissions with no skos:Concept previously entered the
+    # retry path and failed during missing-label generation because the CSV class_count
+    # fallback reported a non-zero count that disagreed with the SPARQL result. With the
+    # fallback removed, class_count returns -1, total_pages stays 0, and the loop exits
+    # cleanly without entering the retry path.
+    submission_parse("SKOS-NO-CONCEPT",
+                     "SKOS without Concept",
+                     "./test/data/ontology_files/no_concepts.skos.rdf", 1,
+                     process_rdf: true, extract_metadata: false,
+                     index_search: false, run_metrics: false, diff: false)
 
-    assert_match(/Empty page 1 of 1 persisted after retrying/, error.message)
+    sub = LinkedData::Models::Ontology.find("SKOS-NO-CONCEPT").first.latest_submission(status: :any)
+    sub.bring(:submissionStatus)
+    codes = sub.submissionStatus.map { |status| status.get_code_from_id }
+
+    assert_includes codes, "RDF_LABELS"
+    refute_includes codes, "ERROR_RDF_LABELS"
     assert_nil RequestStore.store[:requested_lang]
   end
 
