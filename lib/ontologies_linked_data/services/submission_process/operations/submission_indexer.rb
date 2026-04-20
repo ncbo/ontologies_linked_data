@@ -279,21 +279,23 @@ module LinkedData
         ancestors_cache = LinkedData::Models::Class.ancestors_cache
         return unless ancestors_cache
 
-        old_time = Benchmark.realtime do
-          @old_ancestors_result = cls.retrieve_hierarchy_ids(:ancestors)
-          @old_ancestors_result.select! { |x| !x["owl#Thing"] }
+        sparql_ancestors = nil
+        sparql_time = Benchmark.realtime do
+          sparql_ancestors = cls.retrieve_hierarchy_ids(:ancestors)
+          sparql_ancestors.select! { |x| !x["owl#Thing"] }
         end
 
-        new_time = Benchmark.realtime do
-          @new_ancestors_result = (ancestors_cache[cls_id] || Set.new).reject { |x| x["owl#Thing"] }.to_set
+        cached_ancestors = nil
+        cache_time = Benchmark.realtime do
+          cached_ancestors = (ancestors_cache[cls_id] || Set.new).reject { |x| x["owl#Thing"] }.to_set
         end
 
-        if @old_ancestors_result == @new_ancestors_result
-          logger.info("Ancestor OK for #{cls_id}: #{@old_ancestors_result.size} ancestors, old=#{old_time.round(4)}s new=#{new_time.round(4)}s")
+        if sparql_ancestors == cached_ancestors
+          logger.info("Ancestor OK for #{cls_id}: #{sparql_ancestors.size} ancestors, sparql=#{sparql_time.round(4)}s cache=#{cache_time.round(4)}s")
         else
-          only_old = @old_ancestors_result - @new_ancestors_result
-          only_new = @new_ancestors_result - @old_ancestors_result
-          logger.warn("Ancestor MISMATCH for #{cls_id}: old=#{@old_ancestors_result.size} (#{old_time.round(4)}s) new=#{@new_ancestors_result.size} (#{new_time.round(4)}s) only_in_old=#{only_old.to_a.first(5)} only_in_new=#{only_new.to_a.first(5)}")
+          only_sparql = sparql_ancestors - cached_ancestors
+          only_cached = cached_ancestors - sparql_ancestors
+          logger.warn("Ancestor MISMATCH for #{cls_id}: sparql=#{sparql_ancestors.size} (#{sparql_time.round(4)}s) cache=#{cached_ancestors.size} (#{cache_time.round(4)}s) only_in_sparql=#{only_sparql.to_a.first(5)} only_in_cache=#{only_cached.to_a.first(5)}")
         end
       rescue StandardError => e
         logger.warn("Ancestor validation failed for #{cls_id}: #{e.class}: #{e.message}")
