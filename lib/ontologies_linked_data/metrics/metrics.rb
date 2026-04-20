@@ -1,8 +1,6 @@
 module LinkedData
   module Metrics
     def self.max_depth_fn(submission, logger, is_flat, rdfsSC)
-      return 0 if is_flat
-
       max_depth = 0
       mx_from_file = submission.metrics_from_file(logger)
       if (mx_from_file && mx_from_file.length == 2 && mx_from_file[0].length >= 4)
@@ -42,11 +40,8 @@ module LinkedData
       submission.ontology.bring(:flat) if submission.ontology.bring?(:flat)
 
       is_flat = submission.ontology.flat
-      rdfsSC = nil
-      unless is_flat
-          rdfsSC = Goo.namespaces[:rdfs][:subClassOf]
-      end
-      max_depth = max_depth_fn(submission, logger, is_flat, rdfsSC) 
+      rdfsSC = Goo.namespaces[:rdfs][:subClassOf]
+      max_depth = max_depth_fn(submission, logger, is_flat, rdfsSC)
 
       cls_metrics = {}
       cls_metrics[:classes] = 0
@@ -63,16 +58,17 @@ module LinkedData
       unless submission.definitionProperty.nil?
         definitionP << submission.definitionProperty
       end
+      t0 = Time.now
+      groupby_children = query_groupby_classes(submission.id,rdfsSC)
+      logger.info("Metrics groupby_children retrieved #{groupby_children.length}" +
+                  " in #{Time.now - t0} sec.")
+      logger.flush
       children_counts = []
-      unless is_flat
-        t0 = Time.now
-        groupby_children = query_groupby_classes(submission.id,rdfsSC)
-        logger.info("Metrics groupby_children retrieved #{groupby_children.length}" +
-                    " in #{Time.now - t0} sec.")
-        logger.flush
-        groupby_children.each do |cls,count|
-          next unless cls.start_with?('http')
-
+      groupby_children.each do |cls,count|
+        unless cls.start_with?('http')
+          next
+        end
+        unless is_flat
           if count > 24
             cls_metrics[:classesWithMoreThan25Children] += 1
           end

@@ -1159,7 +1159,7 @@ eos
     assert_equal 63, metrics.properties
     assert_equal 124, metrics.individuals
     assert_equal 0, metrics.classesWithOneChild
-    assert_equal 0, metrics.maxDepth
+    assert_equal 7, metrics.maxDepth
     #cause it has not the subproperty added
     assert_equal 474, metrics.classesWithNoDefinition
     assert_equal 0, metrics.classesWithMoreThan25Children
