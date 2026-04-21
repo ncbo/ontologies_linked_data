@@ -4,23 +4,27 @@ task default: %w[test]
 
 Rake::TestTask.new do |t|
   t.libs = []
+  t.warning = false
   t.test_files = FileList['test/**/test*.rb']
 end
 
 Rake::TestTask.new do |t|
   t.libs = []
+  t.warning = false
   t.name = "test:models"
   t.test_files = FileList['test/models/test*.rb']
 end
 
 Rake::TestTask.new do |t|
   t.libs = []
+  t.warning = false
   t.name = "test:rack"
   t.test_files = FileList['test/rack/test*.rb']
 end
 
 Rake::TestTask.new do |t|
   t.libs = []
+  t.warning = false
   t.name = "test:serializer"
   t.test_files = FileList['test/serializer/test*.rb']
 end

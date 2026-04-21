@@ -18,11 +18,12 @@ module LinkedData
       attribute :children, namespace: :rdfs, inverse: { on: :datatype_property, :attribute => :parents }
       attribute :ancestors, namespace: :rdfs, property: :subPropertyOf, handler: :retrieve_ancestors
       attribute :descendants, namespace: :rdfs, property: :subPropertyOf, handler: :retrieve_descendants
-      # attribute :domain
-      # attribute :range
+      attribute :domain, namespace: :rdfs
+      attribute :range, namespace: :rdfs
 
-      serialize_default :label, :labelGenerated, :definition, :matchType, :ontologyType, :propertyType, :parents, :children, :hasChildren # some of these attributes are used in Search (not shown out of context)
+      serialize_default :label, :labelGenerated, :definition, :matchType, :ontologyType, :propertyType, :parents, :children, :hasChildren, :domain, :range # some of these attributes are used in Search (not shown out of context)
       aggregates childrenCount: [:count, :children]
+      serialize_methods :properties
       # this command allows the children to be serialized in the output
       embed :children
 
@@ -34,6 +35,10 @@ module LinkedData
               LinkedData::Hypermedia::Link.new("ancestors", lambda {|m| "#{self.ontology_link(m)}/properties/#{CGI.escape(m.id.to_s)}/ancestors"}, self.uri_type),
               LinkedData::Hypermedia::Link.new("descendants", lambda {|m| "#{self.ontology_link(m)}/properties/#{CGI.escape(m.id.to_s)}/descendants"}, self.uri_type),
               LinkedData::Hypermedia::Link.new("tree", lambda {|m| "#{self.ontology_link(m)}/properties/#{CGI.escape(m.id.to_s)}/tree"}, self.uri_type)
+
+      enable_indexing(:prop_search_core1, :property) do |schema_generator|
+        index_schema(schema_generator)
+      end
     end
 
   end

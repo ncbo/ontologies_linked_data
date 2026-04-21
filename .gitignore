@@ -1,7 +1,9 @@
 .bundle/
+vendor/
 *.swp
 *.gemtags
 .bundle
+.serena
 *.tags*
 .DS_Store
 

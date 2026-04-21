@@ -6,6 +6,13 @@ module LinkedData
       attribute :email, enforce: [:existence, :email]
 
       embedded true
+
+      def embedded_doc
+        bring(:name) if bring?(:name)
+        bring(:email) if bring?(:email)
+
+        "#{self.name} | #{self.email}"
+      end
     end
   end
 end

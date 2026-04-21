@@ -1,7 +1,7 @@
 require 'minitest/autorun'
 require_relative '../../lib/ontologies_linked_data/utils/file'
 
-class TestUtilsFile < MiniTest::Unit::TestCase
+class TestUtilsFile < Minitest::Test
   DST = nil
 
   def setup

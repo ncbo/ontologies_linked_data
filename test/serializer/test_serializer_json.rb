@@ -1,9 +1,9 @@
-require 'minitest/unit'
+require 'minitest/autorun'
 require "multi_json"
 require_relative "../../lib/ontologies_linked_data"
-require_relative "../../config/config"
+require_relative "../../config/config.test"
 
-class TestSerializerOutput < MiniTest::Unit::TestCase
+class TestSerializerOutput < Minitest::Test
   class Car < LinkedData::Models::Base
     model :car, name_with: :model, namespace: :omv
     attribute :model, enforce: [:unique]

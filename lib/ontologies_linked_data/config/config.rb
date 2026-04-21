@@ -23,8 +23,8 @@ module LinkedData
     @settings.goo_path_query                ||= '/sparql/'
     @settings.goo_path_data                 ||= '/data/'
     @settings.goo_path_update               ||= '/update/'
-    @settings.search_server_url             ||= 'http://localhost:8983/solr/term_search_core1'
-    @settings.property_search_server_url    ||= 'http://localhost:8983/solr/prop_search_core1'
+    @settings.search_server_url             ||= 'http://localhost:8983/solr'
+    @settings.property_search_server_url    ||= 'http://localhost:8983/solr'
     @settings.repository_folder             ||= './test/data/ontology_files/repo'
     @settings.rest_url_prefix               ||= DEFAULT_PREFIX
     @settings.enable_security               ||= false
@@ -40,8 +40,6 @@ module LinkedData
 
     @settings.queries_debug                 ||= false
     @settings.enable_monitoring             ||= false
-    @settings.cube_host                     ||= 'localhost'
-    @settings.cube_port                     ||= 1180
 
     # Caching http
     @settings.enable_http_cache             ||= false
@@ -87,6 +85,8 @@ module LinkedData
     # ontology creation to OntoPortal site admins
     @settings.enable_administrative_notifications ||= true
 
+    @settings.oauth_providers               ||= {}
+
     # number of times to retry a query when empty records are returned
     @settings.num_retries_4store            ||= 10
 
@@ -131,14 +131,6 @@ module LinkedData
         conf.add_search_backend(:property, service: @settings.property_search_server_url)
         conf.add_redis_backend(host: @settings.goo_redis_host,
                                port: @settings.goo_redis_port)
-
-        if @settings.enable_monitoring
-          puts "(LD) >> Enable SPARQL monitoring with cube #{@settings.cube_host}:#{@settings.cube_port}"
-          conf.enable_cube do |opts|
-            opts[:host] = @settings.cube_host
-            opts[:port] = @settings.cube_port
-          end
-        end
       end
     rescue StandardError => e
       abort("EXITING: Cannot connect to triplestore and/or search server:\n  #{e}\n#{e.backtrace.join("\n")}")
@@ -171,7 +163,7 @@ module LinkedData
       conf.add_namespace(:adms, RDF::Vocabulary.new("http://www.w3.org/ns/adms#"))
       conf.add_namespace(:voaf, RDF::Vocabulary.new("http://purl.org/vocommons/voaf#"))
       conf.add_namespace(:dcat, RDF::Vocabulary.new("http://www.w3.org/ns/dcat#"))
-      conf.add_namespace(:mod, RDF::Vocabulary.new("http://www.isibang.ac.in/ns/mod#"))
+      conf.add_namespace(:mod, RDF::Vocabulary.new("https://w3id.org/mod#"))
       conf.add_namespace(:prov, RDF::Vocabulary.new("http://www.w3.org/ns/prov#"))
       conf.add_namespace(:cc, RDF::Vocabulary.new("http://creativecommons.org/ns#"))
       conf.add_namespace(:schema, RDF::Vocabulary.new("http://schema.org/"))

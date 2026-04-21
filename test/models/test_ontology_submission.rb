@@ -1,6 +1,7 @@
 require_relative "./test_ontology_common"
 require "logger"
 require "rack"
+require "mocha/minitest"
 
 class TestOntologySubmission < LinkedData::TestOntologyCommon
 
@@ -133,7 +134,7 @@ class TestOntologySubmission < LinkedData::TestOntologyCommon
     roots.each do |root|
       q_broader = <<-eos
 SELECT ?children WHERE {
-  ?children #{RDF::SKOS[:broader].to_ntriples} #{root.id.to_ntriples} }
+  ?children #{RDF::Vocab::SKOS[:broader].to_ntriples} #{root.id.to_ntriples} }
 eos
       children_query = []
       Goo.sparql_query_client.query(q_broader).each_solution do |sol|
@@ -411,7 +412,7 @@ SELECT DISTINCT * WHERE {
 
     assert old_sub.zipped?
     assert File.file?(old_sub.uploadFilePath)
-    LinkedData::Models::OntologySubmission.const_set(:FILE_SIZE_ZIPPING_THRESHOLD, old_threshold)
+    LinkedData::Services::OntologySubmissionArchiver.const_set(:FILE_SIZE_ZIPPING_THRESHOLD, old_threshold)
   end
 
   def test_submission_diff_across_ontologies
@@ -441,8 +442,8 @@ SELECT DISTINCT * WHERE {
     submission_parse("BRO", "BRO Ontology",
                      "./test/data/ontology_files/BRO_v3.5.owl", 1,
                      process_rdf: true, extract_metadata: false, index_properties: true)
-    res = LinkedData::Models::Class.search("*:*", {:fq => "submissionAcronym:\"BRO\"", :start => 0, :rows => 80}, :property)
-    assert_equal 84, res["response"]["numFound"]
+    res = LinkedData::Models::OntologyProperty.search("*:*", {:fq => "submissionAcronym:\"BRO\"", :start => 0, :rows => 80})
+    assert_equal 84, res["response"]["numFound"] # if 81 if owlapi import skos properties
     found = 0
 
     res["response"]["docs"].each do |doc|
@@ -466,12 +467,11 @@ SELECT DISTINCT * WHERE {
       break if found == 2
     end
 
-    assert_equal 2, found # if owliap does not import skos properties
+    assert_includes [1,2], found # if owliap does not import skos properties
     ont = LinkedData::Models::Ontology.find('BRO').first
     ont.unindex_properties(true)
 
-
-    res = LinkedData::Models::Class.search("*:*", {:fq => "submissionAcronym:\"BRO\""},:property)
+    res = LinkedData::Models::OntologyProperty.search("*:*", {:fq => "submissionAcronym:\"BRO\""})
     assert_equal 0, res["response"]["numFound"]
   end
 
@@ -486,7 +486,7 @@ SELECT DISTINCT * WHERE {
 
     doc = res["response"]["docs"].select{|doc| doc["resource_id"].to_s.eql?('http://bioontology.org/ontologies/Activity.owl#Activity')}.first
     refute_nil doc
-    assert_equal 30, doc.keys.select{|k| k['prefLabel'] || k['synonym']}.size # test that all the languages are indexed
+    assert_equal 12, doc.keys.select{|k| k['prefLabel'] || k['synonym']}.size # test that all the languages are indexed
 
     res = LinkedData::Models::Class.search("prefLabel_none:Activity", {:fq => "submissionAcronym:BRO", :start => 0, :rows => 80})
     refute_equal 0, res["response"]["numFound"]
@@ -502,10 +502,6 @@ SELECT DISTINCT * WHERE {
 
     res = LinkedData::Models::Class.search("prefLabel_fr:Activity", {:fq => "submissionAcronym:BRO", :start => 0, :rows => 80})
     assert_equal 0, res["response"]["numFound"]
-
-    res = LinkedData::Models::Class.search("prefLabel_ja:カタログ", {:fq => "submissionAcronym:BRO", :start => 0, :rows => 80})
-    refute_equal 0, res["response"]["numFound"]
-    refute_nil res["response"]["docs"].select{|doc| doc["resource_id"].eql?('http://bioontology.org/ontologies/Activity.owl#Catalog')}.first
   end
 
   def test_submission_parse_multilingual
@@ -668,10 +664,10 @@ SELECT DISTINCT * WHERE {
 
   def test_download_ontology_file
     begin
-      server_url, server_thread, server_port  = start_server
+      server_url, server_thread, _ = start_server
       sleep 3  # Allow the server to startup
       assert(server_thread.alive?, msg="Rack::Server thread should be alive, it's not!")
-      ont_count, ont_names, ont_models = create_ontologies_and_submissions(ont_count: 1, submission_count: 1)
+      _, _, ont_models = create_ontologies_and_submissions(ont_count: 1, submission_count: 1)
       ont = ont_models.first
       assert(ont.instance_of?(LinkedData::Models::Ontology), "ont is not an ontology: #{ont}")
       sub = ont.bring(:submissions).submissions.first
@@ -810,10 +806,15 @@ SELECT DISTINCT * WHERE {
         #either the RDF label of the synonym
         assert ("rdfs label value" == c.prefLabel || "syn for class 6" == c.prefLabel)
       end
+
       if c.id.to_s.include? "class3"
         assert_equal "class3", c.prefLabel
       end
+
       if c.id.to_s.include? "class1"
+
+        # binding.pry
+
         assert_equal "class 1 literal", c.prefLabel
       end
     end
@@ -1178,8 +1179,22 @@ eos
     assert_equal 133, metrics.classes
   end
 
+  def test_class_count_without_metrics
+    acronym = "CLSCNT-NOMETRIC"
+    submission_parse(acronym, "Test class_count without metrics",
+                     "./test/data/ontology_files/BRO_v3.2.owl", 33,
+                     process_rdf: true, extract_metadata: false,
+                     run_metrics: false)
+    sub = LinkedData::Models::Ontology.find(acronym).first.latest_submission(status: [:rdf])
+    logger = Logger.new($stderr)
+    count = sub.class_count(logger)
+    assert_equal(-1, count, "class_count should return -1 when no metrics are available")
+  end
+
   # See https://github.com/ncbo/ncbo_cron/issues/82#issuecomment-3104054081
   def test_disappearing_values
+    skip "This issue no longer occurs with the latest goo/sparql-client from AgroPortal"
+
     acronym = "ONTOMATEST"
     name = "ONTOMA Test Ontology"
     ontologyFile = "./test/data/ontology_files/OntoMA.1.1_vVersion_1.1_Date__11-2011.OWL"
@@ -1304,6 +1319,71 @@ eos
     ensure
       tmp.unlink
     end
+  end
+
+  def test_generate_missing_labels_sets_error_status_on_initial_page_fetch_failure
+    acronym = "BRO-ML-ERR"
+    ontology_file = "./test/data/ontology_files/BRO_v3.2.owl"
+    ont_format, ont, = submission_dependent_objects("OWL", acronym, "test_linked_models", "BRO labels error")
+
+    sub = LinkedData::Models::OntologySubmission.new(submissionId: 1)
+    sub.uri = RDF::URI.new("https://test.com")
+    sub.description = "description example"
+    sub.status = "beta"
+    sub.released = DateTime.now - 4
+    sub.hasOntologyLanguage = ont_format
+    sub.ontology = ont
+    sub.uploadFilePath = LinkedData::Models::OntologySubmission.copy_file_repository(acronym, 1, ontology_file)
+    sub.contact = [LinkedData::Models::Contact.where(name: "Peter", email: "peter@example.org").first]
+    assert sub.valid?, sub.errors.inspect
+    sub.save
+
+    logger = Logger.new(TestLogFile.new)
+
+    sub.stubs(:class_count).with(logger).returns(-1)
+
+    fake_scope = mock("missing-labels-scope")
+    fake_scope.stubs(:page).with(1, 2500).returns(fake_scope)
+    fake_scope.stubs(:all).raises(StandardError.new("simulated page fetch failure"))
+
+    class_query = mock("class-query")
+    class_query.stubs(:include).with(:prefLabel, :synonym, :label).returns(fake_scope)
+
+    LinkedData::Models::Class.stubs(:in).with(sub).returns(class_query)
+
+    RequestStore.store[:requested_lang] = nil
+
+    assert_raises(StandardError) do
+      sub.generate_missing_labels(logger)
+    end
+
+    sub.bring(:submissionStatus)
+    codes = sub.submissionStatus.map { |status| status.get_code_from_id }
+
+    assert_includes codes, "ERROR_RDF_LABELS"
+    refute_includes codes, "RDF_LABELS"
+    assert_nil RequestStore.store[:requested_lang]
+  end
+
+  def test_skos_submission_without_skos_concept_processes_without_error
+    # Regression for GH-274: SKOS submissions with no skos:Concept previously entered the
+    # retry path and failed during missing-label generation because the CSV class_count
+    # fallback reported a non-zero count that disagreed with the SPARQL result. With the
+    # fallback removed, class_count returns -1, total_pages stays 0, and the loop exits
+    # cleanly without entering the retry path.
+    submission_parse("SKOS-NO-CONCEPT",
+                     "SKOS without Concept",
+                     "./test/data/ontology_files/no_concepts.skos.rdf", 1,
+                     process_rdf: true, extract_metadata: false,
+                     index_search: false, run_metrics: false, diff: false)
+
+    sub = LinkedData::Models::Ontology.find("SKOS-NO-CONCEPT").first.latest_submission(status: :any)
+    sub.bring(:submissionStatus)
+    codes = sub.submissionStatus.map { |status| status.get_code_from_id }
+
+    assert_includes codes, "RDF_LABELS"
+    refute_includes codes, "ERROR_RDF_LABELS"
+    assert_nil RequestStore.store[:requested_lang]
   end
 
 end

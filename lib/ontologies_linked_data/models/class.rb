@@ -15,6 +15,14 @@ module LinkedData
       include LinkedData::Concerns::Concept::InScheme
       include LinkedData::Concerns::Concept::InCollection
 
+      class << self
+        # When set, index_doc uses this precomputed map instead of per-class
+        # SPARQL ancestor traversal. Keyed by class URI string, values are
+        # Sets of ancestor URI strings. Set by OntologySubmissionIndexer
+        # during bulk indexing and cleared after completion.
+        attr_accessor :ancestors_cache
+      end
+
       model :class, name_with: :id, collection: :submission,
             namespace: :owl, :schemaless => :true,
             rdf_type: lambda { |*x| self.class_rdf_type(x) }
@@ -118,6 +126,66 @@ module LinkedData
       cache_segment_keys [:class]
       cache_load submission: [ontology: [:acronym]]
 
+      # Index settings
+      def self.index_schema(schema_generator)
+        schema_generator.add_field(:prefLabel, 'text_general', indexed: true, stored: true, multi_valued: true)
+        schema_generator.add_field(:synonym, 'text_general', indexed: true, stored: true, multi_valued: true)
+        schema_generator.add_field(:notation, 'string_ci', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:oboId, 'string_ci', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:idAcronymMatch, 'boolean', indexed: true, stored: true, multi_valued: false, default: false)
+        schema_generator.add_field(:definition, 'string', indexed: true, stored: true, multi_valued: true)
+        schema_generator.add_field(:submissionAcronym, 'string', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:parents, 'string', indexed: true, stored: true, multi_valued: true)
+        schema_generator.add_field(:ontologyType, 'string', indexed: true, stored: true, multi_valued: false)
+        # schema_generator.add_field(:ontologyType, 'ontologyType', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:ontologyId, 'string', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:submissionId, 'pint', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:childCount, 'pint', indexed: true, stored: true, multi_valued: false)
+
+        schema_generator.add_field(:cui, 'text_general', indexed: true, stored: true, multi_valued: true)
+        schema_generator.add_field(:semanticType, 'text_general', indexed: true, stored: true, multi_valued: true)
+
+        schema_generator.add_field(:property, 'text_general', indexed: true, stored: true, multi_valued: true)
+        schema_generator.add_field(:propertyRaw, 'text_general', indexed: false, stored: true, multi_valued: false)
+
+        schema_generator.add_field(:obsolete, 'boolean', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:provisional, 'boolean', indexed: true, stored: true, multi_valued: false)
+
+        # Copy fields for term search
+        schema_generator.add_copy_field('notation', '_text_')
+        schema_generator.add_copy_field('oboId', '_text_')
+
+        %w[prefLabel synonym].each do |field|
+          schema_generator.add_field("#{field}Exact", 'string', indexed: true, stored: false, multi_valued: true)
+          schema_generator.add_field("#{field}Suggest", 'text_suggest', indexed: true, stored: false, multi_valued: true, omit_norms: true)
+          schema_generator.add_field("#{field}SuggestEdge", 'text_suggest_edge', indexed: true, stored: false, multi_valued: true)
+          schema_generator.add_field("#{field}SuggestNgram", 'text_suggest_ngram', indexed: true, stored: false, multi_valued: true, omit_norms: true)
+
+          schema_generator.add_copy_field(field, '_text_')
+          schema_generator.add_copy_field(field, "#{field}Exact")
+          schema_generator.add_copy_field(field, "#{field}Suggest")
+          schema_generator.add_copy_field(field, "#{field}SuggestEdge")
+          schema_generator.add_copy_field(field, "#{field}SuggestNgram")
+
+          schema_generator.add_dynamic_field("#{field}_*", 'text_general', indexed: true, stored: true, multi_valued: true)
+          schema_generator.add_dynamic_field("#{field}Exact_*", 'string', indexed: true, stored: false, multi_valued: true)
+          schema_generator.add_dynamic_field("#{field}Suggest_*", 'text_suggest', indexed: true, stored: false, multi_valued: true, omit_norms: true)
+          schema_generator.add_dynamic_field("#{field}SuggestEdge_*", 'text_suggest_edge', indexed: true, stored: false, multi_valued: true)
+          schema_generator.add_dynamic_field("#{field}SuggestNgram_*", 'text_suggest_ngram', indexed: true, stored: false, multi_valued: true, omit_norms: true)
+
+          schema_generator.add_copy_field("#{field}_*", "#{field}Exact_*")
+          schema_generator.add_copy_field("#{field}_*", "#{field}Suggest_*")
+          schema_generator.add_copy_field("#{field}_*", "#{field}SuggestEdge_*")
+          schema_generator.add_copy_field("#{field}_*", "#{field}SuggestNgram_*")
+        end
+
+        schema_generator.add_dynamic_field('definition_*', 'text_general', indexed: true, stored: true, multi_valued: true)
+      end
+
+      enable_indexing(:term_search_core1) do |schema_generator|
+        index_schema(schema_generator)
+      end
+
       def self.tree_view_property(*args)
         submission = args.first
         unless submission.loaded_attributes.include?(:hasOntologyLanguage)
@@ -194,23 +262,26 @@ module LinkedData
           end
 
           begin
-            # paths_to_root = self.paths_to_root
-            # paths_to_root.each do |paths|
-            #   path_ids += paths.map { |p| p.id.to_s }
+            # TODO: do we ever need per-class ancestor lookup outside of bulk indexing?
+            # If so, uncomment the fallback below.
+            # if self.class.ancestors_cache
+            #   path_ids = (self.class.ancestors_cache[class_id] || Set.new).dup
+            # else
+            #   path_ids = retrieve_hierarchy_ids(:ancestors)
             # end
-            # path_ids.delete(class_id)
-            path_ids = retrieve_hierarchy_ids(:ancestors)
+            path_ids = (self.class.ancestors_cache[class_id] || Set.new).dup
             path_ids.select! { |x| !x["owl#Thing"] }
             doc[:parents] = path_ids
-          rescue Exception => e
-            doc[:parents] = Set.new
+          rescue StandardError => e
+            doc[:parents] = []
             puts "Exception getting paths to root for search for #{class_id}: #{e.class}: #{e.message}\n#{e.backtrace.join("\n")}"
           end
 
           acronym = self.submission.ontology.acronym
+          self.submission.ontology.bring(:ontologyType) if self.submission.ontology.bring?(:ontologyType)
 
           doc[:ontologyId] = self.submission.id.to_s
-          doc[:submissionAcronym] = self.submission.ontology.acronym
+          doc[:submissionAcronym] = acronym
           doc[:submissionId] = self.submission.submissionId
           doc[:ontologyType] = self.submission.ontology.ontologyType.get_code_from_id
           doc[:obsolete] = self.obsolete.to_s
@@ -227,7 +298,10 @@ module LinkedData
             if cur_val.is_a?(Hash) # Multi language
               if multi_language_fields.include?(att)
                 doc[att] = cur_val.values.flatten # index all values of each language
-                cur_val.each { |lang, values| doc["#{att}_#{lang}".to_sym] = values } # index values per language
+                cur_val.each do |lang, values|
+                  lang_key = lang.to_s.gsub('@', '')
+                  doc["#{att}_#{lang_key}".to_sym] = values
+                end # index values per language
               else
                 doc[att] = cur_val.values.flatten.first
               end
@@ -422,8 +496,8 @@ module LinkedData
         total_size = ids.length
         if !page.nil?
           ids = ids.to_a.sort
-          rstart = (page -1) * size
-          rend = (page * size) -1
+          rstart = (page - 1) * size
+          rend = (page * size) - 1
           ids = ids[rstart..rend]
         end
         ids.map! { |x| RDF::URI.new(x) }

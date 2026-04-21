@@ -13,10 +13,10 @@ module LinkedData
     class OntologySubmission < LinkedData::Models::Base
 
       include LinkedData::Concerns::SubmissionProcessable
-      include LinkedData::Concerns::OntologySubmission::MetadataExtractor
       include LinkedData::Concerns::OntologySubmission::Validators
+      include LinkedData::Concerns::OntologySubmission::UpdateCallbacks
       extend LinkedData::Concerns::OntologySubmission::DefaultCallbacks
-
+      include LinkedData::Concerns::SubmissionDiffParser
       include SKOS::ConceptSchemes
       include SKOS::RootsFetcher
 
@@ -46,7 +46,7 @@ module LinkedData
       # Ontology metadata
       # General metadata
       attribute :versionIRI, namespace: :owl, type: :uri, enforce: [:distinct_of_uri]
-      attribute :version, namespace: :omv, enforce: [:safe_text_64]
+      attribute :version, namespace: :omv, enforce: [:safe_text_1024]
       attribute :status, namespace: :omv, default: ->(x) { 'production' }
       attribute :deprecated, namespace: :owl, type: :boolean, default: ->(x) { false }
       attribute :hasOntologyLanguage, namespace: :omv, type: :ontology_format, enforce: [:existence]
@@ -128,8 +128,7 @@ module LinkedData
       attribute :uriLookupEndpoint, namespace: :void, type: :uri, default: -> (s) { uri_lookup_default(s) }
       attribute :openSearchDescription, namespace: :void, type: :uri, default: -> (s) { open_search_default(s) }
       attribute :source, namespace: :dct, type: :list
-      attribute :endpoint, namespace: :sd, type: %i[uri list],
-                default: ->(s) { default_sparql_endpoint(s) }
+      attribute :endpoint, namespace: :sd, type: %i[uri list], default: ->(s) { default_sparql_endpoint(s) }
       attribute :includedInDataCatalog, namespace: :schema, type: %i[list uri]
 
       # Relations
@@ -181,26 +180,11 @@ module LinkedData
       # System-controlled attributes that should not be set by API clients
       system_controlled :submissionId, :uploadFilePath, :diffFilePath, :missingImports
 
-      def self.agents_attrs
-        return [] #TODO implement agent separately
-        %i[hasCreator publisher copyrightHolder hasContributor
-         translator endorsedBy fundedBy curatedBy]
-      end
-
       # Hypermedia settings
-      embed *%i[contact ontology metrics] + agents_attrs
+      embed *(%i[contact ontology metrics])
 
       def self.embed_values_hash
-        out = {
-          submissionStatus: [:code], hasOntologyLanguage: [:acronym]
-        }
-
-        # TODO implement agents separately
-        # agent_attributes = LinkedData::Models::Agent.goo_attrs_to_load +
-        #   [identifiers: LinkedData::Models::AgentIdentifier.goo_attrs_to_load, affiliations: LinkedData::Models::Agent.goo_attrs_to_load]
-        #
-        # agents_attrs.each { |k| out[k] = agent_attributes }
-        out
+        { submissionStatus: [:code], hasOntologyLanguage: [:acronym] }
       end
 
       embed_values self.embed_values_hash
@@ -230,6 +214,8 @@ module LinkedData
       read_restriction_based_on lambda { |sub| sub.ontology }
       access_control_load ontology: [:administeredBy, :acl, :viewingRestriction]
 
+      enable_indexing(:ontology_metadata)
+
       def initialize(*args)
         super(*args)
         @mutex = Mutex.new
@@ -240,7 +226,7 @@ module LinkedData
       end
 
       def URI=(value)
-        self.uri  = value
+        self.uri = value
       end
 
       def URI
@@ -256,11 +242,29 @@ module LinkedData
           begin
             m.ontology.bring(:acronym) if m.ontology.bring?(:acronym)
             ontology_link = "ontologies/#{m.ontology.acronym}"
-          rescue Exception => e
+          rescue Exception
             ontology_link = ""
           end
         end
         ontology_link
+      end
+
+      # Override the bring_remaining method from Goo::Base::Resource : https://github.com/ncbo/goo/blob/master/lib/goo/base/resource.rb#L383
+      # Because the old way to query the 4store was not working when lots of attributes
+      # Now it is querying attributes 5 by 5 (way faster than 1 by 1)
+      def bring_remaining
+        to_bring = []
+        i = 0
+        self.class.attributes.each do |attr|
+          to_bring << attr if self.bring?(attr)
+          if i == 5
+            self.bring(*to_bring)
+            to_bring = []
+            i = 0
+          end
+          i = i + 1
+        end
+        self.bring(*to_bring)
       end
 
       def self.segment_instance(sub)
@@ -315,6 +319,18 @@ module LinkedData
         dst
       end
 
+      def self.clear_indexed_content(ontology_acronym, logger=nil)
+        logger ||= LinkedData::Parser.logger || Logger.new($stderr)
+        conn = Goo.init_search_connection(:ontology_data)
+        begin
+          conn.delete_by_query("ontology_t:\"#{ontology_acronym}\"")
+        rescue StandardError => e
+          logger.error("Unable to clear search index for #{ontology_acronym} - #{e.class}: #{e.message}\n" + e.backtrace.join("\n\t"))
+          logger.flush
+        end
+        conn
+      end
+
       def valid?
         valid_result = super
         return false unless valid_result
@@ -348,7 +364,7 @@ module LinkedData
 
         begin
           sum_only = self.ontology.summaryOnly
-        rescue Exception => e
+        rescue Exception
           i = 0
           num_calls = LinkedData.settings.num_retries_4store
           sum_only = nil
@@ -362,7 +378,7 @@ module LinkedData
               self.ontology.bring(:summaryOnly)
               sum_only = self.ontology.summaryOnly
               puts "Success getting summaryOnly for #{self.id.to_s} after retrying #{i} times..."
-            rescue Exception => e1
+            rescue Exception
               sum_only = nil
 
               if i == num_calls
@@ -542,21 +558,10 @@ module LinkedData
             count += mx.individuals
           end
           count_set = true
-        else
-          mx = metrics_from_file(logger)
-
-          unless mx.empty?
-            count = mx[1][0].to_i
-
-            if self.hasOntologyLanguage.skos?
-              count += mx[1][1].to_i
-            end
-            count_set = true
-          end
         end
 
         unless count_set
-          logger.error("No calculated metrics or metrics file was found for #{self.id.to_s}. Unable to return total class count.")
+          logger.error("No calculated metrics found for #{self.id.to_s}. Unable to return total class count.")
           logger.flush
         end
         count
@@ -569,7 +574,7 @@ module LinkedData
 
         begin
           metrics = CSV.read(m_path)
-        rescue Exception => e
+        rescue Exception
           logger.error("Unable to find metrics file: #{m_path}")
           logger.flush
         end
@@ -818,18 +823,6 @@ module LinkedData
         RDF::URI.new(self.uri)
       end
 
-
-
-
-
-
-
-
-
-
-
-
-
       def roots_sorted(extra_include=nil)
         classes = roots(extra_include)
         LinkedData::Models::Class.sort_classes(classes)
@@ -931,7 +924,7 @@ module LinkedData
         ftp.login
         begin
           file_exists = ftp.size(uri.path) > 0
-        rescue Exception => e
+        rescue Exception
           # Check using another method
           path = uri.path.split("/")
           filename = path.pop

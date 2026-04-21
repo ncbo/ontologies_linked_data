@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+         xmlns:dcterms="http://purl.org/dc/terms/">
+  <skos:ConceptScheme rdf:about="http://example.org/no-concepts">
+    <dcterms:title>No Concepts SKOS Scheme</dcterms:title>
+    <skos:prefLabel xml:lang="en">No Concepts SKOS Scheme</skos:prefLabel>
+    <rdfs:comment xml:lang="en">A SKOS-like fixture with no skos:Concept resources.</rdfs:comment>
+  </skos:ConceptScheme>
+</rdf:RDF>
