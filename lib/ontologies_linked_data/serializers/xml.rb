@@ -1,4 +1,4 @@
-require 'libxml'
+require 'libxml-ruby'
 
 module LinkedData
   module Serializers
