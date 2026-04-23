@@ -38,7 +38,7 @@ module LinkedData
 
             parsed = @submission.ready?(status: %i[rdf])
 
-            @submission = @submission.extract_metadata(logger, user_params: options[:params], heavy_extraction: extract_metadata?(options))
+            @submission.extract_metadata(logger, user_params: options[:params], heavy_extraction: extract_metadata?(options))
 
             @submission.generate_missing_labels(logger) if generate_missing_labels?(options)
 
@@ -70,6 +70,8 @@ module LinkedData
       end
 
       def notify_submission_processed(logger)
+        return if @submission.nil?
+
         LinkedData::Utils::Notifications.submission_processed(@submission) unless @submission.archived?
       rescue StandardError => e
         logger.error("Email sending failed: #{e.message}\n#{e.backtrace.join("\n\t")}"); logger.flush
