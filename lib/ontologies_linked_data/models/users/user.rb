@@ -45,7 +45,7 @@ module LinkedData
       serialize_never :passwordHash, :show_apikey, :resetToken, :resetTokenExpireTime
       serialize_filter lambda {|inst| filter_attributes(inst)}
 
-      system_controlled :created, :resetToken, :resetTokenExpireTime
+      system_controlled :created, :resetToken, :resetTokenExpireTime, :lastLoginAt
 
       link_to LinkedData::Hypermedia::Link.new("createdOntologies", lambda {|s| "users/#{s.id.split('/').last}/ontologies"}, nil)
 
