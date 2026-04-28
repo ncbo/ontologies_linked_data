@@ -8,8 +8,13 @@ GIT
 
 GIT
   remote: https://github.com/ncbo/goo.git
+<<<<<<< HEAD
   revision: 90365864f67a9458011f16e1b9f44a73af0d3739
   branch: development
+=======
+  revision: ee72f43daa37f02362da1b747f037c442cfbf112
+  branch: main
+>>>>>>> 7da8276a (Gemfile update)
   specs:
     goo (0.0.2)
       addressable (~> 2.8)
@@ -90,7 +95,7 @@ GEM
     date (3.5.1)
     docile (1.4.1)
     domain_name (0.6.20240107)
-    down (5.5.0)
+    down (5.6.0)
       addressable (~> 2.8)
       base64 (~> 0.3)
     drb (2.2.3)
@@ -171,7 +176,7 @@ GEM
       uri (>= 0.11.1)
     net-http-persistent (4.0.8)
       connection_pool (>= 2.2.4, < 4)
-    net-imap (0.4.23)
+    net-imap (0.4.24)
       date
       net-protocol
     net-pop (0.1.2)
@@ -354,7 +359,7 @@ CHECKSUMS
   date (3.5.1) sha256=750d06384d7b9c15d562c76291407d89e368dda4d4fff957eb94962d325a0dc0
   docile (1.4.1) sha256=96159be799bfa73cdb721b840e9802126e4e03dfc26863db73647204c727f21e
   domain_name (0.6.20240107) sha256=5f693b2215708476517479bf2b3802e49068ad82167bcd2286f899536a17d933
-  down (5.5.0) sha256=787e14fcfe7824b8cac676c608359e4083b2e4d6e1d3b1745b79f27bcf931585
+  down (5.6.0) sha256=48ec6ddb078cbf3b425d02596bb388303316f976143c6e94a7b3169d6712b593
   drb (2.2.3) sha256=0b00d6fdb50995fe4a45dea13663493c841112e4068656854646f418fda13373
   email_spec (2.3.1) sha256=5e8891319427fd6de0f3883dffe3c2ac4f5434359a33ed9c48e6d68e9f712f1b
   eventmachine (1.2.7) sha256=994016e42aa041477ba9cff45cbe50de2047f25dd418eba003e84f0d16560972
@@ -395,7 +400,7 @@ CHECKSUMS
   net-ftp (0.3.9) sha256=307817ccf7f428f79d083f7e36dbb46a9d1d375e0d23027824de1866f0b13b65
   net-http (0.9.1) sha256=25ba0b67c63e89df626ed8fac771d0ad24ad151a858af2cc8e6a716ca4336996
   net-http-persistent (4.0.8) sha256=ef3de8319d691537b329053fae3a33195f8b070bbbfae8bf1a58c796081960e6
-  net-imap (0.4.23) sha256=b86cc99340a47b1f37e721781a147882811796a92eb635562eb3145ed2f68953
+  net-imap (0.4.24) sha256=88289db8fd3f08aa8c661137810118e58fe309829e815e2ea8f3650662a6501b
   net-pop (0.1.2) sha256=848b4e982013c15b2f0382792268763b748cce91c9e91e36b0f27ed26420dff3
   net-protocol (0.2.2) sha256=aa73e0cba6a125369de9837b8d8ef82a61849360eba0521900e2c3713aa162a8
   net-smtp (0.5.1) sha256=ed96a0af63c524fceb4b29b0d352195c30d82dd916a42f03c62a3a70e5b70736
