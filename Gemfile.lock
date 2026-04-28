@@ -8,13 +8,8 @@ GIT
 
 GIT
   remote: https://github.com/ncbo/goo.git
-<<<<<<< HEAD
-  revision: 90365864f67a9458011f16e1b9f44a73af0d3739
-  branch: development
-=======
   revision: ee72f43daa37f02362da1b747f037c442cfbf112
   branch: main
->>>>>>> 7da8276a (Gemfile update)
   specs:
     goo (0.0.2)
       addressable (~> 2.8)
