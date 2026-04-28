@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/alexskr/ontoportal_testkit.git
-  revision: 45ecfaf2a621b670dad373cd35c1c4b1b529fa96
+  revision: 33f52810bdb576c25922fb739dea49507cf362a6
   branch: main
   specs:
     ontoportal_testkit (0.1.0)
@@ -8,8 +8,8 @@ GIT
 
 GIT
   remote: https://github.com/ncbo/goo.git
-  revision: fa850f46c94e09b6368ed47728b9cce05b7e9d54
-  branch: main
+  revision: 90365864f67a9458011f16e1b9f44a73af0d3739
+  branch: development
   specs:
     goo (0.0.2)
       addressable (~> 2.8)

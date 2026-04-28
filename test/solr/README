@@ -1,5 +1,0 @@
-Solr configsets consists of solr config files from config/solr merged with the _default configsets
-provided by solr distribution.
-These solr configsets are used for staring up docker containers for unit testing and are in place
-until solr Schema API and Config API is adoped for configuing solr.
-
