@@ -36,9 +36,9 @@ module LinkedData
               LinkedData::Hypermedia::Link.new("descendants", lambda {|m| "#{self.ontology_link(m)}/properties/#{CGI.escape(m.id.to_s)}/descendants"}, self.uri_type),
               LinkedData::Hypermedia::Link.new("tree", lambda {|m| "#{self.ontology_link(m)}/properties/#{CGI.escape(m.id.to_s)}/tree"}, self.uri_type)
 
-      enable_indexing(:property_search_active,
+      enable_indexing(:property_search,
                       :property,
-                      bootstrap_collection: :property_search,
+                      bootstrap_collection: :property_search_bootstrap,
                       num_shards: LinkedData.settings.property_search_num_shards,
                       replication_factor: LinkedData.settings.property_search_replication_factor) do |schema_generator|
         index_schema(schema_generator)

@@ -26,9 +26,9 @@ module LinkedData
         end
       end
 
-      enable_indexing(:property_search_active,
+      enable_indexing(:property_search,
                       :property,
-                      bootstrap_collection: :property_search,
+                      bootstrap_collection: :property_search_bootstrap,
                       num_shards: LinkedData.settings.property_search_num_shards,
                       replication_factor: LinkedData.settings.property_search_replication_factor) do |schema_generator|
         index_schema(schema_generator)
