@@ -8,7 +8,7 @@ GIT
 
 GIT
   remote: https://github.com/ncbo/goo.git
-  revision: 604b7094404864b0e7c2dbcc0744545e0783300b
+  revision: 13f5497873bb9c3b98102977091be63191892de0
   branch: feature/solrcloud-alias-indexing-codex
   specs:
     goo (0.0.2)
