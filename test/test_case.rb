@@ -52,6 +52,7 @@ module LinkedData
   module MinitestRunHooks
     def run(*args)
       LinkedData::TestCase.backend_4s_delete
+      Goo.init_search_connections(true)
       super
     ensure
       LinkedData::TestCase.backend_4s_delete
