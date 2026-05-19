@@ -35,6 +35,7 @@ module LinkedData
     @settings.rest_url_prefix               ||= DEFAULT_PREFIX
     @settings.enable_security               ||= false
     @settings.enable_slices                 ||= false
+    @settings.skip_connect_goo              ||= ENV['LINKEDDATA_SKIP_CONNECT_GOO'] == 'true'
 
     # Java/JVM options
     @settings.java_max_heap_size            ||= '10240M'
@@ -112,7 +113,7 @@ module LinkedData
     puts "(LD) >> Using HTTP Redis instance at #{@settings.http_redis_host}:#{@settings.http_redis_port}"
     puts "(LD) >> Using Goo Redis instance at #{@settings.goo_redis_host}:#{@settings.goo_redis_port}"
 
-    connect_goo unless overide_connect_goo
+    connect_goo unless overide_connect_goo || @settings.skip_connect_goo
   end
 
   ##
