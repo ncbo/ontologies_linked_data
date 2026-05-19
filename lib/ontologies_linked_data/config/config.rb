@@ -101,6 +101,7 @@ module LinkedData
 
     # Override defaults
     yield @settings, overide_connect_goo if block_given?
+    configure_search_bootstrap_collections
 
     # Check to make sure url prefix has trailing slash
     @settings.rest_url_prefix = "#{@settings.rest_url_prefix}/" unless @settings.rest_url_prefix[-1].eql?('/')
@@ -141,6 +142,11 @@ module LinkedData
     rescue StandardError => e
       abort("EXITING: Cannot connect to triplestore and/or search server:\n  #{e}\n#{e.backtrace.join("\n")}")
     end
+  end
+
+  def configure_search_bootstrap_collections
+    Goo.set_search_collection_bootstrap(:term_search, @settings.term_search_bootstrap_collection)
+    Goo.set_search_collection_bootstrap(:property_search, @settings.property_search_bootstrap_collection)
   end
 
   ##
