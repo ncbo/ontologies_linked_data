@@ -102,8 +102,17 @@ module LinkedData
         if APIKEYS_FOR_AUTHORIZATION.key?(apikey)
           store_user(APIKEYS_FOR_AUTHORIZATION[apikey], env)
         else
+          # Exclude inverse attributes (e.g. :provisionalClasses) from the auth load —
+          # they fan out across all referencing instances and aren't needed to
+          # establish identity.
+          # TODO: this could be tightened further to an explicit allowlist
+          # (:username, :customOntology, role: [:role] are the only attrs the
+          # middleware and access-control checks actually read on every request);
+          # leaving forward scalars in for now to avoid surprising any callers
+          # that quietly depend on profile fields being preloaded.
+          attrs_to_load = LinkedData::Models::User.attributes(:all) - LinkedData::Models::User.attributes(:inverse)
           user = LinkedData::Models::User.where(apikey: apikey)
-                                         .include(LinkedData::Models::User.attributes(:all))
+                                         .include(attrs_to_load)
                                          .first
           return false if user.nil?
 

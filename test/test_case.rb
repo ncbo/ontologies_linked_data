@@ -20,6 +20,7 @@ require_relative 'test_log_file'
 require_relative '../lib/ontologies_linked_data'
 require_relative '../config/config.test'
 require 'minitest/autorun'
+require 'tmpdir'
 require 'webmock/minitest'
 WebMock.allow_net_connect!
 
@@ -51,11 +52,13 @@ Minitest::Runnable.singleton_class.prepend(LinkedData::MinitestSuiteHooks)
 module LinkedData
   module MinitestRunHooks
     def run(*args)
+      LinkedData::TestCase.setup_test_repository_folder
       LinkedData::TestCase.backend_4s_delete
       Goo.init_search_connections(true)
       super
     ensure
       LinkedData::TestCase.backend_4s_delete
+      LinkedData::TestCase.teardown_test_repository_folder
     end
   end
 end
@@ -94,6 +97,29 @@ module LinkedData
 
     # Ensure all threads exit on any exception
     Thread.abort_on_exception = true
+
+    def self.setup_test_repository_folder
+      return if defined?(@tmp_repository_folder) && @tmp_repository_folder
+
+      @old_repository_folder = LinkedData.settings.repository_folder
+      @tmp_repository_folder = Dir.mktmpdir("ontology-repo-")
+      puts "(LD) >> Using temp repository folder #{@tmp_repository_folder}"
+      LinkedData.settings.repository_folder = @tmp_repository_folder
+    end
+
+    def self.teardown_test_repository_folder
+      return unless defined?(@tmp_repository_folder) && @tmp_repository_folder
+
+      LinkedData.settings.repository_folder = @old_repository_folder if defined?(@old_repository_folder)
+
+      if ENV["KEEP_TEST_REPOSITORY_FOLDER"] == "true"
+        puts "(LD) >> Preserving temp repository folder #{@tmp_repository_folder}"
+      elsif File.exist?(@tmp_repository_folder)
+        FileUtils.remove_entry(@tmp_repository_folder)
+      end
+
+      @tmp_repository_folder = nil
+    end
 
     def submission_dependent_objects(format, acronym, user_name)
       # ontology format

@@ -92,7 +92,7 @@ module LinkedData
       end
 
       def index_all_data?(options)
-        options.empty? || options[:index_all_data].eql?(true)
+        options[:index_all_data].eql?(true)
       end
 
       def index_search?(options)

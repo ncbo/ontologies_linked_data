@@ -15,6 +15,14 @@ module LinkedData
       include LinkedData::Concerns::Concept::InScheme
       include LinkedData::Concerns::Concept::InCollection
 
+      class << self
+        # When set, index_doc uses this precomputed map instead of per-class
+        # SPARQL ancestor traversal. Keyed by class URI string, values are
+        # Sets of ancestor URI strings. Set by OntologySubmissionIndexer
+        # during bulk indexing and cleared after completion.
+        attr_accessor :ancestors_cache
+      end
+
       model :class, name_with: :id, collection: :submission,
             namespace: :owl, :schemaless => :true,
             rdf_type: lambda { |*x| self.class_rdf_type(x) }
@@ -258,15 +266,17 @@ module LinkedData
           end
 
           begin
-            # paths_to_root = self.paths_to_root
-            # paths_to_root.each do |paths|
-            #   path_ids += paths.map { |p| p.id.to_s }
+            # TODO: do we ever need per-class ancestor lookup outside of bulk indexing?
+            # If so, uncomment the fallback below.
+            # if self.class.ancestors_cache
+            #   path_ids = (self.class.ancestors_cache[class_id] || Set.new).dup
+            # else
+            #   path_ids = retrieve_hierarchy_ids(:ancestors)
             # end
-            # path_ids.delete(class_id)
-            path_ids = retrieve_hierarchy_ids(:ancestors)
+            path_ids = (self.class.ancestors_cache[class_id] || Set.new).dup
             path_ids.select! { |x| !x["owl#Thing"] }
             doc[:parents] = path_ids
-          rescue Exception => e
+          rescue StandardError => e
             doc[:parents] = []
             puts "Exception getting paths to root for search for #{class_id}: #{e.class}: #{e.message}\n#{e.backtrace.join("\n")}"
           end

@@ -1,5 +1,7 @@
+require "tmpdir"
+
 class TestLogFile < File
   def initialize
-    super(File.expand_path("../test_run.log", __FILE__), "w")
+    super(File.join(Dir.tmpdir, "ontologies_linked_data-test-#{Process.pid}.log"), "w")
   end
 end
