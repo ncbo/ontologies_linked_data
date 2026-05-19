@@ -176,7 +176,7 @@ module LinkedData
 
       enable_indexing(:term_search,
                       :main,
-                      bootstrap_collection: :term_search_bootstrap,
+                      bootstrap_collection: LinkedData.settings.term_search_bootstrap_collection,
                       num_shards: LinkedData.settings.term_search_num_shards,
                       replication_factor: LinkedData.settings.term_search_replication_factor) do |schema_generator|
         index_schema(schema_generator)

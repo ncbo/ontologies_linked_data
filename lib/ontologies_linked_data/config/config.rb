@@ -27,8 +27,10 @@ module LinkedData
     @settings.property_search_server_url    ||= 'http://localhost:8983/solr'
     @settings.term_search_num_shards        ||= 1
     @settings.term_search_replication_factor ||= 1
+    @settings.term_search_bootstrap_collection ||= :term_search_bootstrap
     @settings.property_search_num_shards    ||= 1
     @settings.property_search_replication_factor ||= 1
+    @settings.property_search_bootstrap_collection ||= :property_search_bootstrap
     @settings.repository_folder             ||= './test/data/ontology_files/repo'
     @settings.rest_url_prefix               ||= DEFAULT_PREFIX
     @settings.enable_security               ||= false
