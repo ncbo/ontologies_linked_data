@@ -102,7 +102,7 @@ module LinkedData
 
     # Override defaults
     yield @settings, overide_connect_goo if block_given?
-    configure_search_bootstrap_collections
+    configure_search_collections
 
     # Check to make sure url prefix has trailing slash
     @settings.rest_url_prefix = "#{@settings.rest_url_prefix}/" unless @settings.rest_url_prefix[-1].eql?('/')
@@ -145,9 +145,15 @@ module LinkedData
     end
   end
 
-  def configure_search_bootstrap_collections
+  def configure_search_collections
     Goo.set_search_collection_bootstrap(:term_search, @settings.term_search_bootstrap_collection)
     Goo.set_search_collection_bootstrap(:property_search, @settings.property_search_bootstrap_collection)
+    Goo.set_search_collection_topology(:term_search,
+                                       num_shards: @settings.term_search_num_shards,
+                                       replication_factor: @settings.term_search_replication_factor)
+    Goo.set_search_collection_topology(:property_search,
+                                       num_shards: @settings.property_search_num_shards,
+                                       replication_factor: @settings.property_search_replication_factor)
   end
 
   ##
