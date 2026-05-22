@@ -57,8 +57,9 @@ class TestOntologyCSVWriter < LinkedData::TestOntologyCommon
   end
 
   def get_csv_string_from_path(csv_path)
-    gz = Zlib::GzipReader.open(csv_path)
-    gz.read
+    Zlib::GzipReader.open(csv_path) do |gz|
+      gz.read.force_encoding(Encoding::UTF_8)
+    end
   end
 
   def test_csv_writer_valid

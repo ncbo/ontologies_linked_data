@@ -40,7 +40,11 @@ module LinkedData
                 end
               }, Goo.vocabulary["Ontology"])
 
-      enable_indexing(:term_search_core1) do |schema_generator|
+      enable_indexing(:term_search,
+                      :main,
+                      bootstrap_collection: LinkedData.settings.term_search_bootstrap_collection,
+                      num_shards: LinkedData.settings.term_search_num_shards,
+                      replication_factor: LinkedData.settings.term_search_replication_factor) do |schema_generator|
         Class.index_schema(schema_generator)
       end
 

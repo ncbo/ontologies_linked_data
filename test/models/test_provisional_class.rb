@@ -1,6 +1,8 @@
 require_relative "./test_ontology_common"
 
 class TestProvisionalClass < LinkedData::TestOntologyCommon
+  TEST_ONTOLOGY_ACRONYM = "PROV-CLASS".freeze
+  TEST_ONTOLOGY_NAME = "#{TEST_ONTOLOGY_ACRONYM} Ontology".freeze
 
   def self.before_suite
     @@user = LinkedData::Models::User.new({username: "test_user_prov_class",
@@ -8,7 +10,9 @@ class TestProvisionalClass < LinkedData::TestOntologyCommon
     @@user.save
 
     ont_count, ont_names, ont_models = LinkedData::SampleData::Ontology.create_ontologies_and_submissions(ont_count: 1,
-                                                                                                          submission_count: 1)
+                                                                                                          submission_count: 1,
+                                                                                                          acronym: TEST_ONTOLOGY_ACRONYM,
+                                                                                                          acronym_suffix: "")
     @@ontology = ont_models.first
     @@ontology.bring(:name)
     @@ontology.bring(:acronym)
@@ -275,8 +279,8 @@ class TestProvisionalClass < LinkedData::TestOntologyCommon
     pc = @@provisional_class
     pc.ontology = @@ontology
     assert pc.valid?, "#{pc.errors}"
-    assert_equal(true, pc.ontology.acronym == "TEST-ONT-0")
-    assert_equal(true, pc.ontology.name == "TEST-ONT-0 Ontology")
+    assert_equal(true, pc.ontology.acronym == TEST_ONTOLOGY_ACRONYM)
+    assert_equal(true, pc.ontology.name == TEST_ONTOLOGY_NAME)
   end
 
   def test_provisional_class_search_indexing

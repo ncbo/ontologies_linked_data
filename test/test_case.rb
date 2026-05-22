@@ -54,6 +54,7 @@ module LinkedData
     def run(*args)
       LinkedData::TestCase.setup_test_repository_folder
       LinkedData::TestCase.backend_4s_delete
+      Goo.init_search_connections(true)
       super
     ensure
       LinkedData::TestCase.backend_4s_delete
