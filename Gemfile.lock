@@ -8,8 +8,8 @@ GIT
 
 GIT
   remote: https://github.com/ncbo/goo.git
-  revision: ee72f43daa37f02362da1b747f037c442cfbf112
-  branch: main
+  revision: 0187c6c0ba3871fa8b67055c1a1adfdea38b2189
+  branch: development
   specs:
     goo (0.0.2)
       addressable (~> 2.8)
