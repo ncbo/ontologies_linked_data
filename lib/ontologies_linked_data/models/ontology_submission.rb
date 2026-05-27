@@ -670,8 +670,7 @@ module LinkedData
         index_commit = options[:index_commit] == false ? false : true
 
         super(*args)
-        self.ontology.unindex(index_commit)
-        self.ontology.unindex_properties(index_commit)
+        self.ontology.unindex_all_data(index_commit)
 
         self.bring(:metrics) if self.bring?(:metrics)
         self.metrics.delete if self.metrics

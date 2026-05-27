@@ -41,7 +41,7 @@ module LinkedData
           begin
             logger.info("Indexing ontology terms: #{@submission.ontology.acronym}...")
             t0 = Time.now
-            @submission.ontology.unindex(false)
+            @submission.ontology.unindex_by_acronym(false)
             logger.info("Removed ontology terms index (#{Time.now - t0}s)"); logger.flush
 
             paging = LinkedData::Models::Class.in(@submission).include(:unmapped).aggregate(:count, :children).page(page, size)
@@ -304,4 +304,3 @@ module LinkedData
     end
   end
 end
-
