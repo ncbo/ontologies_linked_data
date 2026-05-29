@@ -1379,13 +1379,16 @@ eos
     submission.stubs(:csv_path).returns("/tmp/npdx-classes.csv")
     submission.stubs(:loaded_attributes).returns([:hasOntologyLanguage])
     submission.stubs(:hasOntologyLanguage).returns(stub(skos?: true))
+    submission.stubs(:id).returns(RDF::URI.new("http://example.org/submissions/npdx"))
 
     csv_writer = mock("csv-writer")
     csv_writer.expects(:open).with(ontology, "/tmp/npdx-classes.csv")
     csv_writer.expects(:close)
     LinkedData::Utils::OntologyCSVWriter.expects(:new).returns(csv_writer)
 
-    empty_page = stub(total_pages: 0)
+    empty_page = []
+    empty_page.define_singleton_method(:total_pages) { 0 }
+    empty_page.define_singleton_method(:next?) { false }
     paging = mock("class-paging")
     paging.expects(:include).with(:unmapped).returns(paging)
     paging.expects(:aggregate).with(:count, :children).returns(paging)
@@ -1393,6 +1396,70 @@ eos
     paging.expects(:page).with(1, 2500).returns(paging)
     paging.expects(:all).returns(empty_page)
     LinkedData::Models::Class.expects(:in).with(submission).returns(paging)
+
+    indexer = LinkedData::Services::OntologySubmissionIndexer.new(submission)
+    indexer.stubs(:compute_ancestors_map).returns({})
+
+    indexer.send(:index, Logger.new(TestLogFile.new), false, false)
+  ensure
+    LinkedData::Models::Class.ancestors_cache = nil
+  end
+
+  def test_index_terms_sets_total_pages_from_class_count_without_prefetching_first_page
+    ontology = mock("ontology")
+    ontology.stubs(:bring?).with(:acronym).returns(false)
+    ontology.stubs(:bring?).with(:provisionalClasses).returns(false)
+    ontology.stubs(:acronym).returns("PAGING")
+    ontology.stubs(:provisionalClasses).returns([])
+    ontology.expects(:unindex_by_acronym).with(false)
+
+    language = mock("language")
+    language.expects(:skos?).returns(false)
+
+    submission = mock("submission")
+    submission.stubs(:bring?).with(:ontology).returns(false)
+    submission.stubs(:ontology).returns(ontology)
+    submission.stubs(:csv_path).returns("/tmp/paging-classes.csv")
+    submission.stubs(:loaded_attributes).returns([:hasOntologyLanguage])
+    submission.stubs(:hasOntologyLanguage).returns(language)
+    submission.stubs(:class_count).returns(2501)
+    submission.stubs(:id).returns(RDF::URI.new("http://example.org/submissions/1"))
+
+    first_class = stub("first-class", id: RDF::URI.new("http://example.org/classes/1"), indexable_object: { id: "1" })
+    second_class = stub("second-class", id: RDF::URI.new("http://example.org/classes/2"), indexable_object: { id: "2" })
+    page_one = [first_class]
+    page_one.define_singleton_method(:next?) { true }
+    page_two = [second_class]
+    page_two.define_singleton_method(:next?) { false }
+
+    csv_writer = mock("csv-writer")
+    csv_writer.expects(:open).with(ontology, "/tmp/paging-classes.csv")
+    csv_writer.expects(:write_class).with(first_class)
+    csv_writer.expects(:write_class).with(second_class)
+    csv_writer.expects(:close)
+    LinkedData::Utils::OntologyCSVWriter.expects(:new).returns(csv_writer)
+
+    first_page_scope = mock("first-page-scope")
+    first_page_scope.expects(:all).returns(page_one)
+    second_page_scope = mock("second-page-scope")
+    second_page_scope.expects(:all).returns(page_two)
+
+    paging = mock("class-paging")
+    paging.expects(:include).with(:unmapped).returns(paging)
+    paging.expects(:aggregate).with(:count, :children).returns(paging)
+    paging.expects(:page).with(0, 2500).returns(paging)
+    paging.expects(:page_count_set).with(2501)
+    paging.expects(:page).with(1, 2500).once.returns(first_page_scope)
+    paging.expects(:page).with(2, 2500).once.returns(second_page_scope)
+    paging.stubs(:equivalent_predicates).returns({})
+    LinkedData::Models::Class.expects(:in).with(submission).returns(paging)
+    LinkedData::Models::Class.expects(:map_attributes).with(first_class, {}, include_languages: true)
+    LinkedData::Models::Class.expects(:map_attributes).with(second_class, {}, include_languages: true)
+
+    search_client = mock("search-client")
+    search_client.expects(:index_document).with([{ id: "1" }], commit: false, commit_within: nil)
+    search_client.expects(:index_document).with([{ id: "2" }], commit: false, commit_within: nil)
+    LinkedData::Models::Class.expects(:search_client).twice.returns(search_client)
 
     indexer = LinkedData::Services::OntologySubmissionIndexer.new(submission)
     indexer.stubs(:compute_ancestors_map).returns({})
