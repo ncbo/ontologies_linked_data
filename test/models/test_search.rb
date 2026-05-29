@@ -12,6 +12,36 @@ class TestSearch < LinkedData::TestCase
     self.class.after_suite
   end
 
+  def test_term_search_exact_fields_are_case_insensitive
+    schema_generator = SOLR::SolrSchemaGenerator.new
+    LinkedData::Models::Class.index_schema(schema_generator)
+
+    exact_fields = schema_generator.fields_to_add.select { |field| %w[prefLabelExact synonymExact].include?(field[:name]) }
+    exact_dynamic_fields = schema_generator.dynamic_fields_to_add.select { |field| %w[prefLabelExact_* synonymExact_*].include?(field[:name]) }
+    ontology_rank_field = schema_generator.fields_to_add.find { |field| field[:name] == 'ontologyRank' }
+
+    assert_equal %w[prefLabelExact synonymExact], exact_fields.map { |field| field[:name] }.sort
+    assert_equal %w[prefLabelExact_* synonymExact_*], exact_dynamic_fields.map { |field| field[:name] }.sort
+    assert exact_fields.all? { |field| field[:type] == 'string_ci' }
+    assert exact_dynamic_fields.all? { |field| field[:type] == 'string_ci' }
+    refute_nil ontology_rank_field
+    assert_equal 'pfloat', ontology_rank_field[:type]
+    assert_equal '0.0', ontology_rank_field[:default]
+  end
+
+  def test_ontology_rank_for_index_uses_normalized_score
+    begin
+      LinkedData::Models::Class.instance_variable_set(:@ontology_rank_cache, {
+        'RANKED' => { normalizedScore: 0.884 }
+      })
+
+      assert_equal 0.884, LinkedData::Models::Class.ontology_rank_for_index('RANKED')
+      assert_equal 0.0, LinkedData::Models::Class.ontology_rank_for_index('UNRANKED')
+    ensure
+      LinkedData::Models::Class.reset_ontology_rank_cache
+    end
+  end
+
   def test_search_ontology
     _, _, created_ontologies = create_ontologies_and_submissions({
                                                                     process_submission: true,

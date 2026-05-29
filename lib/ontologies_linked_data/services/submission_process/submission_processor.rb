@@ -51,7 +51,7 @@ module LinkedData
 
             @submission.index_all(logger, commit: process_index_commit?(options)) if index_all_data?(options)
 
-            @submission.index_terms(logger, commit: process_index_commit?(options)) if index_search?(options)
+            @submission.index_terms(logger, commit: process_index_commit?(options), commit_within: index_commit_within(options)) if index_search?(options)
 
             @submission.index_properties(logger, commit: process_index_commit?(options)) if index_properties?(options)
 
@@ -105,6 +105,10 @@ module LinkedData
 
       def process_index_commit?(options)
         index_search?(options) || index_properties?(options) || index_all_data?(options)
+      end
+
+      def index_commit_within(options)
+        options.key?(:index_commit_within) ? options[:index_commit_within] : 30_000
       end
 
       def process_diff?(options)
