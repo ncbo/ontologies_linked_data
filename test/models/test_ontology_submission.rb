@@ -1469,6 +1469,42 @@ eos
     LinkedData::Models::Class.ancestors_cache = nil
   end
 
+  def test_index_terms_can_skip_csv_generation
+    ontology = mock("ontology")
+    ontology.stubs(:bring?).with(:acronym).returns(false)
+    ontology.stubs(:bring?).with(:provisionalClasses).returns(false)
+    ontology.stubs(:acronym).returns("NOCSV")
+    ontology.stubs(:provisionalClasses).returns([])
+    ontology.expects(:unindex_by_acronym).with(false)
+
+    submission = mock("submission")
+    submission.stubs(:bring?).with(:ontology).returns(false)
+    submission.stubs(:ontology).returns(ontology)
+    submission.stubs(:loaded_attributes).returns([:hasOntologyLanguage])
+    submission.stubs(:hasOntologyLanguage).returns(stub(skos?: true))
+    submission.stubs(:id).returns(RDF::URI.new("http://example.org/submissions/nocsv"))
+
+    empty_page = []
+    empty_page.define_singleton_method(:total_pages) { 0 }
+    empty_page.define_singleton_method(:next?) { false }
+
+    paging = mock("class-paging")
+    paging.expects(:include).with(:unmapped).returns(paging)
+    paging.expects(:aggregate).with(:count, :children).returns(paging)
+    paging.expects(:page).with(0, 2500).returns(paging)
+    paging.expects(:page).with(1, 2500).returns(paging)
+    paging.expects(:all).returns(empty_page)
+    LinkedData::Models::Class.expects(:in).with(submission).returns(paging)
+    LinkedData::Utils::OntologyCSVWriter.expects(:new).never
+
+    indexer = LinkedData::Services::OntologySubmissionIndexer.new(submission)
+    indexer.stubs(:compute_ancestors_map).returns({})
+
+    indexer.send(:index, Logger.new(TestLogFile.new), false, false, nil, false)
+  ensure
+    LinkedData::Models::Class.ancestors_cache = nil
+  end
+
   def test_skos_submission_without_skos_concept_processes_without_error
     # Regression for GH-274: SKOS submissions with no skos:Concept previously entered the
     # retry path and failed during missing-label generation because the CSV class_count

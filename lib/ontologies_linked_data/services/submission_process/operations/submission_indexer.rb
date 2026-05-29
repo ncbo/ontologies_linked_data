@@ -13,19 +13,23 @@ module LinkedData
 
         status = LinkedData::Models::SubmissionStatus.find('INDEXED').first
         begin
-          index(logger, options[:commit], false, options[:commit_within])
+          index(logger, options[:commit], false, options[:commit_within], generate_csv?(options))
           @submission.add_submission_status(status)
         rescue StandardError => e
           logger.error("#{e.class}: #{e.message}\n#{e.backtrace.join("\n\t")}")
           logger.flush
           @submission.add_submission_status(status.get_error_status)
-          FileUtils.rm(@submission.csv_path) if File.file?(@submission.csv_path)
+          FileUtils.rm(@submission.csv_path) if generate_csv?(options) && File.file?(@submission.csv_path)
         ensure
           @submission.save
         end
       end
 
-      def index(logger, commit = true, optimize = true, commit_within = 30_000)
+      def generate_csv?(options)
+        !options[:generate_csv].eql?(false)
+      end
+
+      def index(logger, commit = true, optimize = true, commit_within = 30_000, generate_csv = true)
         page = 0
         size = 2500
         count_classes = 0
@@ -35,8 +39,11 @@ module LinkedData
           @submission.ontology.bring(:acronym) if @submission.ontology.bring?(:acronym)
           @submission.ontology.bring(:provisionalClasses) if @submission.ontology.bring?(:provisionalClasses)
           LinkedData::Models::Class.reset_ontology_rank_cache
-          csv_writer = LinkedData::Utils::OntologyCSVWriter.new
-          csv_writer.open(@submission.ontology, @submission.csv_path)
+          csv_writer = nil
+          if generate_csv
+            csv_writer = LinkedData::Utils::OntologyCSVWriter.new
+            csv_writer.open(@submission.ontology, @submission.csv_path)
+          end
 
           LinkedData::Models::Class.ancestors_cache = compute_ancestors_map(logger)
 
@@ -90,7 +97,7 @@ module LinkedData
                 # TODO: Remove once precomputed ancestors are validated against production data
                 validate_class_ancestors(c, logger) if ENV['OP_VALIDATE_ANCESTORS']
 
-                csv_writer.write_class(c)
+                csv_writer.write_class(c) if csv_writer
                 docs << c.indexable_object
               end
               logger.info("Page #{page} of #{total_pages} attributes mapped in #{Time.now - t0} sec.")
@@ -106,7 +113,7 @@ module LinkedData
               logger.flush
             end
 
-            csv_writer.close
+            csv_writer.close if csv_writer
 
             begin
               # index provisional classes
@@ -123,7 +130,7 @@ module LinkedData
               logger.info("Ontology terms index commit in #{Time.now - t0} sec.")
             end
           rescue StandardError => e
-            csv_writer.close
+            csv_writer.close if csv_writer
             logger.error("\n\n#{e.class}: #{e.message}\n")
             logger.error(e.backtrace)
             raise e
