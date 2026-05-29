@@ -13,7 +13,11 @@ module LinkedData
 
         status = LinkedData::Models::SubmissionStatus.find('INDEXED').first
         begin
-          index(logger, options[:commit], false, options[:commit_within], generate_csv?(options))
+          index(logger,
+                commit: options[:commit],
+                optimize: false,
+                commit_within: options[:commit_within],
+                generate_csv: generate_csv?(options))
           @submission.add_submission_status(status)
         rescue StandardError => e
           logger.error("#{e.class}: #{e.message}\n#{e.backtrace.join("\n\t")}")
@@ -29,7 +33,7 @@ module LinkedData
         !options[:generate_csv].eql?(false)
       end
 
-      def index(logger, commit = true, optimize = true, commit_within = 30_000, generate_csv = true)
+      def index(logger, commit: true, optimize: true, commit_within: 30_000, generate_csv: true)
         page = 0
         size = 2500
         count_classes = 0

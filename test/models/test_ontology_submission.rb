@@ -1400,7 +1400,7 @@ eos
     indexer = LinkedData::Services::OntologySubmissionIndexer.new(submission)
     indexer.stubs(:compute_ancestors_map).returns({})
 
-    indexer.send(:index, Logger.new(TestLogFile.new), false, false)
+    indexer.send(:index, Logger.new(TestLogFile.new), commit: false, optimize: false)
   ensure
     LinkedData::Models::Class.ancestors_cache = nil
   end
@@ -1464,7 +1464,7 @@ eos
     indexer = LinkedData::Services::OntologySubmissionIndexer.new(submission)
     indexer.stubs(:compute_ancestors_map).returns({})
 
-    indexer.send(:index, Logger.new(TestLogFile.new), false, false)
+    indexer.send(:index, Logger.new(TestLogFile.new), commit: false, optimize: false)
   ensure
     LinkedData::Models::Class.ancestors_cache = nil
   end
@@ -1500,7 +1500,7 @@ eos
     indexer = LinkedData::Services::OntologySubmissionIndexer.new(submission)
     indexer.stubs(:compute_ancestors_map).returns({})
 
-    indexer.send(:index, Logger.new(TestLogFile.new), false, false, nil, false)
+    indexer.send(:index, Logger.new(TestLogFile.new), commit: false, optimize: false, commit_within: nil, generate_csv: false)
   ensure
     LinkedData::Models::Class.ancestors_cache = nil
   end
