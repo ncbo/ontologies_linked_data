@@ -104,6 +104,8 @@ module LinkedData
       end
 
       def process_index_commit?(options)
+        return false if options[:index_commit].eql?(false)
+
         index_search?(options) || index_properties?(options) || index_all_data?(options)
       end
 
