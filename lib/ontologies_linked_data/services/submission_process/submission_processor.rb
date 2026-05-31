@@ -42,6 +42,10 @@ module LinkedData
 
             @submission = @submission.extract_metadata(logger, user_params: options[:params], heavy_extraction: extract_metadata?(options))
 
+            if @submission.nil?
+              raise StandardError, "Submission processing aborted: extract_metadata returned nil (submission failed validation; see per-submission parsing.log)"
+            end
+
             @submission.generate_missing_labels(logger) if generate_missing_labels?(options)
 
             @submission.generate_obsolete_classes(logger) if generate_obsolete_classes?(options)
@@ -72,7 +76,8 @@ module LinkedData
       end
 
       def notify_submission_processed(logger)
-        LinkedData::Utils::Notifications.submission_processed(@submission) unless @submission.archived?
+        return if @submission.nil? || @submission.archived?
+        LinkedData::Utils::Notifications.submission_processed(@submission)
       rescue StandardError => e
         logger.error("Email sending failed: #{e.message}\n#{e.backtrace.join("\n\t")}"); logger.flush
       end
