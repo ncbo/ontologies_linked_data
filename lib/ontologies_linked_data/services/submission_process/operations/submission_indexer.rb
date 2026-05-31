@@ -42,6 +42,7 @@ module LinkedData
         page = 0
         size = 2500
         count_classes = 0
+        previous_requested_lang = RequestStore.store[:requested_lang]
 
         time = Benchmark.realtime do
           @submission.bring(:ontology) if @submission.bring?(:ontology)
@@ -57,6 +58,13 @@ module LinkedData
           LinkedData::Models::Class.ancestors_cache = compute_ancestors_map(logger)
 
           begin
+            # Set once for the whole indexing run; restored in the ensure block below.
+            # In the previous multi-threaded indexer this lived inside per-page worker
+            # threads, so the change was thread-local. Single-threaded, it would otherwise
+            # leak into @submission.save's after_save Solr callback and into the next
+            # ontology's bring_remaining.
+            RequestStore.store[:requested_lang] = :ALL
+
             logger.info("Indexing ontology terms: #{@submission.ontology.acronym}...")
             t0 = Time.now
             if unindex_existing
@@ -84,7 +92,6 @@ module LinkedData
               page = (page == 0 || page_classes.next?) ? page + 1 : nil
               break if page.nil?
 
-              RequestStore.store[:requested_lang] = :ALL
               t0 = Time.now
               page_classes = (page == 1 && first_page) ? first_page : paging.page(page, size).all
               count_classes += page_classes.length
@@ -149,6 +156,7 @@ module LinkedData
             raise e
           ensure
             LinkedData::Models::Class.ancestors_cache = nil
+            RequestStore.store[:requested_lang] = previous_requested_lang
           end
         end
         logger.info("Completed indexing ontology terms: #{@submission.ontology.acronym} in #{time} sec. #{count_classes} classes.")
