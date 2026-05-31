@@ -17,7 +17,8 @@ module LinkedData
                 commit: options[:commit],
                 optimize: false,
                 commit_within: options[:commit_within],
-                generate_csv: generate_csv?(options))
+                generate_csv: generate_csv?(options),
+                unindex_existing: unindex_existing?(options))
           @submission.add_submission_status(status)
         rescue StandardError => e
           logger.error("#{e.class}: #{e.message}\n#{e.backtrace.join("\n\t")}")
@@ -33,7 +34,11 @@ module LinkedData
         !options[:generate_csv].eql?(false)
       end
 
-      def index(logger, commit: true, optimize: true, commit_within: 30_000, generate_csv: true)
+      def unindex_existing?(options)
+        !options[:unindex_existing].eql?(false)
+      end
+
+      def index(logger, commit: true, optimize: true, commit_within: 30_000, generate_csv: true, unindex_existing: true)
         page = 0
         size = 2500
         count_classes = 0
@@ -54,8 +59,12 @@ module LinkedData
           begin
             logger.info("Indexing ontology terms: #{@submission.ontology.acronym}...")
             t0 = Time.now
-            @submission.ontology.unindex_by_acronym(false)
-            logger.info("Removed ontology terms index (#{Time.now - t0}s)"); logger.flush
+            if unindex_existing
+              @submission.ontology.unindex_by_acronym(false)
+              logger.info("Removed ontology terms index (#{Time.now - t0}s)"); logger.flush
+            else
+              logger.info("Skipping unindex_by_acronym (fresh target collection)"); logger.flush
+            end
 
             paging = LinkedData::Models::Class.in(@submission).include(:unmapped).aggregate(:count, :children).page(page, size)
             # a fix for SKOS ontologies, see https://github.com/ncbo/ontologies_api/issues/20

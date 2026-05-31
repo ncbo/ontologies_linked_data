@@ -9,6 +9,7 @@ module LinkedData
       #   index_properties  = false
       #   index_commit      = false
       #   generate_csv      = true
+      #   unindex_existing  = true
       #   run_metrics       = false
       #   reasoning         = false
       #   diff              = false
@@ -52,7 +53,7 @@ module LinkedData
 
             @submission.index_all(logger, commit: process_index_commit?(options)) if index_all_data?(options)
 
-            @submission.index_terms(logger, commit: process_index_commit?(options), commit_within: index_commit_within(options), generate_csv: generate_csv?(options)) if index_search?(options)
+            @submission.index_terms(logger, commit: process_index_commit?(options), commit_within: index_commit_within(options), generate_csv: generate_csv?(options), unindex_existing: unindex_existing?(options)) if index_search?(options)
 
             @submission.index_properties(logger, commit: process_index_commit?(options)) if index_properties?(options)
 
@@ -116,6 +117,10 @@ module LinkedData
 
       def generate_csv?(options)
         !options[:generate_csv].eql?(false)
+      end
+
+      def unindex_existing?(options)
+        !options[:unindex_existing].eql?(false)
       end
 
       def process_diff?(options)
