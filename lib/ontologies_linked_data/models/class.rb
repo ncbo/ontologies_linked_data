@@ -157,7 +157,7 @@ module LinkedData
         schema_generator.add_copy_field('oboId', '_text_')
 
         %w[prefLabel synonym].each do |field|
-          schema_generator.add_field("#{field}Exact", 'string_ci', indexed: true, stored: false, multi_valued: true)
+          schema_generator.add_field("#{field}Exact", 'string_ci', indexed: true, stored: true, multi_valued: true)
           schema_generator.add_field("#{field}Suggest", 'text_suggest', indexed: true, stored: false, multi_valued: true, omit_norms: true)
           schema_generator.add_field("#{field}SuggestEdge", 'text_suggest_edge', indexed: true, stored: false, multi_valued: true)
           schema_generator.add_field("#{field}SuggestNgram", 'text_suggest_ngram', indexed: true, stored: false, multi_valued: true, omit_norms: true)
@@ -169,7 +169,7 @@ module LinkedData
           schema_generator.add_copy_field(field, "#{field}SuggestNgram")
 
           schema_generator.add_dynamic_field("#{field}_*", 'text_general', indexed: true, stored: true, multi_valued: true)
-          schema_generator.add_dynamic_field("#{field}Exact_*", 'string_ci', indexed: true, stored: false, multi_valued: true)
+          schema_generator.add_dynamic_field("#{field}Exact_*", 'string_ci', indexed: true, stored: true, multi_valued: true)
           schema_generator.add_dynamic_field("#{field}Suggest_*", 'text_suggest', indexed: true, stored: false, multi_valued: true, omit_norms: true)
           schema_generator.add_dynamic_field("#{field}SuggestEdge_*", 'text_suggest_edge', indexed: true, stored: false, multi_valued: true)
           schema_generator.add_dynamic_field("#{field}SuggestNgram_*", 'text_suggest_ngram', indexed: true, stored: false, multi_valued: true, omit_norms: true)
