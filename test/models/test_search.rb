@@ -22,8 +22,8 @@ class TestSearch < LinkedData::TestCase
 
     assert_equal %w[prefLabelExact synonymExact], exact_fields.map { |field| field[:name] }.sort
     assert_equal %w[prefLabelExact_* synonymExact_*], exact_dynamic_fields.map { |field| field[:name] }.sort
-    assert exact_fields.all? { |field| field[:type] == 'string_ci' }
-    assert exact_dynamic_fields.all? { |field| field[:type] == 'string_ci' }
+    assert exact_fields.all? { |field| field[:type] == 'string_ci_exact' }
+    assert exact_dynamic_fields.all? { |field| field[:type] == 'string_ci_exact' }
     refute_nil ontology_rank_field
     assert_equal 'pfloat', ontology_rank_field[:type]
     assert_equal '0.0', ontology_rank_field[:default]
