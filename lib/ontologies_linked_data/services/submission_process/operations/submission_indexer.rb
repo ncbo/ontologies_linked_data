@@ -40,7 +40,7 @@ module LinkedData
 
       def index(logger, commit: true, optimize: true, commit_within: 30_000, generate_csv: true, unindex_existing: true)
         page = 0
-        size = 2500
+        size = 5000
         count_classes = 0
         previous_requested_lang = RequestStore.store[:requested_lang]
 
