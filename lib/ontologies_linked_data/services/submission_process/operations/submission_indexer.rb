@@ -38,11 +38,9 @@ module LinkedData
         !options[:unindex_existing].eql?(false)
       end
 
-      TERM_INDEX_PAGE_SIZE = 5000
-
-      def index(logger, commit: true, optimize: true, commit_within: 30_000, generate_csv: true, unindex_existing: true, page_size: TERM_INDEX_PAGE_SIZE)
+      def index(logger, commit: true, optimize: true, commit_within: 30_000, generate_csv: true, unindex_existing: true)
         page = 0
-        size = page_size
+        size = 2500
         count_classes = 0
         previous_requested_lang = RequestStore.store[:requested_lang]
 
@@ -88,64 +86,29 @@ module LinkedData
               first_page = paging.page(1, size).all
               total_pages = first_page.total_pages
             end
-            # Fetch one page of classes from the triplestore. Used for the synchronous
-            # fetch of page 1 and for the background prefetch of later pages.
-            #
-            # RequestStore is thread-local, so the :ALL language override set on the
-            # main thread above does NOT propagate to a prefetch thread; it must be set
-            # again here, or the background fetch would drop multilingual values.
-            #
-            # equivalent_predicates is identical for every page (same query shape) and
-            # is returned alongside the page so the consumer never reads it from `paging`
-            # concurrently with a background fetch.
-            fetch_page = lambda do |pnum|
-              RequestStore.store[:requested_lang] = :ALL
-              t_fetch = Time.now
-              page_classes = (pnum == 1 && first_page) ? first_page : paging.page(pnum, size).all
-              # Measure the actual SPARQL fetch wall-time here so the per-page
-              # retrieval timing remains meaningful even when the fetch runs on a
-              # background prefetch thread. (Summing these across pages overcounts,
-              # since prefetched pages overlap the previous page's work — the
-              # overlap is the win; this metric is the raw per-page fetch cost.)
-              [page_classes, paging.equivalent_predicates, Time.now - t_fetch]
-            end
+            page_classes = nil
 
-            # Prime page 1 synchronously, then overlap each page's mapping + Solr write
-            # with the background fetch of the next page. `paging` is mutated by #page,
-            # so only one thread ever touches it at a time: the main thread fetches
-            # page 1, and thereafter each fetch runs on its own thread while the main
-            # thread is busy mapping/indexing and never touching `paging`.
-            current = total_pages >= 1 ? fetch_page.call(1) : nil
-            page = 1
+            while true
+              page = (page == 0 || page_classes.next?) ? page + 1 : nil
+              break if page.nil?
 
-            while current && page <= total_pages
-              page_classes, equivalent_predicates, fetch_seconds = current
+              t0 = Time.now
+              page_classes = (page == 1 && first_page) ? first_page : paging.page(page, size).all
+              count_classes += page_classes.length
 
               if page_classes.empty?
                 logger.info("Page #{page} of #{total_pages} returned no classes. Completing indexing for #{@submission.id.to_s}.")
                 break
               end
 
-              count_classes += page_classes.length
-              logger.info("Page #{page} of #{total_pages} - #{page_classes.length} ontology terms retrieved in #{fetch_seconds} sec.")
-
-              # Kick off the next page's fetch before the CPU-bound mapping so the
-              # triplestore round-trip overlaps with this page's mapping + Solr write.
-              next_page = page + 1
-              next_thread =
-                if next_page <= total_pages
-                  Thread.new(next_page) do |pn|
-                    Thread.current.report_on_exception = false
-                    fetch_page.call(pn)
-                  end
-                end
-
+              logger.info("Page #{page} of #{total_pages} - #{page_classes.length} ontology terms retrieved in #{Time.now - t0} sec.")
               t0 = Time.now
+
               docs = []
               page_classes.each do |c|
                 begin
                   # this call is needed for indexing of properties
-                  LinkedData::Models::Class.map_attributes(c, equivalent_predicates, include_languages: true)
+                  LinkedData::Models::Class.map_attributes(c, paging.equivalent_predicates, include_languages: true)
                 rescue StandardError => e
                   logger.error("Error mapping attributes for #{c.id.to_s}: #{e.class}: #{e.message}\n#{e.backtrace.join("\n\t")}")
                   logger.flush
@@ -168,12 +131,6 @@ module LinkedData
               )
               logger.info("Page #{page} of #{total_pages} - #{page_classes.length} ontology terms indexed in #{Time.now - t0} sec.")
               logger.flush
-
-              # Block until the prefetch completes (usually already done). Thread#value
-              # re-raises a fetch error here on the main thread, where the rescue below
-              # handles it — a failed fetch must not silently drop the remaining pages.
-              current = next_thread&.value
-              page = next_page
             end
 
             csv_writer.close if csv_writer
