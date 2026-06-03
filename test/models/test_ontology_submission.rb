@@ -1400,7 +1400,7 @@ eos
     indexer = LinkedData::Services::OntologySubmissionIndexer.new(submission)
     indexer.stubs(:compute_ancestors_map).returns({})
 
-    indexer.send(:index, Logger.new(TestLogFile.new), commit: false, optimize: false)
+    indexer.send(:index, Logger.new(TestLogFile.new), commit: false, optimize: false, page_size: 2500)
   ensure
     LinkedData::Models::Class.ancestors_cache = nil
   end
@@ -1464,7 +1464,7 @@ eos
     indexer = LinkedData::Services::OntologySubmissionIndexer.new(submission)
     indexer.stubs(:compute_ancestors_map).returns({})
 
-    indexer.send(:index, Logger.new(TestLogFile.new), commit: false, optimize: false)
+    indexer.send(:index, Logger.new(TestLogFile.new), commit: false, optimize: false, page_size: 2500)
   ensure
     LinkedData::Models::Class.ancestors_cache = nil
   end
@@ -1500,7 +1500,7 @@ eos
     indexer = LinkedData::Services::OntologySubmissionIndexer.new(submission)
     indexer.stubs(:compute_ancestors_map).returns({})
 
-    indexer.send(:index, Logger.new(TestLogFile.new), commit: false, optimize: false, commit_within: nil, generate_csv: false)
+    indexer.send(:index, Logger.new(TestLogFile.new), commit: false, optimize: false, commit_within: nil, generate_csv: false, page_size: 2500)
   ensure
     LinkedData::Models::Class.ancestors_cache = nil
   end
@@ -1541,9 +1541,242 @@ eos
     indexer = LinkedData::Services::OntologySubmissionIndexer.new(submission)
     indexer.stubs(:compute_ancestors_map).returns({})
 
-    indexer.send(:index, Logger.new(TestLogFile.new), commit: false, optimize: false, unindex_existing: false)
+    indexer.send(:index, Logger.new(TestLogFile.new), commit: false, optimize: false, unindex_existing: false, page_size: 2500)
   ensure
     LinkedData::Models::Class.ancestors_cache = nil
+  end
+
+  def test_index_terms_indexes_all_pages_in_order
+    ontology = mock("ontology")
+    ontology.stubs(:bring?).with(:acronym).returns(false)
+    ontology.stubs(:bring?).with(:provisionalClasses).returns(false)
+    ontology.stubs(:acronym).returns("ORDER")
+    ontology.stubs(:provisionalClasses).returns([])
+    ontology.expects(:unindex_by_acronym).with(false)
+
+    language = mock("language")
+    language.expects(:skos?).returns(false)
+
+    submission = mock("submission")
+    submission.stubs(:bring?).with(:ontology).returns(false)
+    submission.stubs(:ontology).returns(ontology)
+    submission.stubs(:csv_path).returns("/tmp/order-classes.csv")
+    submission.stubs(:loaded_attributes).returns([:hasOntologyLanguage])
+    submission.stubs(:hasOntologyLanguage).returns(language)
+    submission.stubs(:class_count).returns(5)
+    submission.stubs(:id).returns(RDF::URI.new("http://example.org/submissions/order"))
+
+    classes = (1..5).map do |i|
+      stub("c#{i}", id: RDF::URI.new("http://example.org/c/#{i}"), indexable_object: { id: i.to_s })
+    end
+    page_one   = [classes[0], classes[1]]
+    page_two   = [classes[2], classes[3]]
+    page_three = [classes[4]]
+
+    csv_writer = mock("csv-writer")
+    csv_writer.expects(:open).with(ontology, "/tmp/order-classes.csv")
+    csv_writer.stubs(:write_class)
+    csv_writer.expects(:close)
+    LinkedData::Utils::OntologyCSVWriter.expects(:new).returns(csv_writer)
+
+    scope_one   = mock("scope-1"); scope_one.expects(:all).returns(page_one)
+    scope_two   = mock("scope-2"); scope_two.expects(:all).returns(page_two)
+    scope_three = mock("scope-3"); scope_three.expects(:all).returns(page_three)
+
+    paging = mock("class-paging")
+    paging.expects(:include).with(:unmapped).returns(paging)
+    paging.expects(:aggregate).with(:count, :children).returns(paging)
+    paging.expects(:page).with(0, 2).returns(paging)
+    paging.expects(:page_count_set).with(5)
+    paging.expects(:page).with(1, 2).once.returns(scope_one)
+    paging.expects(:page).with(2, 2).once.returns(scope_two)
+    paging.expects(:page).with(3, 2).once.returns(scope_three)
+    paging.stubs(:equivalent_predicates).returns({})
+    LinkedData::Models::Class.expects(:in).with(submission).returns(paging)
+
+    classes.each do |c|
+      LinkedData::Models::Class.expects(:map_attributes).with(c, {}, include_languages: true)
+    end
+
+    index_seq = sequence("index-order")
+    search_client = mock("search-client")
+    search_client.expects(:index_document).with([{ id: "1" }, { id: "2" }], commit: false, commit_within: nil).in_sequence(index_seq)
+    search_client.expects(:index_document).with([{ id: "3" }, { id: "4" }], commit: false, commit_within: nil).in_sequence(index_seq)
+    search_client.expects(:index_document).with([{ id: "5" }], commit: false, commit_within: nil).in_sequence(index_seq)
+    LinkedData::Models::Class.stubs(:search_client).returns(search_client)
+
+    indexer = LinkedData::Services::OntologySubmissionIndexer.new(submission)
+    indexer.stubs(:compute_ancestors_map).returns({})
+
+    indexer.send(:index, Logger.new(TestLogFile.new), commit: false, optimize: false, page_size: 2)
+  ensure
+    LinkedData::Models::Class.ancestors_cache = nil
+  end
+
+  def test_index_terms_sets_requested_lang_all_in_background_fetch_thread
+    # RequestStore is thread-local. The page-prefetch thread must set
+    # requested_lang = :ALL itself; otherwise the background fetch would run
+    # under the wrong language and drop multilingual values. This asserts the
+    # value observed *during the background fetch* is :ALL.
+    ontology = mock("ontology")
+    ontology.stubs(:bring?).with(:acronym).returns(false)
+    ontology.stubs(:bring?).with(:provisionalClasses).returns(false)
+    ontology.stubs(:acronym).returns("LANG")
+    ontology.stubs(:provisionalClasses).returns([])
+    ontology.expects(:unindex_by_acronym).with(false)
+
+    language = mock("language")
+    language.expects(:skos?).returns(false)
+
+    submission = mock("submission")
+    submission.stubs(:bring?).with(:ontology).returns(false)
+    submission.stubs(:ontology).returns(ontology)
+    submission.stubs(:csv_path).returns("/tmp/lang-classes.csv")
+    submission.stubs(:loaded_attributes).returns([:hasOntologyLanguage])
+    submission.stubs(:hasOntologyLanguage).returns(language)
+    submission.stubs(:class_count).returns(3)
+    submission.stubs(:id).returns(RDF::URI.new("http://example.org/submissions/lang"))
+
+    c1 = stub("c1", id: RDF::URI.new("http://example.org/c/1"), indexable_object: { id: "1" })
+    c2 = stub("c2", id: RDF::URI.new("http://example.org/c/2"), indexable_object: { id: "2" })
+    page_one = [c1]
+    page_two = [c2]
+
+    captured_langs = Queue.new
+    # page 2 is the one fetched on the background thread; capture the
+    # thread-local lang observed when its fetch executes.
+    page_two_scope = Object.new
+    page_two_scope.define_singleton_method(:all) do
+      captured_langs << RequestStore.store[:requested_lang]
+      page_two
+    end
+
+    csv_writer = mock("csv-writer")
+    csv_writer.stubs(:open)
+    csv_writer.stubs(:write_class)
+    csv_writer.stubs(:close)
+    LinkedData::Utils::OntologyCSVWriter.expects(:new).returns(csv_writer)
+
+    first_page_scope = mock("first-page-scope")
+    first_page_scope.expects(:all).returns(page_one)
+
+    paging = mock("class-paging")
+    paging.expects(:include).with(:unmapped).returns(paging)
+    paging.expects(:aggregate).with(:count, :children).returns(paging)
+    paging.expects(:page).with(0, 2).returns(paging)
+    paging.expects(:page_count_set).with(3)
+    paging.expects(:page).with(1, 2).returns(first_page_scope)
+    paging.expects(:page).with(2, 2).returns(page_two_scope)
+    paging.stubs(:equivalent_predicates).returns({})
+    LinkedData::Models::Class.expects(:in).with(submission).returns(paging)
+    LinkedData::Models::Class.stubs(:map_attributes)
+
+    search_client = mock("search-client")
+    search_client.stubs(:index_document)
+    LinkedData::Models::Class.stubs(:search_client).returns(search_client)
+
+    indexer = LinkedData::Services::OntologySubmissionIndexer.new(submission)
+    indexer.stubs(:compute_ancestors_map).returns({})
+
+    indexer.send(:index, Logger.new(TestLogFile.new), commit: false, optimize: false, page_size: 2)
+
+    langs = []
+    langs << captured_langs.pop until captured_langs.empty?
+    assert_includes langs, :ALL, "background page fetch must run with requested_lang = :ALL"
+  ensure
+    LinkedData::Models::Class.ancestors_cache = nil
+  end
+
+  def test_index_terms_reraises_background_page_fetch_errors
+    # A failed page fetch must surface, not silently drop the remaining pages.
+    ontology = mock("ontology")
+    ontology.stubs(:bring?).with(:acronym).returns(false)
+    ontology.stubs(:bring?).with(:provisionalClasses).returns(false)
+    ontology.stubs(:acronym).returns("BOOM")
+    ontology.stubs(:provisionalClasses).returns([])
+    ontology.expects(:unindex_by_acronym).with(false)
+
+    language = mock("language")
+    language.expects(:skos?).returns(false)
+
+    submission = mock("submission")
+    submission.stubs(:bring?).with(:ontology).returns(false)
+    submission.stubs(:ontology).returns(ontology)
+    submission.stubs(:csv_path).returns("/tmp/boom-classes.csv")
+    submission.stubs(:loaded_attributes).returns([:hasOntologyLanguage])
+    submission.stubs(:hasOntologyLanguage).returns(language)
+    submission.stubs(:class_count).returns(3)
+    submission.stubs(:id).returns(RDF::URI.new("http://example.org/submissions/boom"))
+
+    c1 = stub("c1", id: RDF::URI.new("http://example.org/c/1"), indexable_object: { id: "1" })
+    page_one = [c1]
+
+    page_two_scope = Object.new
+    page_two_scope.define_singleton_method(:all) { raise "boom fetching page 2" }
+
+    csv_writer = mock("csv-writer")
+    csv_writer.stubs(:open)
+    csv_writer.stubs(:write_class)
+    csv_writer.stubs(:close)
+    LinkedData::Utils::OntologyCSVWriter.expects(:new).returns(csv_writer)
+
+    first_page_scope = mock("first-page-scope")
+    first_page_scope.expects(:all).returns(page_one)
+
+    paging = mock("class-paging")
+    paging.expects(:include).with(:unmapped).returns(paging)
+    paging.expects(:aggregate).with(:count, :children).returns(paging)
+    paging.expects(:page).with(0, 2).returns(paging)
+    paging.expects(:page_count_set).with(3)
+    paging.expects(:page).with(1, 2).returns(first_page_scope)
+    paging.expects(:page).with(2, 2).returns(page_two_scope)
+    paging.stubs(:equivalent_predicates).returns({})
+    LinkedData::Models::Class.expects(:in).with(submission).returns(paging)
+    LinkedData::Models::Class.stubs(:map_attributes)
+
+    search_client = mock("search-client")
+    search_client.stubs(:index_document)
+    LinkedData::Models::Class.stubs(:search_client).returns(search_client)
+
+    indexer = LinkedData::Services::OntologySubmissionIndexer.new(submission)
+    indexer.stubs(:compute_ancestors_map).returns({})
+
+    error = assert_raises(RuntimeError) do
+      indexer.send(:index, Logger.new(TestLogFile.new), commit: false, optimize: false, page_size: 2)
+    end
+    assert_match(/boom fetching page 2/, error.message)
+  ensure
+    LinkedData::Models::Class.ancestors_cache = nil
+  end
+
+  def test_index_terms_multi_page_prefetch_indexes_same_complete_set
+    # Real end-to-end paging: index the same ontology once as a single page
+    # (reference) and once with a tiny page_size that forces many prefetched
+    # pages. The background fetch runs against the real SPARQL client + Solr.
+    # Both runs must produce the identical, complete document set — proving the
+    # concurrent prefetch drops no pages and duplicates none.
+    submission_parse("BRO", "BRO Ontology",
+                     "./test/data/ontology_files/BRO_v3.5.owl", 1,
+                     process_rdf: true, extract_metadata: false, generate_missing_labels: false,
+                     index_search: false, index_properties: false)
+
+    sub = LinkedData::Models::Ontology.find("BRO").first.latest_submission(status: :rdf)
+    sub.bring_remaining
+    indexer = LinkedData::Services::OntologySubmissionIndexer.new(sub)
+
+    indexer.send(:index, Logger.new(TestLogFile.new),
+                 commit: true, optimize: false, commit_within: nil,
+                 generate_csv: false, unindex_existing: true, page_size: 100_000)
+    reference = LinkedData::Models::Class.search("*:*", { fq: "submissionAcronym:BRO", rows: 0 })["response"]["numFound"]
+    assert_operator reference, :>, 5, "fixture must span multiple pages at page_size=5"
+
+    indexer.send(:index, Logger.new(TestLogFile.new),
+                 commit: true, optimize: false, commit_within: nil,
+                 generate_csv: false, unindex_existing: true, page_size: 5)
+    prefetched = LinkedData::Models::Class.search("*:*", { fq: "submissionAcronym:BRO", rows: 0 })["response"]["numFound"]
+
+    assert_equal reference, prefetched,
+                 "multi-page prefetch must index the same complete set as a single page"
   end
 
   def test_skos_submission_without_skos_concept_processes_without_error
