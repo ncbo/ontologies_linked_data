@@ -97,9 +97,6 @@ module LinkedData
     # number of times to retry a query when empty records are returned
     @settings.num_retries_4store            ||= 10
 
-    # number of threads to use when indexing a single ontology for search
-    @settings.indexing_num_threads          ||= 1
-
     # Override defaults
     yield @settings, overide_connect_goo if block_given?
     configure_search_collections
