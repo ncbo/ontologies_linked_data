@@ -30,8 +30,8 @@ module LinkedData
         LinkedData::Services::OntologySubmissionAllDataIndexer.new(self).process(logger, commit: commit)
       end
 
-      def index_terms(logger, commit: true, optimize: true)
-        LinkedData::Services::OntologySubmissionIndexer.new(self).process(logger, commit: commit, optimize: optimize)
+      def index_terms(logger, commit: true, optimize: true, commit_within: 30_000, generate_csv: true, unindex_existing: true)
+        LinkedData::Services::OntologySubmissionIndexer.new(self).process(logger, commit: commit, optimize: optimize, commit_within: commit_within, generate_csv: generate_csv, unindex_existing: unindex_existing)
       end
 
       def index_properties(logger, commit: true, optimize: true)

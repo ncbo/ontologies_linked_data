@@ -141,6 +141,7 @@ module LinkedData
         schema_generator.add_field(:ontologyId, 'string', indexed: true, stored: true, multi_valued: false)
         schema_generator.add_field(:submissionId, 'pint', indexed: true, stored: true, multi_valued: false)
         schema_generator.add_field(:childCount, 'pint', indexed: true, stored: true, multi_valued: false)
+        schema_generator.add_field(:ontologyRank, 'pfloat', indexed: true, stored: true, multi_valued: false, default: 0.0)
 
         schema_generator.add_field(:cui, 'text_general', indexed: true, stored: true, multi_valued: true)
         schema_generator.add_field(:semanticType, 'text_general', indexed: true, stored: true, multi_valued: true)
@@ -156,7 +157,7 @@ module LinkedData
         schema_generator.add_copy_field('oboId', '_text_')
 
         %w[prefLabel synonym].each do |field|
-          schema_generator.add_field("#{field}Exact", 'string', indexed: true, stored: false, multi_valued: true)
+          schema_generator.add_field("#{field}Exact", 'string_ci_exact', indexed: true, stored: true, multi_valued: true)
           schema_generator.add_field("#{field}Suggest", 'text_suggest', indexed: true, stored: false, multi_valued: true, omit_norms: true)
           schema_generator.add_field("#{field}SuggestEdge", 'text_suggest_edge', indexed: true, stored: false, multi_valued: true)
           schema_generator.add_field("#{field}SuggestNgram", 'text_suggest_ngram', indexed: true, stored: false, multi_valued: true, omit_norms: true)
@@ -168,7 +169,7 @@ module LinkedData
           schema_generator.add_copy_field(field, "#{field}SuggestNgram")
 
           schema_generator.add_dynamic_field("#{field}_*", 'text_general', indexed: true, stored: true, multi_valued: true)
-          schema_generator.add_dynamic_field("#{field}Exact_*", 'string', indexed: true, stored: false, multi_valued: true)
+          schema_generator.add_dynamic_field("#{field}Exact_*", 'string_ci_exact', indexed: true, stored: true, multi_valued: true)
           schema_generator.add_dynamic_field("#{field}Suggest_*", 'text_suggest', indexed: true, stored: false, multi_valued: true, omit_norms: true)
           schema_generator.add_dynamic_field("#{field}SuggestEdge_*", 'text_suggest_edge', indexed: true, stored: false, multi_valued: true)
           schema_generator.add_dynamic_field("#{field}SuggestNgram_*", 'text_suggest_ngram', indexed: true, stored: false, multi_valued: true, omit_norms: true)
@@ -218,6 +219,16 @@ module LinkedData
         return nil unless self.submission.ontology
         self.submission.ontology.bring(:acronym) if self.submission.ontology.bring?(:acronym)
         "#{self.id.to_s}_#{self.submission.ontology.acronym}_#{self.submission.submissionId}"
+      end
+
+      def self.reset_ontology_rank_cache
+        @ontology_rank_cache = nil
+      end
+
+      def self.ontology_rank_for_index(acronym)
+        @ontology_rank_cache ||= LinkedData::Models::Ontology.rank
+        rank = @ontology_rank_cache[acronym]
+        rank && !rank.empty? ? rank[:normalizedScore].to_f : 0.0
       end
 
       def to_hash(include_languages: false)
@@ -289,6 +300,7 @@ module LinkedData
           doc[:submissionId] = self.submission.submissionId
           doc[:ontologyType] = self.submission.ontology.ontologyType.get_code_from_id
           doc[:obsolete] = self.obsolete.to_s
+          doc[:ontologyRank] = self.class.ontology_rank_for_index(acronym)
 
           all_attrs = self.to_hash
           std = [:id, :prefLabel, :notation, :synonym, :definition, :cui]
