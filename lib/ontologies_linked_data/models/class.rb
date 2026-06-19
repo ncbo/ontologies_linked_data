@@ -466,7 +466,12 @@ module LinkedData
           if cls.aggregates.nil?
             next
           end
-          if cls.aggregates.first.value > threshold
+          count = cls.aggregates.first.value
+          # hasChildren is exactly (child count > 0). Reuse the count we just
+          # aggregated to pre-warm @intlHasChildren so the per-node
+          # load_has_children query is never needed for these nodes downstream.
+          cls.instance_variable_set("@intlHasChildren", count > 0) if cls.instance_variable_get("@intlHasChildren").nil?
+          if count > threshold
             #too many load a page
             page_children = LinkedData::Models::Class
                               .where(parents: cls)
