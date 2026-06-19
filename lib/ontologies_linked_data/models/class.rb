@@ -483,6 +483,40 @@ module LinkedData
         self.in(submission).models(single_load).include({children: ld}).all if single_load.length > 0
       end
 
+      # Resolves hasChildren for a set of classes, pre-warming each instance's
+      # @intlHasChildren so subsequent per-node #load_has_children calls become
+      # no-ops. hasChildren is true iff the class has at least one child, which
+      # is exactly (children count > 0) -- #children and #hasChildren both use
+      # tree_view_property -- so we derive it from data already on hand and fall
+      # back to a single grouped count query for the rest, instead of issuing
+      # one has_children_query SPARQL round-trip per node.
+      def self.load_has_children_batch(models, submission)
+        models = models.to_a.compact.reject do |m|
+          !m.instance_variable_get("@intlHasChildren").nil? || m.id.to_s["#Thing"]
+        end
+        return if models.empty?
+
+        remaining = []
+        models.each do |m|
+          if m.aggregates
+            agg = m.aggregates.find { |x| x.attribute == :children && x.aggregate == :count }
+            m.instance_variable_set("@intlHasChildren", agg.value > 0) if agg
+          elsif m.loaded_attributes.include?(:children)
+            m.instance_variable_set("@intlHasChildren", !m.children.empty?)
+          else
+            remaining << m
+          end
+        end
+
+        return if remaining.empty?
+
+        self.in(submission).models(remaining).aggregate(:count, :children).all
+        remaining.each do |m|
+          agg = m.aggregates&.find { |x| x.attribute == :children && x.aggregate == :count }
+          m.instance_variable_set("@intlHasChildren", agg.value > 0) if agg
+        end
+      end
+
       def load_computed_attributes(to_load:, options:)
         self.load_has_children if to_load&.include?(:hasChildren)
         self.load_is_in_scheme(options[:schemes]) if to_load&.include?(:isInActiveScheme)

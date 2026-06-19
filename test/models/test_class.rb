@@ -260,6 +260,42 @@ class TestClassModel < LinkedData::TestOntologyCommon
     end
   end
 
+  # Guards the hasChildren <-> childrenCount contract on every node of a built
+  # tree. The batched hasChildren optimization derives hasChildren from the
+  # child-count aggregate, so this asserts the two stay consistent and that
+  # hasChildren is always loaded (never raises) on tree nodes.
+  def test_bro_tree_has_children
+    if !LinkedData::Models::Ontology.find("BROTEST123").first
+      submission_parse("BROTEST123", "SOME BROTEST Bla", "./test/data/ontology_files/BRO_v3.2.owl", 123,
+                       process_rdf: true, index_search: false,
+                       run_metrics: false, reasoning: true)
+    end
+    os = LinkedData::Models::Ontology.find("BROTEST123").first.latest_submission(status: [:rdf])
+    statistical_Text_Analysis = "http://bioontology.org/ontologies/BiomedicalResourceOntology.owl#Statistical_Text_Analysis"
+    cls = LinkedData::Models::Class.find(RDF::URI.new(statistical_Text_Analysis)).in(os).first
+
+    tree_root = cls.tree
+
+    checked = 0
+    stack = [tree_root]
+    until stack.empty?
+      node = stack.pop
+
+      hc = node.hasChildren
+      assert_includes [true, false], hc, "hasChildren not a boolean for #{node.id}"
+
+      cc = node.aggregates ? node.childrenCount : nil
+      unless cc.nil?
+        assert_equal((cc > 0), hc, "hasChildren/childrenCount mismatch for #{node.id}")
+        checked += 1
+      end
+
+      stack.concat(node.children)
+    end
+
+    assert checked > 0, "expected at least one node with a child-count aggregate"
+  end
+
 
   def test_include_ancestors
     if !LinkedData::Models::Ontology.find("BROTEST123").first

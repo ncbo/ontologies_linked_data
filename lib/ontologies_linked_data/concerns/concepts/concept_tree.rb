@@ -26,8 +26,18 @@ module LinkedData
           childrens_hash = {}
           path.each do |m|
             next if m.id.to_s["#Thing"]
+            m.children.each { |c| childrens_hash[c.id.to_s] = c }
+          end
+
+          # Resolve hasChildren for every node we are about to compute attributes
+          # on in a single grouped query, so the per-node load_has_children calls
+          # made by load_computed_attributes below become no-ops.
+          has_children_nodes = path.reject { |m| m.id.to_s["#Thing"] } + childrens_hash.values
+          LinkedData::Models::Class.load_has_children_batch(has_children_nodes, submission)
+
+          path.each do |m|
+            next if m.id.to_s["#Thing"]
             m.children.each do |c|
-              childrens_hash[c.id.to_s] = c
               c.load_computed_attributes(to_load:extra_include ,
                                          options: {schemes: concept_schemes, collections: concept_collections})
             end

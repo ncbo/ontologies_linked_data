@@ -870,6 +870,26 @@ SELECT DISTINCT * WHERE {
     assert_equal 6, roots.length
   end
 
+  # roots(:hasChildren) is the path the class-tree endpoint takes. Guards that
+  # the batched hasChildren resolution leaves the other loaded attributes
+  # (prefLabel) intact and stays consistent with childrenCount.
+  def test_submission_root_classes_has_children
+    acr = "CSTPROPS"
+    init_test_ontology_msotest acr
+    os = LinkedData::Models::OntologySubmission.where(ontology: [acronym: acr], submissionId: 1).all.first
+
+    roots = os.roots([:hasChildren])
+    refute_empty roots
+
+    roots.each do |r|
+      assert_includes r.loaded_attributes.to_a, :prefLabel, "prefLabel not loaded for #{r.id}"
+      refute_nil r.prefLabel, "prefLabel nil for #{r.id}"
+      assert_includes [true, false], r.hasChildren, "hasChildren not a boolean for #{r.id}"
+      cc = r.aggregates ? r.childrenCount : nil
+      assert_equal((cc > 0), r.hasChildren, "hasChildren/childrenCount mismatch for #{r.id}") unless cc.nil?
+    end
+  end
+
   #escaping sequences
   def test_submission_parse_sbo
     acronym = "SBO-TST"
