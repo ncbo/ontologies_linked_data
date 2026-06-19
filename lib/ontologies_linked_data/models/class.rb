@@ -490,11 +490,11 @@ module LinkedData
 
       # Resolves hasChildren for a set of classes, pre-warming each instance's
       # @intlHasChildren so subsequent per-node #load_has_children calls become
-      # no-ops. hasChildren is true iff the class has at least one child, which
-      # is exactly (children count > 0) -- #children and #hasChildren both use
-      # tree_view_property -- so we derive it from data already on hand and fall
-      # back to a single grouped count query for the rest, instead of issuing
-      # one has_children_query SPARQL round-trip per node.
+      # no-ops. hasChildren is true iff the class has at least one child --
+      # #children and #hasChildren both use tree_view_property -- so we derive
+      # it from a child-count aggregate or loaded children when those are
+      # already on hand, and otherwise issue a single batched existence query
+      # instead of one has_children_query SPARQL round-trip per node.
       def self.load_has_children_batch(models, submission)
         models = models.to_a.compact.reject do |m|
           !m.instance_variable_get("@intlHasChildren").nil? || m.id.to_s["#Thing"]
@@ -515,10 +515,42 @@ module LinkedData
 
         return if remaining.empty?
 
-        self.in(submission).models(remaining).aggregate(:count, :children).all
+        # Existence, not count: a DISTINCT query lets the store stop at the first
+        # child per node instead of COUNTing every child edge.
+        #
+        # The optimal way to constrain ?id to our node set is a VALUES block --
+        # modern stores (AllegroGraph, Virtuoso, GraphDB) push it into an index
+        # seek per id. But 4store silently ignores VALUES (verified against the
+        # test backend: it returns every parent in the graph regardless), so for
+        # 4store compatibility we use a FILTER (?id = <a> || ...) disjunction and
+        # slice the ids, matching hierarchy_query.
+        #
+        # Note: correctness does NOT depend on the constraint working -- we build
+        # a positive set of "ids that have children" and test membership, so even
+        # an unconstrained result (all parents in the graph) yields the right
+        # booleans. FILTER is purely about keeping the result set bounded; on
+        # 4store an ignored VALUES would still be correct, just transfer the whole
+        # parent set per slice. If 4store support is dropped, switch to VALUES.
+        prop = tree_view_property(submission)
+        graphs = [submission.id]
+        with_children = Set.new
+
+        remaining.each_slice(750) do |slice|
+          filter = slice.map { |m| "?id = <#{m.id}>" }.join(" || ")
+          query = <<-EOS
+SELECT DISTINCT ?id WHERE {
+GRAPH #{submission.id.to_ntriples} {
+  ?c <#{prop}> ?id .
+}
+FILTER (#{filter})
+}
+EOS
+          Goo.sparql_query_client.query(query, query_options: { rules: :NONE }, graphs: graphs)
+             .each { |sol| with_children << sol[:id].to_s }
+        end
+
         remaining.each do |m|
-          agg = m.aggregates&.find { |x| x.attribute == :children && x.aggregate == :count }
-          m.instance_variable_set("@intlHasChildren", agg.value > 0) if agg
+          m.instance_variable_set("@intlHasChildren", with_children.include?(m.id.to_s))
         end
       end
 
