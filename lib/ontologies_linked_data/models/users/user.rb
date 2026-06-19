@@ -45,7 +45,7 @@ module LinkedData
       serialize_never :passwordHash, :show_apikey, :resetToken, :resetTokenExpireTime
       serialize_filter lambda {|inst| filter_attributes(inst)}
 
-      system_controlled :created, :resetToken, :resetTokenExpireTime
+      system_controlled :created, :resetToken, :resetTokenExpireTime, :lastLoginAt
 
       link_to LinkedData::Hypermedia::Link.new("createdOntologies", lambda {|s| "users/#{s.id.split('/').last}/ontologies"}, nil)
 
@@ -139,7 +139,11 @@ module LinkedData
 
       def admin?
         return false unless persistent?
-        bring(role: [:role])
+        # bring nested role.role only when needed; bring? is checked at both levels
+        # so this is a no-op once cached for the request's remote_user
+        if bring?(:role) || (instance_variable_defined?(:@role) && Array(@role).any? { |r| r.bring?(:role) })
+          bring(role: [:role])
+        end
         return false if role.empty?
         role.map {|r| r.role}.include?(LinkedData::Models::Users::Role::ADMIN)
       end

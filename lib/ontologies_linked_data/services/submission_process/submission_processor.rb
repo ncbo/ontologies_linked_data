@@ -8,6 +8,8 @@ module LinkedData
       #   index_search      = false
       #   index_properties  = false
       #   index_commit      = false
+      #   generate_csv      = true
+      #   unindex_existing  = true
       #   run_metrics       = false
       #   reasoning         = false
       #   diff              = false
@@ -38,7 +40,11 @@ module LinkedData
 
             parsed = @submission.ready?(status: %i[rdf])
 
-            @submission.extract_metadata(logger, user_params: options[:params], heavy_extraction: extract_metadata?(options))
+            @submission = @submission.extract_metadata(logger, user_params: options[:params], heavy_extraction: extract_metadata?(options))
+
+            if @submission.nil?
+              raise StandardError, "Submission processing aborted: extract_metadata returned nil (submission failed validation; see per-submission parsing.log)"
+            end
 
             @submission.generate_missing_labels(logger) if generate_missing_labels?(options)
 
@@ -51,7 +57,7 @@ module LinkedData
 
             @submission.index_all(logger, commit: process_index_commit?(options)) if index_all_data?(options)
 
-            @submission.index_terms(logger, commit: process_index_commit?(options)) if index_search?(options)
+            @submission.index_terms(logger, commit: process_index_commit?(options), commit_within: index_commit_within(options), generate_csv: generate_csv?(options), unindex_existing: unindex_existing?(options)) if index_search?(options)
 
             @submission.index_properties(logger, commit: process_index_commit?(options)) if index_properties?(options)
 
@@ -70,9 +76,8 @@ module LinkedData
       end
 
       def notify_submission_processed(logger)
-        return if @submission.nil?
-
-        LinkedData::Utils::Notifications.submission_processed(@submission) unless @submission.archived?
+        return if @submission.nil? || @submission.archived?
+        LinkedData::Utils::Notifications.submission_processed(@submission)
       rescue StandardError => e
         logger.error("Email sending failed: #{e.message}\n#{e.backtrace.join("\n\t")}"); logger.flush
       end
@@ -106,7 +111,21 @@ module LinkedData
       end
 
       def process_index_commit?(options)
+        return false if options[:index_commit].eql?(false)
+
         index_search?(options) || index_properties?(options) || index_all_data?(options)
+      end
+
+      def index_commit_within(options)
+        options.key?(:index_commit_within) ? options[:index_commit_within] : 30_000
+      end
+
+      def generate_csv?(options)
+        !options[:generate_csv].eql?(false)
+      end
+
+      def unindex_existing?(options)
+        !options[:unindex_existing].eql?(false)
       end
 
       def process_diff?(options)

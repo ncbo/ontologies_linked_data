@@ -82,6 +82,27 @@ class TestUser < LinkedData::TestCase
     u.delete
   end
 
+  # Regression: admin? must succeed when User is loaded with :role only,
+  # without the nested {role: [:role]} pattern. This is the load shape the
+  # auth middleware (Security::Authorization#authorized?) uses on every
+  # authenticated request.
+  def test_admin_with_shallow_role_load
+    admin_role = LinkedData::Models::Users::Role.find("ADMINISTRATOR").include(:role).first
+    @u.role = [admin_role]
+    @u.save
+
+    admin_user = LinkedData::Models::User.where(username: "test_user").include(:role).first
+    assert admin_user.admin?, "admin? must succeed when only :role is loaded"
+    assert admin_user.admin?, "admin? must remain idempotent across calls"
+
+    # And the negative path on the same load shape, to make sure the fix
+    # didn't accidentally collapse to "always true".
+    @u.role = [LinkedData::Models::Users::Role.find("LIBRARIAN").include(:role).first]
+    @u.save
+    librarian_user = LinkedData::Models::User.where(username: "test_user").include(:role).first
+    refute librarian_user.admin?
+  end
+
   def test_user_default_datetime
     u = LinkedData::Models::User.new({
         username: "test_user_datetime",

@@ -25,10 +25,17 @@ module LinkedData
     @settings.goo_path_update               ||= '/update/'
     @settings.search_server_url             ||= 'http://localhost:8983/solr'
     @settings.property_search_server_url    ||= 'http://localhost:8983/solr'
+    @settings.term_search_num_shards        ||= 1
+    @settings.term_search_replication_factor ||= 1
+    @settings.term_search_bootstrap_collection ||= :term_search_bootstrap
+    @settings.property_search_num_shards    ||= 1
+    @settings.property_search_replication_factor ||= 1
+    @settings.property_search_bootstrap_collection ||= :property_search_bootstrap
     @settings.repository_folder             ||= './test/data/ontology_files/repo'
     @settings.rest_url_prefix               ||= DEFAULT_PREFIX
     @settings.enable_security               ||= false
     @settings.enable_slices                 ||= false
+    @settings.skip_connect_goo              ||= ENV['LINKEDDATA_SKIP_CONNECT_GOO'] == 'true'
 
     # Java/JVM options
     @settings.java_max_heap_size            ||= '10240M'
@@ -90,11 +97,9 @@ module LinkedData
     # number of times to retry a query when empty records are returned
     @settings.num_retries_4store            ||= 10
 
-    # number of threads to use when indexing a single ontology for search
-    @settings.indexing_num_threads          ||= 1
-
     # Override defaults
     yield @settings, overide_connect_goo if block_given?
+    configure_search_collections
 
     # Check to make sure url prefix has trailing slash
     @settings.rest_url_prefix = "#{@settings.rest_url_prefix}/" unless @settings.rest_url_prefix[-1].eql?('/')
@@ -105,7 +110,7 @@ module LinkedData
     puts "(LD) >> Using HTTP Redis instance at #{@settings.http_redis_host}:#{@settings.http_redis_port}"
     puts "(LD) >> Using Goo Redis instance at #{@settings.goo_redis_host}:#{@settings.goo_redis_port}"
 
-    connect_goo unless overide_connect_goo
+    connect_goo unless overide_connect_goo || @settings.skip_connect_goo
   end
 
   ##
@@ -135,6 +140,17 @@ module LinkedData
     rescue StandardError => e
       abort("EXITING: Cannot connect to triplestore and/or search server:\n  #{e}\n#{e.backtrace.join("\n")}")
     end
+  end
+
+  def configure_search_collections
+    Goo.set_search_collection_bootstrap(:term_search, @settings.term_search_bootstrap_collection)
+    Goo.set_search_collection_bootstrap(:property_search, @settings.property_search_bootstrap_collection)
+    Goo.set_search_collection_topology(:term_search,
+                                       num_shards: @settings.term_search_num_shards,
+                                       replication_factor: @settings.term_search_replication_factor)
+    Goo.set_search_collection_topology(:property_search,
+                                       num_shards: @settings.property_search_num_shards,
+                                       replication_factor: @settings.property_search_replication_factor)
   end
 
   ##

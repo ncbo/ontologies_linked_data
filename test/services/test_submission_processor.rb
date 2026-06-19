@@ -19,22 +19,23 @@ class TestSubmissionProcessor < LinkedData::TestCase
     LinkedData::TestCase.backend_4s_delete
   end
 
-  # Regression test for:
+  # Regression test for the misleading log line:
   #   "Email sending failed: undefined method `archived?' for nil:NilClass"
   #
-  # When SubmissionMetadataExtractor#extract_metadata hit the `unless @submission.valid?`
-  # branch it used a bare `return` (returns nil). OntologyProcessor#process_submission
-  # reassigned @submission to that nil, and the ensure-block call to
-  # notify_submission_processed then raised NoMethodError on nil.archived?, which its
-  # inner rescue logged as the misleading "Email sending failed" line above.
-  def test_processor_survives_extract_metadata_returning_nil
+  # When SubmissionMetadataExtractor#extract_metadata bails on an invalid submission it
+  # returns nil, and OntologyProcessor#process_submission reassigns @submission to that
+  # nil. Two invariants must hold:
+  #   1. processing aborts with a clear StandardError (not a NoMethodError on nil), and
+  #   2. notify_submission_processed (run from the ensure block) skips cleanly on a nil
+  #      submission instead of logging the misleading "Email sending failed" line above.
+  def test_processor_aborts_cleanly_when_extract_metadata_returns_nil
     log_io = StringIO.new
     logger = Logger.new(log_io)
 
     submission = @@ont.latest_submission(status: :any)
     submission.bring_remaining
 
-    # Simulate the pre-fix extractor behavior on an invalid submission.
+    # Simulate extract_metadata bailing on an invalid submission.
     submission.stubs(:extract_metadata).returns(nil)
 
     # Disable every other step so the test isolates the extract_metadata → notify path.
@@ -44,11 +45,14 @@ class TestSubmissionProcessor < LinkedData::TestCase
       run_metrics: false, diff: false, archive: false
     }
 
-    begin
+    error = assert_raises(StandardError) do
       submission.process_submission(logger, options)
-    rescue NoMethodError => e
-      flunk "processor raised NoMethodError because @submission was overwritten with nil: #{e.message}"
     end
+
+    refute_instance_of NoMethodError, error,
+                       'processor crashed on a nil @submission instead of aborting cleanly'
+    assert_match(/aborted/i, error.message,
+                 'processor should abort with a clear message when extract_metadata returns nil')
 
     refute_match(/Email sending failed/, log_io.string,
                  'notify_submission_processed logged a misleading "Email sending failed" on a nil submission')

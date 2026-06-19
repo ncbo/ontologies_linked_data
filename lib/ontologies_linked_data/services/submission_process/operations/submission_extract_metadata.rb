@@ -14,7 +14,7 @@ module LinkedData
 
         unless @submission.valid?
           logger.error("Cannot extract metadata from #{@submission.id} because the submission is invalid")
-          return @submission
+          return
         end
 
         ontology_iri = extract_ontology_iri
