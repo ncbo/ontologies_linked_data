@@ -42,6 +42,7 @@ module LinkedData
       def initialize(logger: nil, batch_size: nil)
         @logger = logger || Logger.new($stdout)
         @batch_size = (batch_size || ENV['RANK_SOLR_BATCH_SIZE'] || DEFAULT_BATCH_SIZE).to_i
+        @retry_count = 0
       end
 
       # Reads the rank map and writes each ontology's normalizedScore onto all of
@@ -59,6 +60,7 @@ module LinkedData
         total_onts = rank_map.size
         updated = 0
         skipped = 0
+        @retry_count = 0
 
         rank_map.each_with_index do |(acronym, rank_info), i|
           score = rank_info[:normalizedScore].to_f
@@ -76,7 +78,14 @@ module LinkedData
           updated += 1 if count.positive?
         end
 
-        log("done; updated #{updated}, skipped #{skipped} unchanged (of #{total_onts})")
+        summary = "done; updated #{updated}, skipped #{skipped} unchanged (of #{total_onts}); Solr retries: #{@retry_count}"
+        if @retry_count.zero?
+          log(summary)
+        else
+          @logger.warn("RankSolrPropagator: BACKPRESSURE — #{summary}. " \
+                       'Solr stalled and was retried; consider a smaller RANK_SOLR_BATCH_SIZE.')
+          @logger.flush if @logger.respond_to?(:flush)
+        end
         updated
       end
 
@@ -143,11 +152,20 @@ module LinkedData
         rescue RSolr::Error::Http, Net::ReadTimeout, Net::OpenTimeout,
                Errno::ECONNRESET, Errno::EPIPE => e
           attempts += 1
-          raise if attempts > MAX_RETRIES
+          @retry_count += 1
+          first_line = e.message.to_s.lines.first&.strip
+
+          if attempts > MAX_RETRIES
+            @logger.error("RankSolrPropagator: BACKPRESSURE — #{what} still failing after " \
+                          "#{MAX_RETRIES} retries; aborting — #{first_line}")
+            @logger.flush if @logger.respond_to?(:flush)
+            raise
+          end
 
           wait = RETRY_BASE_SLEEP * (2**(attempts - 1))
-          first_line = e.message.to_s.lines.first&.strip
-          log("#{what} failed (attempt #{attempts}/#{MAX_RETRIES}); retrying in #{wait}s — #{first_line}")
+          @logger.warn("RankSolrPropagator: BACKPRESSURE — #{what} failed (attempt " \
+                       "#{attempts}/#{MAX_RETRIES}); retrying in #{wait}s — #{first_line}")
+          @logger.flush if @logger.respond_to?(:flush)
           sleep(wait)
           retry
         end

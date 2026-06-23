@@ -1,5 +1,6 @@
 require_relative '../models/test_ontology_common'
 require 'mocha/minitest'
+require 'stringio'
 
 class TestRankSolrPropagator < LinkedData::TestOntologyCommon
   ACRONYM = 'BRO'
@@ -104,5 +105,38 @@ class TestRankSolrPropagator < LinkedData::TestOntologyCommon
     # force: true ignores the skip cache and re-propagates.
     forced = LinkedData::Services::RankSolrPropagator.new.propagate(nil, force: true)
     assert_equal 1, forced, 'force should re-propagate even when rank is unchanged'
+  end
+
+  # Manifests the Solr-stall condition: the first atomic-update POST raises a
+  # retryable error, and we assert the run recovers AND emits a visible signal
+  # (a BACKPRESSURE warning plus a non-zero retry count in the summary).
+  def test_backpressure_is_retried_and_logged
+    stub_rank(0.642)
+
+    log_io = StringIO.new
+    propagator = LinkedData::Services::RankSolrPropagator.new(logger: Logger.new(log_io))
+    propagator.stubs(:sleep) # skip the backoff wait in the test
+
+    client = LinkedData::Models::Class.search_client
+    client.stubs(:index_document)
+          .raises(Errno::ECONNRESET.new('simulated Solr stall'))
+          .then.returns(true)
+
+    updated = propagator.propagate
+    assert_equal 1, updated, 'run should recover from the transient error'
+
+    log = log_io.string
+    assert_match(/BACKPRESSURE/, log, 'a retry must emit a filterable BACKPRESSURE warning')
+    assert_match(/Solr retries: 1/, log, 'summary must report the retry count')
+  end
+
+  # A clean run reports zero retries, so "Solr retries: 0" is the all-clear.
+  def test_clean_run_reports_zero_retries
+    stub_rank(0.642)
+
+    log_io = StringIO.new
+    LinkedData::Services::RankSolrPropagator.new(logger: Logger.new(log_io)).propagate
+
+    assert_match(/Solr retries: 0/, log_io.string, 'clean run must report zero retries')
   end
 end
