@@ -13,7 +13,6 @@ class TestRankSolrPropagator < LinkedData::TestOntologyCommon
 
   def setup
     self.class.after_suite
-    clear_propagation_cache
     # Index a small ontology's terms into the real local term_search collection.
     submission_parse(ACRONYM, 'BRO Ontology',
                      './test/data/ontology_files/BRO_v3.5.owl', 1,
@@ -24,13 +23,6 @@ class TestRankSolrPropagator < LinkedData::TestOntologyCommon
 
   def teardown
     self.class.after_suite
-    clear_propagation_cache
-  end
-
-  def clear_propagation_cache
-    Redis.new(host: LinkedData.settings.ontology_analytics_redis_host,
-              port: LinkedData.settings.ontology_analytics_redis_port)
-         .del(LinkedData::Services::RankSolrPropagator::LAST_PROPAGATED_REDIS_FIELD)
   end
 
   def stub_rank(score)
@@ -87,24 +79,17 @@ class TestRankSolrPropagator < LinkedData::TestOntologyCommon
     assert_equal 0, LinkedData::Services::RankSolrPropagator.new.propagate
   end
 
-  def test_propagate_skips_unchanged_ontology_on_second_run
+  # Once Solr already holds the target rank, a fresh propagator (no cache, no
+  # shared state) must skip the ontology purely from Solr's state — this is the
+  # same mechanism that lets the first run skip already-current ontologies.
+  def test_skips_ontology_already_current_in_solr
     stub_rank(0.642)
 
     first = LinkedData::Services::RankSolrPropagator.new.propagate
-    assert_equal 1, first, 'first run should propagate the ontology'
+    assert_equal 1, first, 'first run should propagate the stale ontology'
 
-    # Rank unchanged -> the second run should skip it entirely.
     second = LinkedData::Services::RankSolrPropagator.new.propagate
-    assert_equal 0, second, 'unchanged ontology should be skipped on the second run'
-  end
-
-  def test_force_repropagates_even_when_unchanged
-    stub_rank(0.642)
-
-    LinkedData::Services::RankSolrPropagator.new.propagate
-    # force: true ignores the skip cache and re-propagates.
-    forced = LinkedData::Services::RankSolrPropagator.new.propagate(nil, force: true)
-    assert_equal 1, forced, 'force should re-propagate even when rank is unchanged'
+    assert_equal 0, second, 'ontology already at the target rank in Solr must be skipped'
   end
 
   # Manifests the Solr-stall condition: the first atomic-update POST raises a
