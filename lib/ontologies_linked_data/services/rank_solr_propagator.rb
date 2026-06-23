@@ -149,8 +149,10 @@ module LinkedData
         attempts = 0
         begin
           yield
-        rescue RSolr::Error::Http, Net::ReadTimeout, Net::OpenTimeout,
-               Errno::ECONNRESET, Errno::EPIPE => e
+        rescue RSolr::Error::Http, RSolr::Error::ConnectionRefused,
+               Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::EPIPE, Errno::ETIMEDOUT,
+               Net::ReadTimeout, Net::OpenTimeout, Net::WriteTimeout,
+               SocketError => e
           attempts += 1
           @retry_count += 1
           first_line = e.message.to_s.lines.first&.strip

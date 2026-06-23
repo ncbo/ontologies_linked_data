@@ -117,10 +117,11 @@ class TestRankSolrPropagator < LinkedData::TestOntologyCommon
     propagator = LinkedData::Services::RankSolrPropagator.new(logger: Logger.new(log_io))
     propagator.stubs(:sleep) # skip the backoff wait in the test
 
+    # RSolr::Error::ConnectionRefused is the error that previously slipped past
+    # the retry list and aborted a live run; assert it is now retried.
     client = LinkedData::Models::Class.search_client
-    client.stubs(:index_document)
-          .raises(Errno::ECONNRESET.new('simulated Solr stall'))
-          .then.returns(true)
+    conn_refused = RSolr::Error::ConnectionRefused.new(uri: URI('http://solr.test/term_search/select'))
+    client.stubs(:index_document).raises(conn_refused).then.returns(true)
 
     updated = propagator.propagate
     assert_equal 1, updated, 'run should recover from the transient error'
