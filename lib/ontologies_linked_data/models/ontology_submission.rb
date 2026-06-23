@@ -306,14 +306,14 @@ module LinkedData
           FileUtils.mv(dst_tmp, dst_final)
         rescue StandardError => e
           FileUtils.rm_f(dst_tmp)
-          raise e.class, "Failed to copy #{src} to #{dst}: #{e.message}", e.backtrace
+          raise e.class, "Failed to copy #{src} to #{dst_final}: #{e.message}", e.backtrace
         end
 
         # Sanity check: ensure the file actually exists after copy and chmod
         # This guards against rare cases like silent file storage failures or
         # race conditions
         unless File.exist?(dst_final)
-          raise IOError, "Copy operation completed without error, but file '#{dst}' does not exist"
+          raise IOError, "Copy operation completed without error, but file '#{dst_final}' does not exist"
         end
 
         dst_final
