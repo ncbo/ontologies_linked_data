@@ -769,6 +769,12 @@ module LinkedData
 
         LinkedData::Models::Class.partially_load_children(classes, 99, self) if load_children.length > 0
 
+        # Resolve hasChildren for all roots in one grouped query rather than one
+        # has_children_query per root (up to FLAT_ROOTS_LIMIT for flat ontologies).
+        if extra_include&.include?(:hasChildren)
+          LinkedData::Models::Class.load_has_children_batch(classes, self)
+        end
+
         classes.delete_if { |c|
           obs = !c.obsolete.nil? && c.obsolete == true
           if !obs

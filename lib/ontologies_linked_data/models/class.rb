@@ -466,7 +466,12 @@ module LinkedData
           if cls.aggregates.nil?
             next
           end
-          if cls.aggregates.first.value > threshold
+          count = cls.aggregates.first.value
+          # hasChildren is exactly (child count > 0). Reuse the count we just
+          # aggregated to pre-warm @intlHasChildren so the per-node
+          # load_has_children query is never needed for these nodes downstream.
+          cls.instance_variable_set("@intlHasChildren", count > 0) if cls.instance_variable_get("@intlHasChildren").nil?
+          if count > threshold
             #too many load a page
             page_children = LinkedData::Models::Class
                               .where(parents: cls)
@@ -481,6 +486,72 @@ module LinkedData
         end
 
         self.in(submission).models(single_load).include({children: ld}).all if single_load.length > 0
+      end
+
+      # Resolves hasChildren for a set of classes, pre-warming each instance's
+      # @intlHasChildren so subsequent per-node #load_has_children calls become
+      # no-ops. hasChildren is true iff the class has at least one child --
+      # #children and #hasChildren both use tree_view_property -- so we derive
+      # it from a child-count aggregate or loaded children when those are
+      # already on hand, and otherwise issue a single batched existence query
+      # instead of one has_children_query SPARQL round-trip per node.
+      def self.load_has_children_batch(models, submission)
+        models = models.to_a.compact.reject do |m|
+          !m.instance_variable_get("@intlHasChildren").nil? || m.id.to_s["#Thing"]
+        end
+        return if models.empty?
+
+        remaining = []
+        models.each do |m|
+          if m.aggregates
+            agg = m.aggregates.find { |x| x.attribute == :children && x.aggregate == :count }
+            m.instance_variable_set("@intlHasChildren", agg.value > 0) if agg
+          elsif m.loaded_attributes.include?(:children)
+            m.instance_variable_set("@intlHasChildren", !m.children.empty?)
+          else
+            remaining << m
+          end
+        end
+
+        return if remaining.empty?
+
+        # Existence, not count: a DISTINCT query lets the store stop at the first
+        # child per node instead of COUNTing every child edge.
+        #
+        # The optimal way to constrain ?id to our node set is a VALUES block --
+        # modern stores (AllegroGraph, Virtuoso, GraphDB) push it into an index
+        # seek per id. But 4store silently ignores VALUES (verified against the
+        # test backend: it returns every parent in the graph regardless), so for
+        # 4store compatibility we use a FILTER (?id = <a> || ...) disjunction and
+        # slice the ids, matching hierarchy_query.
+        #
+        # Note: correctness does NOT depend on the constraint working -- we build
+        # a positive set of "ids that have children" and test membership, so even
+        # an unconstrained result (all parents in the graph) yields the right
+        # booleans. FILTER is purely about keeping the result set bounded; on
+        # 4store an ignored VALUES would still be correct, just transfer the whole
+        # parent set per slice. If 4store support is dropped, switch to VALUES.
+        prop = tree_view_property(submission)
+        graphs = [submission.id]
+        with_children = Set.new
+
+        remaining.each_slice(750) do |slice|
+          filter = slice.map { |m| "?id = <#{m.id}>" }.join(" || ")
+          query = <<-EOS
+SELECT DISTINCT ?id WHERE {
+GRAPH #{submission.id.to_ntriples} {
+  ?c <#{prop}> ?id .
+}
+FILTER (#{filter})
+}
+EOS
+          Goo.sparql_query_client.query(query, query_options: { rules: :NONE }, graphs: graphs)
+             .each { |sol| with_children << sol[:id].to_s }
+        end
+
+        remaining.each do |m|
+          m.instance_variable_set("@intlHasChildren", with_children.include?(m.id.to_s))
+        end
       end
 
       def load_computed_attributes(to_load:, options:)
