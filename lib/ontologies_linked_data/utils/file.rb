@@ -163,7 +163,6 @@ module LinkedData
                    File.basename(uri.path.to_s) ||
                    LinkedData::Utils::Triples.last_iri_fragment(uri.request_uri)
         filename = sanitize_filename(filename)
-        tmpfile.rewind
 
         [tmpfile, filename]
       end
