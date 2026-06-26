@@ -31,7 +31,7 @@ group :test do
   gem 'rack-test', '~> 0.6'
   gem 'simplecov'
   gem 'simplecov-cobertura' # for codecov.io
-  gem "thin", "~> 1.8.2"
+  gem 'webrick'
   gem 'webmock'
 end
 
