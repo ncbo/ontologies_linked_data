@@ -26,6 +26,8 @@ module LinkedData
     @settings.search_server_url             ||= 'http://localhost:8983/solr/term_search_core1'
     @settings.property_search_server_url    ||= 'http://localhost:8983/solr/prop_search_core1'
     @settings.repository_folder             ||= './test/data/ontology_files/repo'
+    # Maximum size (bytes) for a remote ontology file download; Down raises Down::TooLarge above this. Default 2 GB.
+    @settings.download_max_file_size        ||= 2 * 1024 * 1024 * 1024
     @settings.rest_url_prefix               ||= DEFAULT_PREFIX
     @settings.enable_security               ||= false
     @settings.enable_slices                 ||= false

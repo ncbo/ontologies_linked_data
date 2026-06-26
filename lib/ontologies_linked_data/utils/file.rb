@@ -144,11 +144,13 @@ module LinkedData
         File.exist?(path) && !File.directory?(path)
       end
 
-      def self.download_file(uri, max_redirects: 10, open_timeout: 15, read_timeout: 1800, headers: {}, max_size: 512 * 1024 * 1024)
+      def self.download_file(uri, max_redirects: 10, open_timeout: 15, read_timeout: 1800, headers: {}, max_size: nil)
         uri = URI(uri) unless uri.is_a?(URI)
         unless %w[http https].include?(uri.scheme)
           raise ArgumentError, "Unsupported URI scheme #{uri.scheme.inspect} (only http/https are supported)"
         end
+
+        max_size ||= LinkedData.settings.download_max_file_size
 
         tmpfile = Down::NetHttp.download(
           uri.to_s,
