@@ -3,6 +3,7 @@ require 'rack'
 
 module LinkedData
   class TestOntologyCommon < LinkedData::TestCase
+
     def create_count_mapping
       count = LinkedData::Models::MappingCount.where.all.length
       unless count > 2
@@ -11,6 +12,7 @@ module LinkedData
       end
       count
     end
+
     def submission_dependent_objects(format, acronym, user_name, name_ont)
       #ontology format
       owl = LinkedData::Models::OntologyFormat.where(:acronym => format).first
@@ -52,6 +54,10 @@ module LinkedData
     #   delete            = true  # delete any existing submissions
     ##############################################
     def submission_parse(acronym, name, ontologyFile, id, parse_options={}, set_attributes={})
+      if Goo.backend_vo?
+        old_slices = Goo.slice_loading_size
+        Goo.slice_loading_size = 20
+      end
       return if ENV["SKIP_PARSING"]
       parse_options[:process_rdf].nil? && parse_options[:process_rdf] = true
       parse_options[:index_search].nil? && parse_options[:index_search] = false
@@ -116,6 +122,10 @@ module LinkedData
       rescue Exception => e
         puts "Error, logged in #{tmp_log.instance_variable_get("@logdev").dev.path}"
         raise e
+      ensure
+        if Goo.backend_vo?
+          Goo.slice_loading_size = old_slices
+        end
       end
     end
 
@@ -247,6 +257,7 @@ eos
         true
       end
     end
+
   end
 end
 

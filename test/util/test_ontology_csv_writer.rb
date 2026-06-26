@@ -57,8 +57,9 @@ class TestOntologyCSVWriter < LinkedData::TestOntologyCommon
   end
 
   def get_csv_string_from_path(csv_path)
-    gz = Zlib::GzipReader.open(csv_path)
-    gz.read
+    Zlib::GzipReader.open(csv_path) do |gz|
+      gz.read.force_encoding(Encoding::UTF_8)
+    end
   end
 
   def test_csv_writer_valid
@@ -335,6 +336,77 @@ class TestOntologyCSVWriter < LinkedData::TestOntologyCommon
         assert_equal false, enclosed_in_square_brackets_with_quotes?(val), "Expected a String, but received an Array: #{val}"
       end
     end
+  end
+
+  def test_preferred_label_for_csv_uses_english_label
+    writer = LinkedData::Utils::OntologyCSVWriter.new
+    ont_class = csv_class_with_pref_label(de: 'Deutsches Label', en: 'English label', none: 'Untagged label')
+
+    assert_equal 'English label', writer.preferred_label_for_csv(ont_class)
+  end
+
+  def test_preferred_label_for_csv_uses_english_regional_label
+    writer = LinkedData::Utils::OntologyCSVWriter.new
+    ont_class = csv_class_with_pref_label(:'en-US' => 'English regional label', none: 'Untagged label')
+
+    assert_equal 'English regional label', writer.preferred_label_for_csv(ont_class)
+  end
+
+  def test_preferred_label_for_csv_skips_blank_english_label
+    writer = LinkedData::Utils::OntologyCSVWriter.new
+    ont_class = csv_class_with_pref_label(en: '', 'en' => 'English label', none: 'Untagged label')
+
+    assert_equal 'English label', writer.preferred_label_for_csv(ont_class)
+  end
+
+  def test_preferred_label_for_csv_falls_back_to_untagged_label
+    writer = LinkedData::Utils::OntologyCSVWriter.new
+    ont_class = csv_class_with_pref_label(de: 'Deutsches Label', none: 'Untagged label')
+
+    assert_equal 'Untagged label', writer.preferred_label_for_csv(ont_class)
+  end
+
+  def test_preferred_label_for_csv_preserves_nonblank_label_without_english_or_untagged
+    writer = LinkedData::Utils::OntologyCSVWriter.new
+    ont_class = csv_class_with_pref_label(de: 'Deutsches Label')
+
+    assert_equal 'Deutsches Label', writer.preferred_label_for_csv(ont_class)
+  end
+
+  def test_preferred_label_for_csv_flattens_nested_label_arrays
+    writer = LinkedData::Utils::OntologyCSVWriter.new
+    ont_class = csv_class_with_pref_label(en: [['English label']])
+
+    assert_equal 'English label', writer.preferred_label_for_csv(ont_class)
+  end
+
+  def test_preferred_label_for_csv_supports_legacy_pref_label_method
+    writer = LinkedData::Utils::OntologyCSVWriter.new
+    ont_class = csv_class_with_legacy_pref_label('Legacy label')
+
+    assert_equal 'Legacy label', writer.preferred_label_for_csv(ont_class)
+  end
+
+  def csv_class_with_pref_label(pref_label)
+    Struct.new(:pref_label) do
+      def method_missing(method_name, *)
+        return pref_label if method_name == :prefLabel
+
+        super
+      end
+
+      def respond_to_missing?(method_name, include_private = false)
+        method_name == :prefLabel || super
+      end
+    end.new(pref_label)
+  end
+
+  def csv_class_with_legacy_pref_label(pref_label)
+    Struct.new(:pref_label) do
+      def prefLabel
+        pref_label
+      end
+    end.new(pref_label)
   end
 
 end

@@ -18,29 +18,52 @@ end
 
 require_relative 'test_log_file'
 require_relative '../lib/ontologies_linked_data'
+require_relative '../config/config.test'
+require 'minitest/autorun'
+require 'tmpdir'
+require 'webmock/minitest'
+WebMock.allow_net_connect!
 
-if ENV['OVERRIDE_CONFIG'] == 'true'
-  SOLR_HOST = ENV.include?('SOLR_HOST') ? ENV['SOLR_HOST'] : 'localhost'
+# Minitest 5+ no longer supports `MiniTest::Unit.runner=`. We emulate the old
+# custom runner behavior using Minitest hooks and a small patch around suite runs.
+module LinkedData
+  module MinitestSuiteHooks
+    def run_suite(reporter, options = {})
+      return if filter_runnable_methods(options).empty?
 
-  LinkedData.config do |config|
-    config.goo_backend_name           = ENV['GOO_BACKEND_NAME']
-    config.goo_port                   = ENV['GOO_PORT'].to_i
-    config.goo_host                   = ENV['GOO_HOST']
-    config.goo_path_query             = ENV['GOO_PATH_QUERY']
-    config.goo_path_data              = ENV['GOO_PATH_DATA']
-    config.goo_path_update            = ENV['GOO_PATH_UPDATE']
-    config.goo_redis_host             = ENV['REDIS_HOST']
-    config.goo_redis_port             = ENV['REDIS_PORT']
-    config.http_redis_host            = ENV['REDIS_HOST']
-    config.http_redis_port            = ENV['REDIS_PORT']
-    config.search_server_url          = "http://#{SOLR_HOST}:8983/solr/term_search_core1"
-    config.property_search_server_url = "http://#{SOLR_HOST}:8983/solr/prop_search_core1"
+      before_suite if respond_to?(:before_suite)
+      super
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace.join("\n\t")
+      puts 'Traced from:'
+      raise
+    ensure
+      after_suite if respond_to?(:after_suite)
+    end
   end
 end
 
-require_relative '../config/config'
-require 'minitest/unit'
-MiniTest::Unit.autorun
+# Apply per-suite before/after hooks around every runnable (test class).
+Minitest::Runnable.singleton_class.prepend(LinkedData::MinitestSuiteHooks)
+
+# Emulate the old Unit runner's before/after suites behavior.
+# (Not all Minitest versions expose `before_run` / `after_run`.)
+module LinkedData
+  module MinitestRunHooks
+    def run(*args)
+      LinkedData::TestCase.setup_test_repository_folder
+      LinkedData::TestCase.backend_4s_delete
+      Goo.init_search_connections(true)
+      super
+    ensure
+      LinkedData::TestCase.backend_4s_delete
+      LinkedData::TestCase.teardown_test_repository_folder
+    end
+  end
+end
+
+Minitest.singleton_class.prepend(LinkedData::MinitestRunHooks)
 
 # Check to make sure you want to run if not pointed at localhost
 safe_hosts = Regexp.new(/localhost|-ut|ncbo-dev*|ncbo-unittest*/)
@@ -69,43 +92,34 @@ unless LinkedData.settings.goo_host.match(safe_hosts) &&
 end
 
 module LinkedData
-  class Unit < MiniTest::Unit
-    def before_suites
-      # code to run before the first test (gets inherited in sub-tests)
-    end
 
-    def after_suites
-      # code to run after the last test (gets inherited in sub-tests)
-    end
-
-    def _run_suites(suites, type)
-      TestCase.backend_4s_delete
-      before_suites
-      super(suites, type)
-    ensure
-      TestCase.backend_4s_delete
-      after_suites
-    end
-
-    def _run_suite(suite, type)
-      suite.before_suite if suite.respond_to?(:before_suite)
-      super(suite, type)
-    rescue Exception => e
-      puts e.message
-      puts e.backtrace.join("\n\t")
-      puts 'Traced from:'
-      raise e
-    ensure
-      suite.after_suite if suite.respond_to?(:after_suite)
-    end
-  end
-
-  MiniTest::Unit.runner = LinkedData::Unit.new
-
-  class TestCase < MiniTest::Unit::TestCase
+  class TestCase < Minitest::Test
 
     # Ensure all threads exit on any exception
     Thread.abort_on_exception = true
+
+    def self.setup_test_repository_folder
+      return if defined?(@tmp_repository_folder) && @tmp_repository_folder
+
+      @old_repository_folder = LinkedData.settings.repository_folder
+      @tmp_repository_folder = Dir.mktmpdir("ontology-repo-")
+      puts "(LD) >> Using temp repository folder #{@tmp_repository_folder}"
+      LinkedData.settings.repository_folder = @tmp_repository_folder
+    end
+
+    def self.teardown_test_repository_folder
+      return unless defined?(@tmp_repository_folder) && @tmp_repository_folder
+
+      LinkedData.settings.repository_folder = @old_repository_folder if defined?(@old_repository_folder)
+
+      if ENV["KEEP_TEST_REPOSITORY_FOLDER"] == "true"
+        puts "(LD) >> Preserving temp repository folder #{@tmp_repository_folder}"
+      elsif File.exist?(@tmp_repository_folder)
+        FileUtils.remove_entry(@tmp_repository_folder)
+      end
+
+      @tmp_repository_folder = nil
+    end
 
     def submission_dependent_objects(format, acronym, user_name)
       # ontology format
@@ -238,7 +252,11 @@ module LinkedData
       raise StandardError, 'Too many triples in KB, does not seem right to run tests' unless
             count_pattern('?s ?p ?o') < 400000
 
-      Goo.sparql_update_client.update('DELETE {?s ?p ?o } WHERE { ?s ?p ?o }')
+      graphs = Goo.sparql_query_client.query("SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o . } }")
+      graphs.each_solution do |sol|
+        Goo.sparql_data_client.delete_graph(sol[:g])
+      end
+
       LinkedData::Models::SubmissionStatus.init_enum
       LinkedData::Models::OntologyType.init_enum
       LinkedData::Models::OntologyFormat.init_enum
@@ -246,4 +264,5 @@ module LinkedData
       LinkedData::Models::Users::NotificationType.init_enum
     end
   end
+
 end

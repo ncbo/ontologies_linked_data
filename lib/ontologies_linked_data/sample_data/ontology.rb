@@ -25,7 +25,7 @@ module LinkedData
         acronym = options[:acronym] || "TEST-ONT"
         pref_label_property = options[:pref_label_property] || false
         synonym_property = options[:synonym_property] || false
-        definition_property = options[:synonym_property] || false
+        definition_property = options[:definition_property] || false
         name = options[:name]
         # set ontology type
         ontology_type = nil
@@ -72,7 +72,10 @@ module LinkedData
               submissionId: o.next_submission_id,
               definitionProperty: (RDF::IRI.new "http://bioontology.org/ontologies/biositemap.owl#definition"),
               contact: [contact],
-              released: DateTime.now - 3
+              released: DateTime.now - 3,
+              uri: RDF::URI.new("https://test-#{o.next_submission_id}.com"),
+              description: "Description #{o.next_submission_id}",
+              status: 'production'
             }
             sub_options[:prefLabelProperty] = RDF::IRI.new(pref_label_property) if pref_label_property
             sub_options[:synonymProperty] = RDF::IRI.new(synonym_property) if synonym_property
@@ -135,7 +138,7 @@ module LinkedData
         file_path = options[:file_path]
         file_path = "../../../../test/data/ontology_files/umls_semantictypes.ttl" if file_path.nil?
 
-        count, acronyms, sty = create_ontologies_and_submissions({
+        _, _, sty = create_ontologies_and_submissions({
                                                                    ont_count: 1,
                                                                    submission_count: 1,
                                                                    process_submission: true,
@@ -179,7 +182,7 @@ module LinkedData
 
       def self.sample_owl_ontologies(process_submission: false, process_options: nil)
         process_options ||= {process_rdf: true, extract_metadata: false, index_search: false}
-        count, acronyms, bro = create_ontologies_and_submissions({
+        _, _, bro = create_ontologies_and_submissions({
                                                                    process_submission: process_submission,
                                                                    process_options: process_options,
                                                                    acronym: "BROTEST",
@@ -190,7 +193,7 @@ module LinkedData
                                                                  })
 
         # This one has some nasty looking IRIS with slashes in the anchor
-        count, acronyms, mccl = create_ontologies_and_submissions({
+        _, _, mccl = create_ontologies_and_submissions({
                                                                     process_submission: process_submission,
                                                                     process_options: process_options,
                                                                     acronym: "MCCLTEST",
@@ -201,7 +204,7 @@ module LinkedData
                                                                   })
 
         # This one has resources wih accents.
-        count, acronyms, onto_matest = create_ontologies_and_submissions({
+        _, _, onto_matest = create_ontologies_and_submissions({
                                                                            process_submission: process_submission,
                                                                            process_options: process_options,
                                                                            acronym: "ONTOMATEST",

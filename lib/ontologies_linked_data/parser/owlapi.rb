@@ -13,7 +13,7 @@ module LinkedData
 
     class OWLAPICommand
       def initialize(input_file, output_repo, opts = {})
-        @owlapi_wrapper_jar_path = LinkedData.bindir + "/owlapi-wrapper-1.5.0.jar"
+        @owlapi_wrapper_jar_path = LinkedData.bindir + "/owlapi-wrapper-1.5.1.jar"
         @input_file = input_file
         @output_repo = output_repo
         @master_file = opts[:master_file]
@@ -124,7 +124,7 @@ module LinkedData
           end
           if not File.exist?(File.join([@output_repo, "owlapi.xrdf"]))
             raise Parser::OWLAPIParserException, "OWLAPI java command exited with"+
-            "  #{w.value.exitstatus}. " +\
+            "  #{w.value.exitstatus}. " + \
             "Output file #{File.join([@output_repo, "owlapi.xrdf"])} cannot be found."
           else
             @file_triples_path = File.join([@output_repo, "owlapi.xrdf"])

@@ -43,7 +43,7 @@ class TestOntologySubmission < LinkedData::TestOntologyCommon
     roots.each do |root|
       q_broader = <<-eos
 SELECT ?children WHERE {
-  ?children #{RDF::SKOS[:broader].to_ntriples} #{root.id.to_ntriples} }
+  ?children #{RDF::Vocab::SKOS[:broader].to_ntriples} #{root.id.to_ntriples} }
       eos
       children_query = []
       Goo.sparql_query_client.query(q_broader).each_solution do |sol|
@@ -92,7 +92,7 @@ SELECT ?children WHERE {
     roots.each do |r|
       selected_schemes = r.inScheme.select { |s| concept_schemes.include?(s) }
       refute_empty selected_schemes
-      assert_equal r.isInActiveScheme, selected_schemes
+      assert_equal r.isInActiveScheme.sort, selected_schemes.sort
       assert_equal r.isInActiveCollection, []
     end
     roots = roots.map { |r| r.id.to_s } unless roots.nil?
@@ -130,6 +130,57 @@ SELECT ?children WHERE {
       selected_collections = r.memberOf.select { |c| concept_collection.include?(c)}
       assert_equal r.isInActiveCollection, selected_collections unless selected_collections.empty?
     end
+  end
+
+  # Builds a tree from a SKOS concept and asserts the structural invariants the
+  # tree endpoint relies on. Guards the SKOS branch of Class#tree (computed
+  # attributes, isInActiveScheme) and the hasChildren <-> childrenCount
+  # contract that the batched hasChildren optimization must preserve.
+  def test_skos_class_tree
+    sub = before_suite
+    roots = sub.roots
+    refute_empty roots, 'expected SKOS roots'
+
+    # Find a root that has children and descend one level so the path to root
+    # is non-trivial (root -> target).
+    target = nil
+    roots.each do |r|
+      LinkedData::Models::Class.in(sub).models([r]).include(children: [:prefLabel]).all
+      next if r.children.empty?
+
+      target = LinkedData::Models::Class.find(r.children.first.id).in(sub).first
+      break
+    end
+    refute_nil target, 'expected a SKOS root with at least one child'
+
+    tree_root = target.tree
+
+    # The tree must terminate at one of the submission roots.
+    assert_includes roots.map { |x| x.id.to_s }, tree_root.id.to_s
+
+    # Walk the whole tree and check the invariants on every node.
+    seen_target = false
+    stack = [tree_root]
+    until stack.empty?
+      node = stack.pop
+      seen_target ||= node.id.to_s == target.id.to_s
+
+      # hasChildren must be loaded (no raise) and a boolean.
+      hc = node.hasChildren
+      assert_includes [true, false], hc, "hasChildren not a boolean for #{node.id}"
+
+      # When the child-count aggregate is present it must agree with hasChildren.
+      # This is the semantic contract the batched optimization preserves.
+      cc = node.aggregates ? node.childrenCount : nil
+      assert_equal((cc > 0), hc, "hasChildren/childrenCount mismatch for #{node.id}") unless cc.nil?
+
+      # SKOS computed scheme attribute must be loaded on tree nodes.
+      assert_kind_of Array, node.isInActiveScheme
+
+      stack.concat(node.children)
+    end
+
+    assert seen_target, 'target class not found within its own tree'
   end
 end
 

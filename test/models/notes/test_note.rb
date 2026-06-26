@@ -145,7 +145,7 @@ class TestNote < LinkedData::TestCase
 
       proposal_id = proposal.id
       note.delete
-      retrieved_proposal = LinkedData::Models::Notes::Proposal.find(proposal_id)
+      retrieved_proposal = LinkedData::Models::Notes::Proposal.find(proposal_id).first
       assert_nil retrieved_proposal
     ensure
       proposal.delete if !proposal.nil? && proposal.persistent?

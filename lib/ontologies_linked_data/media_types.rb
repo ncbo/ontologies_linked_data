@@ -3,8 +3,11 @@ module LinkedData
     HTML = :html
     JSON = :json
     JSONP = :jsonp
+    JSONLD = :jsonld
     XML = :xml
+    RDF_XML = :rdf_xml
     TURTLE = :turtle
+    NTRIPLES = :ntriples
     DEFAULT = JSON
 
     def self.all

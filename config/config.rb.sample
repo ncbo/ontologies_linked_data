@@ -1,10 +1,14 @@
 LinkedData.config do |config|
   config.goo_port          = 9000
   config.goo_host          = "localhost"
-  config.search_server_url = "http://localhost:8983/solr/term_search_core1"
-  config.property_search_server_url = "http://localhost:8983/solr/prop_search_core1"
+  config.search_server_url = "http://localhost:8983/solr"
+  config.property_search_server_url = "http://localhost:8983/solr"
+  config.term_search_num_shards = 1
+  config.term_search_replication_factor = 1
+  config.property_search_num_shards = 1
+  config.property_search_replication_factor = 1
   config.repository_folder = "./test/data/ontology_files/repo"
-  config.rest_url_prefix   = "http://data.bioontology.org/"
+  config.rest_url_prefix   = "http://localhost:9393/"
   config.enable_security   = false
   config.java_max_heap_size         = '10240M'
   #PURL server config parameters
@@ -15,6 +19,25 @@ LinkedData.config do |config|
   config.purl_password          = ""
   config.purl_maintainers       = ""
   config.purl_target_url_prefix = "http://bioportal.bioontology.org"
+
+  config.oauth_providers = {
+    github: {
+      check: :access_token,
+      link: 'https://api.github.com/user'
+    },
+    keycloak: {
+      check: :jwt_token,
+      cert: 'KEYCLOAK_SECRET_KEY'
+    },
+    orcid: {
+      check: :access_token,
+      link: 'https://pub.orcid.org/v3.0/me'
+    },
+    google: {
+      check: :access_token,
+      link: 'https://www.googleapis.com/oauth2/v3/userinfo'
+    }
+  }
 end
 
 #sometimes tmp by default cannot allocate large files

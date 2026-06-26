@@ -18,11 +18,12 @@ module LinkedData
       attribute :children, namespace: :rdfs, inverse: { on: :annotation_property, :attribute => :parents }
       attribute :ancestors, namespace: :rdfs, property: :subPropertyOf, handler: :retrieve_ancestors
       attribute :descendants, namespace: :rdfs, property: :subPropertyOf, handler: :retrieve_descendants
-      # attribute :domain
-      # attribute :range
+      attribute :domain, namespace: :rdfs
+      attribute :range, namespace: :rdfs
 
-      serialize_default :label, :labelGenerated, :definition, :matchType, :ontologyType, :propertyType, :parents, :children, :hasChildren # some of these attributes are used in Search (not shown out of context)
+      serialize_default :label, :labelGenerated, :definition, :matchType, :ontologyType, :propertyType, :parents, :children, :hasChildren,:domain, :range # some of these attributes are used in Search (not shown out of context)
       aggregates childrenCount: [:count, :children]
+      serialize_methods :properties
       # this command allows the children to be serialized in the output
       embed :children
 
@@ -34,6 +35,14 @@ module LinkedData
               LinkedData::Hypermedia::Link.new("ancestors", lambda {|m| "#{self.ontology_link(m)}/properties/#{CGI.escape(m.id.to_s)}/ancestors"}, self.uri_type),
               LinkedData::Hypermedia::Link.new("descendants", lambda {|m| "#{self.ontology_link(m)}/properties/#{CGI.escape(m.id.to_s)}/descendants"}, self.uri_type),
               LinkedData::Hypermedia::Link.new("tree", lambda {|m| "#{self.ontology_link(m)}/properties/#{CGI.escape(m.id.to_s)}/tree"}, self.uri_type)
+
+      enable_indexing(:property_search,
+                      :property,
+                      bootstrap_collection: LinkedData.settings.property_search_bootstrap_collection,
+                      num_shards: LinkedData.settings.property_search_num_shards,
+                      replication_factor: LinkedData.settings.property_search_replication_factor) do |schema_generator|
+        index_schema(schema_generator)
+      end
     end
 
   end

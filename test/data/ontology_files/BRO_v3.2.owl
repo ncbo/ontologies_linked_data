@@ -643,7 +643,7 @@
         <rdfs:subClassOf rdf:resource="&activity;Activity"/>
         <desc:definition rdf:datatype="&xsd;string">Activity related to the creation, use, or maintenance of a biorepository (http://en.wikipedia.org/wiki/Biorepository)</desc:definition>
         <rdfs:label xml:lang="fr">Gestion des échantillons biologiques</rdfs:label>
-        <core:prefLabel xml:lang="fr">Biospecimen Management</core:prefLabel>
+        <core:prefLabel xml:lang="fr">Gestion des Bioéchantillons</core:prefLabel>
     </owl:Class>
 
 
@@ -719,6 +719,7 @@
     <owl:Class rdf:about="&activity;Gene_Therapy">
         <rdfs:subClassOf rdf:resource="&activity;Therapeutics"/>
         <desc:definition rdf:datatype="&xsd;string">As defined in http://en.wikipedia.org/wiki/Gene_therapy</desc:definition>
+        <rdfs:label xml:lang="en">Gene Therapy</rdfs:label>
         <rdfs:label xml:lang="fr">Thérapie génique</rdfs:label>
     </owl:Class>
     

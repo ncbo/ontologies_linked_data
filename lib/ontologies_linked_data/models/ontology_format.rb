@@ -39,14 +39,14 @@ module LinkedData
           return Goo.vocabulary(:metadata)[:treeView]
         end
         if skos?
-          return RDF::SKOS[:broader]
+          return RDF::Vocab::SKOS[:broader]
         end
         return RDF::RDFS[:subClassOf]
       end
 
       def class_type
         if skos?
-          return RDF::SKOS[:Concept]
+          return RDF::Vocab::SKOS[:Concept]
         end
         return RDF::OWL[:Class]
       end

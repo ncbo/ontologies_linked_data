@@ -70,6 +70,19 @@ class TestSlice < LinkedData::TestCase
     assert slices.map {|s| s.acronym}.include?(@@group_acronym)
   end
 
+  def test_synchronization_skips_groups_without_ontologies
+    empty_group = LinkedData::Models::Group.new({
+      acronym: "NOONTS",
+      name: "Group Without Ontologies"
+    }).save
+
+    LinkedData::Models::Slice.synchronize_groups_to_slices
+
+    assert_nil LinkedData::Models::Slice.find("noonts").first
+  ensure
+    empty_group&.delete
+  end
+
   def test_slice_acronym_validity
     s = LinkedData::Models::Slice.new({
                                         :name => "Test Slice",

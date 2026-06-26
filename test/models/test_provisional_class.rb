@@ -1,13 +1,18 @@
 require_relative "./test_ontology_common"
 
 class TestProvisionalClass < LinkedData::TestOntologyCommon
+  TEST_ONTOLOGY_ACRONYM = "PROV-CLASS".freeze
+  TEST_ONTOLOGY_NAME = "#{TEST_ONTOLOGY_ACRONYM} Ontology".freeze
 
   def self.before_suite
-    @@user = LinkedData::Models::User.new({username: "Test User", email: "tester@example.org", password: "password"})
+    @@user = LinkedData::Models::User.new({username: "test_user_prov_class",
+                                           email: "test_user_prov_class@example.org", password: "password"})
     @@user.save
 
     ont_count, ont_names, ont_models = LinkedData::SampleData::Ontology.create_ontologies_and_submissions(ont_count: 1,
-                                                                                                          submission_count: 1)
+                                                                                                          submission_count: 1,
+                                                                                                          acronym: TEST_ONTOLOGY_ACRONYM,
+                                                                                                          acronym_suffix: "")
     @@ontology = ont_models.first
     @@ontology.bring(:name)
     @@ontology.bring(:acronym)
@@ -24,11 +29,9 @@ class TestProvisionalClass < LinkedData::TestOntologyCommon
     LinkedData::Models::ProvisionalClass.indexClear
     LinkedData::Models::ProvisionalClass.indexCommit
     LinkedData::SampleData::Ontology.delete_ontologies_and_submissions
-    user = LinkedData::Models::User.find("Test User").first
+    user = LinkedData::Models::User.find("test_user_prov_class").first
     user.delete unless user.nil?
-
   end
-
 
   def test_provisional_class_lifecycle
     label = "Test Provisional Class Lifecycle"
@@ -276,8 +279,8 @@ class TestProvisionalClass < LinkedData::TestOntologyCommon
     pc = @@provisional_class
     pc.ontology = @@ontology
     assert pc.valid?, "#{pc.errors}"
-    assert_equal(true, pc.ontology.acronym == "TEST-ONT-0")
-    assert_equal(true, pc.ontology.name == "TEST-ONT-0 Ontology")
+    assert_equal(true, pc.ontology.acronym == TEST_ONTOLOGY_ACRONYM)
+    assert_equal(true, pc.ontology.name == TEST_ONTOLOGY_NAME)
   end
 
   def test_provisional_class_search_indexing
@@ -285,11 +288,11 @@ class TestProvisionalClass < LinkedData::TestOntologyCommon
     pc = @@provisional_class
     pc.ontology = @@ontology
     pc.unindex
-    resp = LinkedData::Models::Ontology.search("\"#{pc.label}\"", params)
+    resp = LinkedData::Models::ProvisionalClass.search("\"#{pc.label}\"", params)
     assert_equal 0, resp["response"]["numFound"]
 
     pc.index
-    resp = LinkedData::Models::Ontology.search("\"#{pc.label}\"", params)
+    resp = LinkedData::Models::ProvisionalClass.search("\"#{pc.label}\"", params)
     assert_equal 1, resp["response"]["numFound"]
     assert_equal pc.label, resp["response"]["docs"][0]["prefLabel"].first
     pc.unindex
@@ -312,18 +315,18 @@ class TestProvisionalClass < LinkedData::TestOntologyCommon
     pc3.save
     pc3 = LinkedData::Models::ProvisionalClass.find(pc3.id).include(:label).first
 
-    resp = LinkedData::Models::Ontology.search("\"#{pc1.label}\"", params)
+    resp = LinkedData::Models::ProvisionalClass.search("\"#{pc1.label}\"", params)
     assert_equal 1, resp["response"]["numFound"]
     assert_equal pc1.label, resp["response"]["docs"][0]["prefLabel"].first
     par_len = resp["response"]["docs"][0]["parents"].length
     assert_equal 5, par_len
     assert_equal 1, (resp["response"]["docs"][0]["parents"].select { |x| x == class_id.to_s }).length
 
-    resp = LinkedData::Models::Ontology.search("\"#{pc2.label}\"", params)
+    resp = LinkedData::Models::ProvisionalClass.search("\"#{pc2.label}\"", params)
     assert_equal par_len + 1, resp["response"]["docs"][0]["parents"].length
     assert_equal 1, (resp["response"]["docs"][0]["parents"].select { |x| x == pc1.id.to_s }).length
 
-    resp = LinkedData::Models::Ontology.search("\"#{pc3.label}\"", params)
+    resp = LinkedData::Models::ProvisionalClass.search("\"#{pc3.label}\"", params)
     assert_equal par_len + 2, resp["response"]["docs"][0]["parents"].length
     assert_equal 1, (resp["response"]["docs"][0]["parents"].select { |x| x == pc1.id.to_s }).length
     assert_equal 1, (resp["response"]["docs"][0]["parents"].select { |x| x == pc2.id.to_s }).length

@@ -18,11 +18,11 @@ class TestCollections < LinkedData::TestOntologyCommon
     collections = LinkedData::Models::SKOS::Collection.in(sub).include(:members, :prefLabel).all
 
     assert_equal 2, collections.size
-    collections_test = test_data
+    collections_test = test_data.to_h { |x| [x[:id], x] }
 
-    collections.each_with_index do |x, i|
-      collection_test = collections_test[i]
-      assert_equal collection_test[:id], x.id.to_s
+    collections.each do |x|
+      collection_test = collections_test[x.id.to_s]
+      refute_nil collection_test
       assert_equal collection_test[:prefLabel], x.prefLabel
       assert_equal collection_test[:memberCount], x.memberCount
     end

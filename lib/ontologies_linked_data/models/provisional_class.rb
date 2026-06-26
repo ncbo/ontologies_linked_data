@@ -35,10 +35,18 @@ module LinkedData
                   else
                     ""
                   end
-                rescue Exception => e
+                rescue Exception
                   ""
                 end
               }, Goo.vocabulary["Ontology"])
+
+      enable_indexing(:term_search,
+                      :main,
+                      bootstrap_collection: LinkedData.settings.term_search_bootstrap_collection,
+                      num_shards: LinkedData.settings.term_search_num_shards,
+                      replication_factor: LinkedData.settings.term_search_replication_factor) do |schema_generator|
+        Class.index_schema(schema_generator)
+      end
 
       def index_id()
         self.bring(:ontology) if self.bring?(:ontology)
@@ -141,38 +149,6 @@ module LinkedData
         return false if (path.select { |x| x.id.to_s == r.id.to_s }).length > 0
         path << r
         true
-      end
-
-      def index()
-        if index_id
-          unindex
-          super
-          LinkedData::Models::Ontology.indexCommit
-        end
-      end
-
-      def unindex()
-        ind_id = index_id
-
-        if ind_id
-          query = "id:#{solr_escape(ind_id)}"
-          LinkedData::Models::Ontology.unindexByQuery(query)
-          LinkedData::Models::Ontology.indexCommit
-        end
-      end
-
-      ##
-      # Override save to allow indexing
-      def save(*args)
-        super(*args)
-        index
-        self
-      end
-
-      def delete(*args)
-        # remove index entries
-        unindex
-        super(*args)
       end
 
       def solr_escape(text)

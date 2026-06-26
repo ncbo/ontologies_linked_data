@@ -73,7 +73,7 @@ module LinkedData
           user.bring(:email) if user.bring?(:email)
           recipients << user.email
         end
-        recipients
+        recipients.sort
       end
 
       def self.ontoportal_admin_emails

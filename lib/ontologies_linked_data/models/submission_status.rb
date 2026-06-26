@@ -7,6 +7,7 @@ module LinkedData
         "RDF_LABELS", "ERROR_RDF_LABELS",
         "OBSOLETE", "ERROR_OBSOLETE",
         "INDEXED", "ERROR_INDEXED",
+        "INDEXED_ALL_DATA", "ERROR_INDEXED_ALL_DATA",
         "INDEXED_PROPERTIES", "ERROR_INDEXED_PROPERTIES",
         "METRICS",  "ERROR_METRICS",
         "ANNOTATOR", "ERROR_ANNOTATOR",
@@ -19,6 +20,8 @@ module LinkedData
         "RDF_ERROR"                => "Error parsing",
         "INDEXED"                  => "Indexed terms for search",
         "ERROR_INDEXED"            => "Error indexing terms for search",
+        "INDEXED_ALL_DATA"         => "Indexed all the data of the resource",
+        "ERROR_INDEXED_ALL_DATA"   => "Error indexeding all the data of the resource",
         "INDEXED_PROPERTIES"       => "Indexed properties for search",
         "ERROR_INDEXED_PROPERTIES" => "Error indexing properties for search",
         "METRICS"                  => "Class metrics calculated",
@@ -87,7 +90,7 @@ module LinkedData
 
             begin
               readable_stats = statuses_raw.map { |s| s.bring(:code); s.code }
-            rescue Exception => e
+            rescue Exception
               readable_stats = nil
 
               if i == num_calls

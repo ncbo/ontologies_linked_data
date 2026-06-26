@@ -23,14 +23,21 @@ module LinkedData
     @settings.goo_path_query                ||= '/sparql/'
     @settings.goo_path_data                 ||= '/data/'
     @settings.goo_path_update               ||= '/update/'
-    @settings.search_server_url             ||= 'http://localhost:8983/solr/term_search_core1'
-    @settings.property_search_server_url    ||= 'http://localhost:8983/solr/prop_search_core1'
+    @settings.search_server_url             ||= 'http://localhost:8983/solr'
+    @settings.property_search_server_url    ||= 'http://localhost:8983/solr'
+    @settings.term_search_num_shards        ||= 1
+    @settings.term_search_replication_factor ||= 1
+    @settings.term_search_bootstrap_collection ||= :term_search_bootstrap
+    @settings.property_search_num_shards    ||= 1
+    @settings.property_search_replication_factor ||= 1
+    @settings.property_search_bootstrap_collection ||= :property_search_bootstrap
     @settings.repository_folder             ||= './test/data/ontology_files/repo'
     # Maximum size (bytes) for a remote ontology file download; Down raises Down::TooLarge above this. Default 2 GB.
     @settings.download_max_file_size        ||= 2 * 1024 * 1024 * 1024
     @settings.rest_url_prefix               ||= DEFAULT_PREFIX
     @settings.enable_security               ||= false
     @settings.enable_slices                 ||= false
+    @settings.skip_connect_goo              ||= ENV['LINKEDDATA_SKIP_CONNECT_GOO'] == 'true'
 
     # Java/JVM options
     @settings.java_max_heap_size            ||= '10240M'
@@ -42,8 +49,6 @@ module LinkedData
 
     @settings.queries_debug                 ||= false
     @settings.enable_monitoring             ||= false
-    @settings.cube_host                     ||= 'localhost'
-    @settings.cube_port                     ||= 1180
 
     # Caching http
     @settings.enable_http_cache             ||= false
@@ -89,14 +94,14 @@ module LinkedData
     # ontology creation to OntoPortal site admins
     @settings.enable_administrative_notifications ||= true
 
+    @settings.oauth_providers               ||= {}
+
     # number of times to retry a query when empty records are returned
     @settings.num_retries_4store            ||= 10
 
-    # number of threads to use when indexing a single ontology for search
-    @settings.indexing_num_threads          ||= 1
-
     # Override defaults
     yield @settings, overide_connect_goo if block_given?
+    configure_search_collections
 
     # Check to make sure url prefix has trailing slash
     @settings.rest_url_prefix = "#{@settings.rest_url_prefix}/" unless @settings.rest_url_prefix[-1].eql?('/')
@@ -107,7 +112,7 @@ module LinkedData
     puts "(LD) >> Using HTTP Redis instance at #{@settings.http_redis_host}:#{@settings.http_redis_port}"
     puts "(LD) >> Using Goo Redis instance at #{@settings.goo_redis_host}:#{@settings.goo_redis_port}"
 
-    connect_goo unless overide_connect_goo
+    connect_goo unless overide_connect_goo || @settings.skip_connect_goo
   end
 
   ##
@@ -133,18 +138,21 @@ module LinkedData
         conf.add_search_backend(:property, service: @settings.property_search_server_url)
         conf.add_redis_backend(host: @settings.goo_redis_host,
                                port: @settings.goo_redis_port)
-
-        if @settings.enable_monitoring
-          puts "(LD) >> Enable SPARQL monitoring with cube #{@settings.cube_host}:#{@settings.cube_port}"
-          conf.enable_cube do |opts|
-            opts[:host] = @settings.cube_host
-            opts[:port] = @settings.cube_port
-          end
-        end
       end
     rescue StandardError => e
       abort("EXITING: Cannot connect to triplestore and/or search server:\n  #{e}\n#{e.backtrace.join("\n")}")
     end
+  end
+
+  def configure_search_collections
+    Goo.set_search_collection_bootstrap(:term_search, @settings.term_search_bootstrap_collection)
+    Goo.set_search_collection_bootstrap(:property_search, @settings.property_search_bootstrap_collection)
+    Goo.set_search_collection_topology(:term_search,
+                                       num_shards: @settings.term_search_num_shards,
+                                       replication_factor: @settings.term_search_replication_factor)
+    Goo.set_search_collection_topology(:property_search,
+                                       num_shards: @settings.property_search_num_shards,
+                                       replication_factor: @settings.property_search_replication_factor)
   end
 
   ##
@@ -173,7 +181,7 @@ module LinkedData
       conf.add_namespace(:adms, RDF::Vocabulary.new("http://www.w3.org/ns/adms#"))
       conf.add_namespace(:voaf, RDF::Vocabulary.new("http://purl.org/vocommons/voaf#"))
       conf.add_namespace(:dcat, RDF::Vocabulary.new("http://www.w3.org/ns/dcat#"))
-      conf.add_namespace(:mod, RDF::Vocabulary.new("http://www.isibang.ac.in/ns/mod#"))
+      conf.add_namespace(:mod, RDF::Vocabulary.new("https://w3id.org/mod#"))
       conf.add_namespace(:prov, RDF::Vocabulary.new("http://www.w3.org/ns/prov#"))
       conf.add_namespace(:cc, RDF::Vocabulary.new("http://creativecommons.org/ns#"))
       conf.add_namespace(:schema, RDF::Vocabulary.new("http://schema.org/"))
