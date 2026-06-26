@@ -161,10 +161,10 @@ module LinkedData
           headers: { "User-Agent" => "OntoPortal" }.merge(headers)
         )
 
-        filename = tmpfile.original_filename ||
-                   File.basename(uri.path.to_s) ||
-                   LinkedData::Utils::Triples.last_iri_fragment(uri.request_uri)
-        filename = sanitize_filename(filename)
+        # Down's original_filename already parses Content-Disposition and falls
+        # back to the (post-redirect) URL path basename; sanitize_filename maps
+        # a nil/empty result to "unnamed".
+        filename = sanitize_filename(tmpfile.original_filename)
 
         [tmpfile, filename]
       end
