@@ -205,8 +205,9 @@ module LinkedData
       end
 
       def self.sanitize_filename(name)
-        base = File.basename(name.to_s)
-        base = base.gsub(/[\x00-\x1F\/\\:\*\?\"<>\|]/, "")  # control + unsafe chars
+        base = name.to_s.gsub(/[\x00-\x1F]/, "")            # strip control chars (incl. NUL) first so File.basename is safe
+        base = File.basename(base)                          # drop any path components
+        base = base.gsub(/[\/\\:\*\?\"<>\|]/, "")           # remove remaining unsafe chars
         base = base.sub(/\A\.+/, "")                        # no leading dots
         base = base.strip.gsub(/\s+/, " ")                  # trim + collapse spaces
         base = base[0, 255]
