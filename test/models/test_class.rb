@@ -296,6 +296,46 @@ class TestClassModel < LinkedData::TestOntologyCommon
     assert checked > 0, "expected at least one node with a child-count aggregate"
   end
 
+  # N+1 guard for the class-tree endpoint (OWL). Serializing a tree must resolve
+  # the submission's languages once, not once per node -- before the get_languages
+  # `bring?` guard (ncbo/ontologies_linked_data#302) serialization issued ~one
+  # naturalLanguage query per serialized node. Asserts serialization query
+  # fan-out stays sub-linear in node count so the N+1 cannot silently return.
+  def test_bro_tree_serialize_no_n_plus_1
+    if !LinkedData::Models::Ontology.find("BROTEST123").first
+      submission_parse("BROTEST123", "SOME BROTEST Bla", "./test/data/ontology_files/BRO_v3.2.owl", 123,
+                       process_rdf: true, index_search: false,
+                       run_metrics: false, reasoning: true)
+    end
+    os = LinkedData::Models::Ontology.find("BROTEST123").first.latest_submission(status: [:rdf])
+    # The hypermedia links serialized per node need submission.ontology.acronym,
+    # exactly as the controller has it loaded; preload so serialization runs.
+    os.bring(:ontology) if os.bring?(:ontology)
+    os.ontology.bring(:acronym) if os.ontology.bring?(:acronym)
+
+    statistical_Text_Analysis = "http://bioontology.org/ontologies/BiomedicalResourceOntology.owl#Statistical_Text_Analysis"
+    display_attrs = [:prefLabel, :hasChildren, :children, :obsolete, :subClassOf]
+    cls = LinkedData::Models::Class.find(RDF::URI.new(statistical_Text_Analysis)).in(os).include(display_attrs).first
+    tree_root = cls.tree
+
+    node_count = 0
+    stack = [tree_root]
+    until stack.empty?
+      n = stack.pop
+      node_count += 1
+      stack.concat(n.children)
+    end
+    assert_operator node_count, :>=, 3, "tree too small to be a meaningful N+1 guard"
+
+    serialize_queries = count_sparql_queries do
+      LinkedData::Serializers::JSON.serialize([tree_root], only: display_attrs)
+    end
+
+    assert_operator serialize_queries, :<, node_count,
+      "serialization issued #{serialize_queries} SPARQL queries for #{node_count} tree nodes -- " \
+      "looks like a per-node N+1 (see get_languages guard in ncbo/ontologies_linked_data#302)"
+  end
+
 
   def test_include_ancestors
     if !LinkedData::Models::Ontology.find("BROTEST123").first

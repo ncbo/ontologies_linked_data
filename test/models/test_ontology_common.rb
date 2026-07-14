@@ -1,8 +1,37 @@
 require_relative "../test_case"
 require 'rack'
 
+# STOPGAP query counter for N+1 regression guards.
+#
+# TODO(de-fork): replace with Goo::TestHelpers.assert_sparql_queries once the
+# de-fork SPARQL query-counting framework lands on the goo branch this app
+# tracks (ncbo/goo `development`). That helper does not exist there yet, so we
+# count Goo::SPARQL::Client#query invocations directly. Inert unless a counting
+# block armed the thread-local, so it adds nothing in normal runs.
+module GooQueryCountSpy
+  def query(*args, **kwargs, &blk)
+    c = Thread.current[:test_goo_query_count]
+    Thread.current[:test_goo_query_count] = c + 1 unless c.nil?
+    super
+  end
+end
+unless Goo::SPARQL::Client.ancestors.include?(GooQueryCountSpy)
+  Goo::SPARQL::Client.prepend(GooQueryCountSpy)
+end
+
 module LinkedData
   class TestOntologyCommon < LinkedData::TestCase
+
+    # Count Goo SPARQL queries (cache hits + store round-trips) issued by the
+    # block. Counts query fan-out -- what an N+1 inflates -- independent of
+    # cache state. See GooQueryCountSpy above.
+    def count_sparql_queries
+      Thread.current[:test_goo_query_count] = 0
+      yield
+      Thread.current[:test_goo_query_count]
+    ensure
+      Thread.current[:test_goo_query_count] = nil
+    end
 
     def create_count_mapping
       count = LinkedData::Models::MappingCount.where.all.length

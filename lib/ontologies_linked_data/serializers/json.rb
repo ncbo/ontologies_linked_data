@@ -96,7 +96,10 @@ module LinkedData
         result_lang = user_languages
 
         if submission
-          submission.bring :naturalLanguage
+          # Guard the load: goo's #bring re-queries every call, and this runs once
+          # per serialized object. Without the guard, a response of N objects sharing
+          # a submission issues N naturalLanguage queries instead of 1.
+          submission.bring(:naturalLanguage) if submission.bring?(:naturalLanguage)
           languages = get_submission_languages(submission.naturalLanguage)
           # intersection of the two arrays , if the requested language is not :all
           result_lang = user_languages == :all ? languages : Array(user_languages) & languages
