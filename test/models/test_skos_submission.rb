@@ -186,8 +186,7 @@ SELECT ?children WHERE {
   # N+1 guard for the class-tree endpoint (SKOS). Same contract as the OWL guard
   # in test_class.rb: serializing a tree must resolve the submission's languages
   # once, not once per node (get_languages `bring?` guard,
-  # ncbo/ontologies_linked_data#302). Asserts serialization query fan-out stays
-  # sub-linear in node count.
+  # ncbo/ontologies_linked_data#302).
   def test_skos_tree_serialize_no_n_plus_1
     sub = before_suite
     sub.bring(:ontology) if sub.bring?(:ontology)
@@ -219,9 +218,27 @@ SELECT ?children WHERE {
       LinkedData::Serializers::JSON.serialize([tree_root], only: display_attrs)
     end
 
-    assert_operator serialize_queries, :<, node_count,
+    # Constant bound, calibrated by mutation testing: with the #302 guard this is
+    # 0; with the guard reverted it is ~1 query per node (9 for 9 nodes on this
+    # fixture). A node-count-relative bound is too loose -- pre-#302 fan-out can
+    # sit just below node_count and slip through.
+    assert_operator serialize_queries, :<=, 2,
       "serialization issued #{serialize_queries} SPARQL queries for #{node_count} tree nodes -- " \
       "looks like a per-node N+1 (see get_languages guard in ncbo/ontologies_linked_data#302)"
+  end
+
+  # Regression guard for the build-phase fix of #302 (fixes #303): the concept
+  # scheme set is fixed per submission for the life of a request, so
+  # all_concepts_schemes must memoize -- the tree endpoints resolve
+  # isInActiveScheme once per node, and without the memo that re-ran the
+  # SKOS::Scheme query per node. Mutation-verified: with the memoization
+  # reverted this counts one query per call.
+  def test_concept_schemes_query_memoized_per_submission
+    sub = before_suite # fresh submission instance -- no memo yet
+    queries = count_sparql_queries { 3.times { sub.all_concepts_schemes } }
+    assert_equal 1, queries,
+      "all_concepts_schemes issued #{queries} SPARQL queries across 3 calls on one " \
+      'submission instance -- per-submission memoization (#302/#303) regressed'
   end
 end
 
