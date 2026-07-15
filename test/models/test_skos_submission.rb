@@ -182,5 +182,63 @@ SELECT ?children WHERE {
 
     assert seen_target, 'target class not found within its own tree'
   end
+
+  # N+1 guard for the class-tree endpoint (SKOS). Same contract as the OWL guard
+  # in test_class.rb: serializing a tree must resolve the submission's languages
+  # once, not once per node (get_languages `bring?` guard,
+  # ncbo/ontologies_linked_data#302).
+  def test_skos_tree_serialize_no_n_plus_1
+    sub = before_suite
+    sub.bring(:ontology) if sub.bring?(:ontology)
+    sub.ontology.bring(:acronym) if sub.ontology.bring?(:acronym)
+
+    roots = sub.roots
+    roots.each { |r| LinkedData::Models::Class.in(sub).models([r]).include(children: [:prefLabel]).all }
+    # Pick the bushiest root so the target's tree (root + its siblings) has enough
+    # nodes to make the query-count guard meaningful on this small fixture.
+    root = roots.reject { |r| r.children.empty? }.max_by { |r| r.children.length }
+    refute_nil root, 'expected a SKOS root with children'
+    target = LinkedData::Models::Class.find(root.children.first.id).in(sub).first
+    refute_nil target, 'expected a SKOS root with at least one child'
+
+    display_attrs = [:prefLabel, :hasChildren, :children, :obsolete, :subClassOf] +
+                    LinkedData::Models::Class.concept_is_in_attributes
+    tree_root = target.tree
+
+    node_count = 0
+    stack = [tree_root]
+    until stack.empty?
+      n = stack.pop
+      node_count += 1
+      stack.concat(n.children)
+    end
+    assert_operator node_count, :>=, 2, 'tree too small to be a meaningful N+1 guard'
+
+    serialize_queries = count_sparql_queries do
+      LinkedData::Serializers::JSON.serialize([tree_root], only: display_attrs)
+    end
+
+    # Constant bound, calibrated by mutation testing: with the #302 guard this is
+    # 0; with the guard reverted it is ~1 query per node (9 for 9 nodes on this
+    # fixture). A node-count-relative bound is too loose -- pre-#302 fan-out can
+    # sit just below node_count and slip through.
+    assert_operator serialize_queries, :<=, 2,
+      "serialization issued #{serialize_queries} SPARQL queries for #{node_count} tree nodes -- " \
+      "looks like a per-node N+1 (see get_languages guard in ncbo/ontologies_linked_data#302)"
+  end
+
+  # Regression guard for the build-phase fix of #302 (fixes #303): the concept
+  # scheme set is fixed per submission for the life of a request, so
+  # all_concepts_schemes must memoize -- the tree endpoints resolve
+  # isInActiveScheme once per node, and without the memo that re-ran the
+  # SKOS::Scheme query per node. Mutation-verified: with the memoization
+  # reverted this counts one query per call.
+  def test_concept_schemes_query_memoized_per_submission
+    sub = before_suite # fresh submission instance -- no memo yet
+    queries = count_sparql_queries { 3.times { sub.all_concepts_schemes } }
+    assert_equal 1, queries,
+      "all_concepts_schemes issued #{queries} SPARQL queries across 3 calls on one " \
+      'submission instance -- per-submission memoization (#302/#303) regressed'
+  end
 end
 

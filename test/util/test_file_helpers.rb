@@ -89,6 +89,49 @@ class TestUtilsFile < Minitest::Test
     assert_raises(StandardError) { LinkedData::Utils::FileHelpers.filenames_in_archive(tgz_path) }
   end
 
+  def test_sanitize_filename_keeps_normal_names
+    fh = LinkedData::Utils::FileHelpers
+    assert_equal 'BRO_v3.2.owl', fh.sanitize_filename('BRO_v3.2.owl')
+    assert_equal 'a b.owl', fh.sanitize_filename('a b.owl')
+  end
+
+  def test_sanitize_filename_falls_back_to_unnamed
+    fh = LinkedData::Utils::FileHelpers
+    assert_equal 'unnamed', fh.sanitize_filename(nil)
+    assert_equal 'unnamed', fh.sanitize_filename('')
+    assert_equal 'unnamed', fh.sanitize_filename('   ')
+    assert_equal 'unnamed', fh.sanitize_filename('...')   # leading dots stripped -> empty
+  end
+
+  def test_sanitize_filename_strips_path_and_traversal
+    fh = LinkedData::Utils::FileHelpers
+    assert_equal 'passwd', fh.sanitize_filename('/etc/passwd')
+    assert_equal 'foo.owl', fh.sanitize_filename('../../foo.owl')
+    # backslashes are not path separators on POSIX: removed as unsafe chars,
+    # then the leading dots that remain are stripped
+    assert_equal 'foo.owl', fh.sanitize_filename('..\\..\\foo.owl')
+  end
+
+  def test_sanitize_filename_removes_control_and_unsafe_chars
+    fh = LinkedData::Utils::FileHelpers
+    assert_equal 'abc.owl', fh.sanitize_filename("a\x00b\x1fc.owl")  # NUL + control
+    assert_equal 'abc.owl', fh.sanitize_filename("a\tb\nc.owl")      # tab/newline
+    assert_equal 'abcde.owl', fh.sanitize_filename('a:b*c?<d>e.owl') # reserved chars
+    assert_equal 'ab.owl', fh.sanitize_filename('a"b|.owl')
+  end
+
+  def test_sanitize_filename_collapses_whitespace_and_trims
+    fh = LinkedData::Utils::FileHelpers
+    assert_equal 'a b c.owl', fh.sanitize_filename("a   b\t c.owl")
+    assert_equal 'a.owl', fh.sanitize_filename('   a.owl   ')
+  end
+
+  def test_sanitize_filename_caps_length_at_255
+    fh = LinkedData::Utils::FileHelpers
+    long = 'x' * 300
+    assert_equal 255, fh.sanitize_filename(long).length
+  end
+
   def test_gzip_strips_any_leading_path_from_orig_name
     gz_path = File.join(Dir.mktmpdir("unzip-src-"), "payload.gz")
     write_gz(gz_path, "data", orig_name: "foo/bar/baz.txt")

@@ -24,17 +24,16 @@ Gem::Specification.new do |gem|
   gem.add_dependency("json")
   gem.add_dependency("libxml-ruby")
   gem.add_dependency("multi_json")
-  gem.add_dependency("net-ftp")
   gem.add_dependency("oj")
   gem.add_dependency("omni_logger")
   gem.add_dependency("pony")
   gem.add_dependency("rack")
-  gem.add_dependency("rack-test")
   gem.add_dependency("rsolr")
   gem.add_dependency("rubyzip", "~> 3.0")
   gem.add_dependency("down", "~> 5.0")
 
   gem.add_development_dependency("email_spec")
+  gem.add_development_dependency("rack-test")
 
   # gem.executables = %w()
 end

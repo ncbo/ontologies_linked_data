@@ -1,4 +1,3 @@
-require 'net/ftp'
 require 'net/http'
 require 'uri'
 require 'open-uri'
@@ -286,37 +285,42 @@ module LinkedData
       end
 
       def self.copy_file_repository(acronym, submission_id, src, filename = nil)
-        path_to_repo = File.join(
-          LinkedData.settings.repository_folder,
-          acronym.to_s,
-          submission_id.to_s
-        )
+        repo_root = LinkedData.settings.repository_folder
+        dst_dir = File.join(repo_root.to_s, acronym.to_s, submission_id.to_s)
+
+        src_path = src.respond_to?(:path) ? src.path.to_s : src.to_s
+        raise ArgumentError, "Source file does not exist: #{src_path}" unless ::File.exist?(src_path)
 
         name = filename || File.basename(src)
-        dst  = File.join(path_to_repo, name)
+        name = LinkedData::Utils::FileHelpers.sanitize_filename(name)
+
+        dst_final = File.join(dst_dir, name)
+        dst_tmp   = "#{dst_final}.tmp-#{Process.pid}-#{rand(1_000_000)}"
 
         begin
-          FileUtils.mkdir_p(path_to_repo)
-          FileUtils.chmod(REPOSITORY_DIR_MODE, path_to_repo)
+          FileUtils.mkdir_p(dst_dir)
+          FileUtils.chmod(REPOSITORY_DIR_MODE, dst_dir)
 
-          FileUtils.copy(src, dst)
+          FileUtils.copy(src, dst_tmp)
           # Uploaded files are initially written to a Tempfile in tmpdir with
           # permissions 0600 (owner read/write only) for security. To ensure
           # repository files are also accessible by the service group as intended,
           # we explicitly chmod the destination file to REPOSITORY_FILE_MODE.
-          FileUtils.chmod(REPOSITORY_FILE_MODE, dst)
+          FileUtils.chmod(REPOSITORY_FILE_MODE, dst_tmp)
+          FileUtils.mv(dst_tmp, dst_final)
         rescue StandardError => e
-          raise e.class, "Failed to copy #{src} to #{dst}: #{e.message}", e.backtrace
+          FileUtils.rm_f(dst_tmp)
+          raise e.class, "Failed to copy #{src} to #{dst_final}: #{e.message}", e.backtrace
         end
 
         # Sanity check: ensure the file actually exists after copy and chmod
         # This guards against rare cases like silent file storage failures or
         # race conditions
-        unless File.exist?(dst)
-          raise IOError, "Copy operation completed without error, but file '#{dst}' does not exist"
+        unless File.exist?(dst_final)
+          raise IOError, "Copy operation completed without error, but file '#{dst_final}' does not exist"
         end
 
-        dst
+        dst_final
       end
 
       def self.clear_indexed_content(ontology_acronym, logger=nil)
@@ -841,17 +845,7 @@ module LinkedData
       end
 
       def remote_file_exists?(url)
-        begin
-          url = URI.parse(url)
-          if url.kind_of?(URI::FTP)
-            check = check_ftp_file(url)
-          else
-            check = check_http_file(url)
-          end
-        rescue Exception
-          check = false
-        end
-        check
+        LinkedData::Utils::FileHelpers.remote_file_exists?(url)
       end
 
       def download_ontology_file
@@ -913,33 +907,6 @@ module LinkedData
                  self.uploadFilePath
                end
         File.expand_path(path)
-      end
-
-      def check_http_file(url)
-        session = Net::HTTP.new(url.host, url.port)
-        session.use_ssl = true if url.port == 443
-        session.start do |http|
-          response_valid = http.head(url.request_uri).code.to_i < 400
-          return response_valid
-        end
-      end
-
-      def check_ftp_file(uri)
-        ftp = Net::FTP.new(uri.host, uri.user, uri.password)
-        ftp.login
-        begin
-          file_exists = ftp.size(uri.path) > 0
-        rescue Exception
-          # Check using another method
-          path = uri.path.split("/")
-          filename = path.pop
-          path = path.join("/")
-          ftp.chdir(path)
-          files = ftp.dir
-          # Dumb check, just see if the filename is somewhere in the list
-          files.each { |file| return true if file.include?(filename) }
-        end
-        file_exists
       end
 
       def self.loom_transform_literal(lit)

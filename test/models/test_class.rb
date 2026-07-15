@@ -296,6 +296,76 @@ class TestClassModel < LinkedData::TestOntologyCommon
     assert checked > 0, "expected at least one node with a child-count aggregate"
   end
 
+  # N+1 guard for the class-tree endpoint (OWL). Serializing a tree must resolve
+  # the submission's languages once, not once per node -- before the get_languages
+  # `bring?` guard (ncbo/ontologies_linked_data#302) serialization issued extra
+  # naturalLanguage queries per serialized node.
+  def test_bro_tree_serialize_no_n_plus_1
+    if !LinkedData::Models::Ontology.find("BROTEST123").first
+      submission_parse("BROTEST123", "SOME BROTEST Bla", "./test/data/ontology_files/BRO_v3.2.owl", 123,
+                       process_rdf: true, index_search: false,
+                       run_metrics: false, reasoning: true)
+    end
+    os = LinkedData::Models::Ontology.find("BROTEST123").first.latest_submission(status: [:rdf])
+    # The hypermedia links serialized per node need submission.ontology.acronym,
+    # exactly as the controller has it loaded; preload so serialization runs.
+    os.bring(:ontology) if os.bring?(:ontology)
+    os.ontology.bring(:acronym) if os.ontology.bring?(:acronym)
+
+    statistical_Text_Analysis = "http://bioontology.org/ontologies/BiomedicalResourceOntology.owl#Statistical_Text_Analysis"
+    display_attrs = [:prefLabel, :hasChildren, :children, :obsolete, :subClassOf]
+    cls = LinkedData::Models::Class.find(RDF::URI.new(statistical_Text_Analysis)).in(os).include(display_attrs).first
+    tree_root = cls.tree
+
+    node_count = 0
+    stack = [tree_root]
+    until stack.empty?
+      n = stack.pop
+      node_count += 1
+      stack.concat(n.children)
+    end
+    assert_operator node_count, :>=, 3, "tree too small to be a meaningful N+1 guard"
+
+    serialize_queries = count_sparql_queries do
+      LinkedData::Serializers::JSON.serialize([tree_root], only: display_attrs)
+    end
+
+    # Constant bound, calibrated by mutation testing: with the #302 guard this is
+    # 1 query; with the guard reverted it is 8 on this 29-node fixture. A
+    # node-count-relative bound (`< node_count`) passes BOTH ways on OWL and
+    # guards nothing.
+    assert_operator serialize_queries, :<=, 2,
+      "serialization issued #{serialize_queries} SPARQL queries for #{node_count} tree nodes -- " \
+      "looks like a per-node N+1 (see get_languages guard in ncbo/ontologies_linked_data#302)"
+  end
+
+  # Regression guard for the build-phase fix of #302 (fixes #303): for a non-SKOS
+  # (OWL) submission, load_is_in_scheme must not run the ConceptScheme query at
+  # all -- isInActiveScheme is SKOS-only, and pre-#302 every tree node issued a
+  # scheme query that always returned nothing. Also pins the intended value
+  # change: [] rather than [nil] (serialized [null]) for non-SKOS.
+  # Mutation-verified: pre-#302 this counts one scheme query per call.
+  def test_owl_load_is_in_scheme_skips_scheme_query
+    if !LinkedData::Models::Ontology.find("BROTEST123").first
+      submission_parse("BROTEST123", "SOME BROTEST Bla", "./test/data/ontology_files/BRO_v3.2.owl", 123,
+                       process_rdf: true, index_search: false,
+                       run_metrics: false, reasoning: true)
+    end
+    os = LinkedData::Models::Ontology.find("BROTEST123").first.latest_submission(status: [:rdf])
+    statistical_Text_Analysis = "http://bioontology.org/ontologies/BiomedicalResourceOntology.owl#Statistical_Text_Analysis"
+    cls = LinkedData::Models::Class.find(RDF::URI.new(statistical_Text_Analysis)).in(os).first
+    # Hoist the one legitimate load (hasOntologyLanguage, used by submission.skos?)
+    # so the counter isolates the scheme query itself.
+    os.bring(:hasOntologyLanguage) if os.bring?(:hasOntologyLanguage)
+
+    queries = count_sparql_queries { 2.times { cls.load_is_in_scheme([]) } }
+    assert_equal 0, queries,
+      "load_is_in_scheme on a non-SKOS submission issued #{queries} SPARQL queries -- " \
+      'the skos? gate (#302/#303) regressed'
+    assert_equal [], cls.isInActiveScheme,
+      'non-SKOS isInActiveScheme must be [] (not [nil]) per #302'
+  end
+
 
   def test_include_ancestors
     if !LinkedData::Models::Ontology.find("BROTEST123").first

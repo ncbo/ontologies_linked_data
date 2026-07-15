@@ -1,6 +1,7 @@
 require_relative "./test_ontology_common"
 require "logger"
 require "rack"
+require "tempfile"
 require "mocha/minitest"
 
 class TestOntologySubmission < LinkedData::TestOntologyCommon
@@ -675,11 +676,12 @@ SELECT DISTINCT * WHERE {
       sub.pullLocation = RDF::IRI.new(server_url)
       file, filename = sub.download_ontology_file
       sleep 2
-      assert filename.nil?, "Test filename is not nil: #{filename}"
-      assert file.is_a?(Tempfile), "Test file is not a Tempfile"
+      assert_equal "unnamed", filename, "Expected fallback filename to be 'unnamed'"
+      assert_kind_of Tempfile, file
       file.open
       assert file.read.eql?("test file"), "Test file content error: #{file.read}"
     ensure
+      file.close! if file && file.respond_to?(:close!)
       LinkedData::TestCase.backend_4s_delete
       Thread.kill(server_thread)  # this will shutdown Rack::Server also
       sleep 3

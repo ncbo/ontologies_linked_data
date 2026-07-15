@@ -4,6 +4,7 @@ require 'zip'
 require 'zlib'
 require 'tmpdir'
 require 'fileutils'
+require 'down/net_http'
 
 module LinkedData
   module Utils
@@ -143,74 +144,50 @@ module LinkedData
         File.exist?(path) && !File.directory?(path)
       end
 
-      def self.download_file(uri, limit = 10)
-        raise ArgumentError, 'HTTP redirect too deep' if limit == 0
-
-        uri = URI(uri) unless uri.kind_of?(URI)
-
-        if uri.kind_of?(URI::FTP)
-          file, filename = download_file_ftp(uri)
-        else
-          file = Tempfile.new('ont-rest-file')
-          filename = nil
-          http_session = Net::HTTP.new(uri.host, uri.port)
-          http_session.verify_mode = OpenSSL::SSL::VERIFY_NONE
-          http_session.use_ssl = (uri.scheme == 'https')
-          http_session.start do |http|
-            http.read_timeout = 1800
-            http.request_get(uri.request_uri, {'Accept-Encoding' => 'gzip'}) do |res|
-              if res.kind_of?(Net::HTTPRedirection)
-                new_loc = res['location']
-                if new_loc.match(/^(http:\/\/|https:\/\/)/)
-                  uri = new_loc
-                else
-                  uri.path = new_loc
-                end
-                return download_file(uri, limit - 1)
-              end
-
-              raise Net::HTTPBadResponse.new("#{uri.request_uri}: #{res.code}") if res.code.to_i >= 400
-
-              file_size = res.read_header['content-length'].to_i
-              begin
-                content_disposition = res.read_header['content-disposition']
-                filenames = content_disposition.match(/filename=\"(.*)\"/) || content_disposition.match(/filename=(.*)/)
-                filename = filenames[1] if filename.nil?
-              rescue
-                filename = LinkedData::Utils::Triples.last_iri_fragment(uri.request_uri) if filename.nil?
-              end
-
-              file.write(res.body)
-
-              if res.header['Content-Encoding'].eql?('gzip')
-                uncompressed_file = Tempfile.new('uncompressed-ont-rest-file')
-                file.rewind
-                sio = StringIO.new(file.read)
-                gz = Zlib::GzipReader.new(sio)
-                uncompressed_file.write(gz.read())
-                file.close
-                file = uncompressed_file
-                gz.close()
-              end
-            end
-          end
-          file.close
+      def self.download_file(uri, max_redirects: 10, open_timeout: 15, read_timeout: 1800, headers: {}, max_size: nil)
+        uri = URI(uri) unless uri.is_a?(URI)
+        unless %w[http https].include?(uri.scheme)
+          raise ArgumentError, "Unsupported URI scheme #{uri.scheme.inspect} (only http/https are supported)"
         end
 
-        return file, filename
+        max_size ||= LinkedData.settings.download_max_file_size
+
+        tmpfile = Down::NetHttp.download(
+          uri.to_s,
+          max_redirects: max_redirects,
+          open_timeout: open_timeout,
+          read_timeout: read_timeout,
+          max_size: max_size,
+          headers: { "User-Agent" => "OntoPortal" }.merge(headers)
+        )
+
+        # Down's original_filename already parses Content-Disposition and falls
+        # back to the (post-redirect) URL path basename; sanitize_filename maps
+        # a nil/empty result to "unnamed".
+        filename = sanitize_filename(tmpfile.original_filename)
+
+        [tmpfile, filename]
       end
 
-      def self.download_file_ftp(url)
-        url = URI.parse(url) unless url.kind_of?(URI)
-        ftp = Net::FTP.new(url.host, url.user, url.password)
-        ftp.passive = true
-        ftp.login
-        filename = LinkedData::Utils::Triples.last_iri_fragment(url.path)
-        temp_dir = Dir.tmpdir
-        temp_file_path = File.join(temp_dir, filename)
-        ftp.getbinaryfile(url.path, temp_file_path)
-        file = File.new(temp_file_path)
-        return file, filename
+      def self.remote_file_exists?(url, max_redirects: 10, open_timeout: 15, read_timeout: 10, headers: {})
+        uri = url.is_a?(URI) ? url : URI.parse(url.to_s)
+
+        # only http/https are supported
+        return false unless %w[http https].include?(uri.scheme)
+
+        Down::NetHttp.open(
+          uri.to_s,
+          max_redirects: max_redirects,
+          open_timeout:  open_timeout,
+          read_timeout:  read_timeout,
+          headers: { "User-Agent" => "OntoPortal" }.merge(headers)
+        ) do |io|
+          io.close
+        end
+
+        true
+      rescue Down::Error, URI::InvalidURIError
+        false
       end
 
       # --- Utility guards / filters ---
@@ -228,6 +205,16 @@ module LinkedData
         entry_name.start_with?('__MACOSX/') || base == '.DS_Store' || base.start_with?('._')
       end
 
+      def self.sanitize_filename(name)
+        base = name.to_s.gsub(/[\x00-\x1F]/, "")            # strip control chars (incl. NUL) first so File.basename is safe
+        base = File.basename(base)                          # drop any path components
+        base = base.gsub(/[\/\\:\*\?\"<>\|]/, "")           # remove remaining unsafe chars
+        base = base.sub(/\A\.+/, "")                        # no leading dots
+        base = base.strip.gsub(/\s+/, " ")                  # trim + collapse spaces
+        base = base[0, 255]
+        base.empty? ? "unnamed" : base
+      end
+
       # Resolve the output filename for a .gz:
       # - Prefer header's orig_name when present
       # - Otherwise use the source filename without its .gz
@@ -237,16 +224,7 @@ module LinkedData
         name = gzip_reader.orig_name
         name = File.basename(file_path, File.extname(file_path)) if name.nil? || name.empty?
         name = File.basename(name.to_s)
-
-        # Strip NULs and other control chars to avoid filesystem weirdness
-        name = name.gsub(/[\x00-\x1F]/, '')
-        # Ensure non-empty
-        if name.empty?
-          base = File.basename(file_path, File.extname(file_path))
-          name = "#{base}_unnamed"
-        end
-
-        name[0, 255]
+        sanitize_filename(name)
       end
 
     end
