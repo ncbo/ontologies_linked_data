@@ -68,7 +68,7 @@ module LinkedData
               "Retrieved #{s_total} records for #{acro} in #{Time.now - t0} seconds.")
           logger.flush
         end
-        sleep(5)
+        sleep(5) if Goo.backend_4s?
       end
 
       if enable_debug
