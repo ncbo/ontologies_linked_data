@@ -104,6 +104,40 @@ SELECT ?children WHERE {
                           'http://www.ebi.ac.uk/efo/EFO_0000324'].sort
   end
 
+  def test_roots_batch_loads_skos_classes
+    sub = before_suite
+    concept_schemes = ['http://www.ebi.ac.uk/efo/skos/EFO_GWAS_view_2',
+                       'http://www.ebi.ac.uk/efo/skos/EFO_GWAS_view']
+
+    roots = nil
+    queries = count_sparql_queries do
+      roots = sub.roots(concept_schemes: concept_schemes)
+    end
+
+    assert_equal 6, roots.length
+    assert_operator queries, :<=, 3,
+      "loading #{roots.length} SKOS roots issued #{queries} SPARQL queries -- " \
+      'looks like per-root class hydration'
+  end
+
+  def test_roots_batch_load_preserves_skos_pagination
+    sub = before_suite
+    concept_scheme = 'http://www.ebi.ac.uk/efo/skos/EFO_GWAS_view'
+
+    roots = sub.roots([], 1, 2, concept_schemes: [concept_scheme])
+
+    assert_instance_of Goo::Base::Page, roots
+    assert_equal 2, roots.length
+    assert_equal 2, roots.total_pages
+  end
+
+  def test_roots_with_no_skos_ids_returns_empty
+    sub = before_suite
+    roots = sub.roots(concept_schemes: ['http://example.org/missing-scheme'])
+
+    assert_empty roots
+  end
+
   def test_roots_of_scheme_collection
     sub = before_suite
 
@@ -241,4 +275,3 @@ SELECT ?children WHERE {
       'submission instance -- per-submission memoization (#302/#303) regressed'
   end
 end
-

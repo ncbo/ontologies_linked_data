@@ -711,9 +711,11 @@ module LinkedData
 
         skos = self.skos?
         classes = []
+        class_ids = []
+        root_count = 0
 
         if skos
-          classes = skos_roots(concept_schemes, page, paged, pagesize)
+          class_ids, root_count = skos_root_ids(concept_schemes, page, paged, pagesize)
           extra_include += LinkedData::Models::Class.concept_is_in_attributes
         else
           self.ontology.bring(:flat)
@@ -744,7 +746,12 @@ module LinkedData
           end
         end
 
-        where = LinkedData::Models::Class.in(self).models(classes).include(:prefLabel, :definition, :synonym, :obsolete)
+        where = if skos
+                  LinkedData::Models::Class.in(self).ids(class_ids) unless class_ids.empty?
+                else
+                  LinkedData::Models::Class.in(self).models(classes)
+                end
+        where.include(:prefLabel, :definition, :synonym, :obsolete) if where
 
         if extra_include
           %i[prefLabel definition synonym obsolete childrenCount].each do |x|
@@ -767,9 +774,13 @@ module LinkedData
             load_children = [:children]
           end
 
-          where.include(extra_include) if extra_include.length > 0
+          where.include(extra_include) if where && extra_include.length > 0
         end
-        where.all
+        if where
+          loaded_classes = where.all
+          classes = loaded_classes if skos
+        end
+        classes = Goo::Base::Page.new(page, pagesize, root_count, classes) if skos && paged
 
         LinkedData::Models::Class.partially_load_children(classes, 99, self) if load_children.length > 0
 
