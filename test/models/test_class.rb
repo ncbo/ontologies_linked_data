@@ -474,32 +474,51 @@ class TestClassModel < LinkedData::TestOntologyCommon
                  LinkedData::Models::Class.tree_view_property(os).to_s,
                  'expected the OBO tree property, otherwise this duplicates the OWL test'
 
-    # Find a class whose own parent has no parents -- one hop is enough to make
-    # the traversal walk into the parentless ancestor.
-    target = nil
+    # Find a class with a parent that itself has no parents -- one hop is enough
+    # to make the traversal walk into the parentless ancestor. Candidates are
+    # sorted so the same class is picked on every backend (row order is not
+    # guaranteed and differs between 4store/AG/GraphDB/Virtuoso).
+    candidates = []
     LinkedData::Models::Class.in(os).include(parents: [:prefLabel]).page(1, 500).each do |cls|
       next if cls.parents.nil? || cls.parents.empty?
 
-      parent = cls.parents.first
-      parent.bring(:parents) if parent.bring?(:parents)
-      next unless parent.parents.nil? || parent.parents.empty?
+      cls.parents.each do |parent|
+        # owl:Thing has no parents either, but the traversal stops on it via the
+        # sentinel, so it does not exercise the empty-parents branch.
+        next if parent.id.to_s['#Thing']
 
-      target = LinkedData::Models::Class.find(cls.id).in(os).first
-      break
+        parent.bring(:parents) if parent.bring?(:parents)
+        next unless parent.parents.nil? || parent.parents.empty?
+
+        candidates << cls.id.to_s
+        break
+      end
     end
-    refute_nil target, 'expected an OBO class whose parent is parentless'
+    target_id = candidates.sort.first
+    refute_nil target_id, 'expected an OBO class whose parent is parentless'
+    target = LinkedData::Models::Class.find(RDF::URI.new(target_id)).in(os).first
 
     paths = target.paths_to_root
     refute_empty paths, 'expected at least one path to root'
 
+    saw_parentless_terminal = false
     paths.each do |path|
       refute_includes path, nil, 'path contains a nil node'
       assert_equal target.id.to_s, path.last.id.to_s, 'path must end at the requested class'
 
       root = path.first
       root.bring(:parents) if root.bring?(:parents)
-      assert_empty(root.parents || [],
-                   "path must terminate at a parentless class, got #{root.id}")
+      root_parents = root.parents || []
+      saw_parentless_terminal ||= root_parents.empty?
+
+      # A path may also stop on the owl:Thing sentinel, which owlapi asserts on
+      # top-level classes; what must hold is that nothing traversable is left.
+      assert_empty root_parents.reject { |p| p.id.to_s['#Thing'] },
+                   "path must terminate where no parent is left to follow, got #{root.id}"
     end
+
+    assert saw_parentless_terminal,
+           'expected at least one path to terminate at a class with no parents at all -- ' \
+           'that is the case that used to raise'
   end
 end
