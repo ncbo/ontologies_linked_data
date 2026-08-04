@@ -454,4 +454,52 @@ class TestClassModel < LinkedData::TestOntologyCommon
     assert_equal String, xml_comment.class
     assert_equal comment, xml_comment
   end
+
+  # Companion to test_bro_paths_to_root, for the OBO tree property. BRO cannot
+  # cover this: owlapi asserts `rdfs:subClassOf owl:Thing` on top-level OWL
+  # classes, and the traversal treats owl:Thing as a stop sentinel. OBO
+  # submissions walk metadata:treeView, where no such sentinel exists, so the
+  # traversal has to terminate on a genuinely parentless ancestor instead.
+  # Regressing that recurses into an empty parents array and raises
+  # "undefined method `id' for nil:NilClass" in append_if_not_there_already.
+  def test_obo_paths_to_root_terminates_at_parentless_class
+    if !LinkedData::Models::Ontology.find("HPPATHSTEST").first
+      submission_parse("HPPATHSTEST", "HP paths_to_root test", "./test/data/ontology_files/hp.obo", 124,
+                       process_rdf: true, index_search: false,
+                       run_metrics: false)
+    end
+    os = LinkedData::Models::Ontology.find("HPPATHSTEST").first.latest_submission(status: [:rdf])
+
+    assert_equal 'http://data.bioontology.org/metadata/treeView',
+                 LinkedData::Models::Class.tree_view_property(os).to_s,
+                 'expected the OBO tree property, otherwise this duplicates the OWL test'
+
+    # Find a class whose own parent has no parents -- one hop is enough to make
+    # the traversal walk into the parentless ancestor.
+    target = nil
+    LinkedData::Models::Class.in(os).include(parents: [:prefLabel]).page(1, 500).each do |cls|
+      next if cls.parents.nil? || cls.parents.empty?
+
+      parent = cls.parents.first
+      parent.bring(:parents) if parent.bring?(:parents)
+      next unless parent.parents.nil? || parent.parents.empty?
+
+      target = LinkedData::Models::Class.find(cls.id).in(os).first
+      break
+    end
+    refute_nil target, 'expected an OBO class whose parent is parentless'
+
+    paths = target.paths_to_root
+    refute_empty paths, 'expected at least one path to root'
+
+    paths.each do |path|
+      refute_includes path, nil, 'path contains a nil node'
+      assert_equal target.id.to_s, path.last.id.to_s, 'path must end at the requested class'
+
+      root = path.first
+      root.bring(:parents) if root.bring?(:parents)
+      assert_empty(root.parents || [],
+                   "path must terminate at a parentless class, got #{root.id}")
+    end
+  end
 end
