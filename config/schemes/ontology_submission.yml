@@ -1410,6 +1410,17 @@ translationOfWork:
   extractedMetadata: true
   metadataMappings: [ "adms:translation", "schema:translationOfWork" ]
 
+#Ontology root term(s)
+hasOntologyRootTerm:
+  display: "relations"
+  label: "Ontology root term(s)"
+  helpText: "Class(es) the ontology declares as its display roots, used to start the class hierarchy below owl:Thing and upper-ontology terms."
+  example: 'http://purl.obolibrary.org/obo/CL_0000000'
+  description: [
+    "IAO: Relates an ontology to a term that is a designated root term of the ontology; display tools can use these as the starting point when rendering the class hierarchy. There can be more than one." ]
+  extractedMetadata: true
+  metadataMappings: [ "obo_purl:IAO_0000700" ]
+
 ### Content
 
 #Identifier pattern
