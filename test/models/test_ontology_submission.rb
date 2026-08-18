@@ -192,7 +192,7 @@ SELECT DISTINCT * WHERE {
     Goo.sparql_query_client.query(qthing).each_solution do |sol|
       count += 1
     end
-    assert count == 0
+    assert_equal 0, count
 
     qthing = <<-eos
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -204,7 +204,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       count += 1
       assert sol[:x].to_s["TAO_0000732"]
     end
-    assert count == 1
+    assert_equal 1, count
 
     qcount = <<-eos
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -217,7 +217,7 @@ SELECT DISTINCT * WHERE {
       count += 1
       assert sol[:x].to_s["TAO_0000732"]
     end
-    assert count == 1
+    assert_equal 1, count
 
     sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: "TAO-TEST"]).first
     assert_equal(3, sub.roots.length, "Incorrect number of root classes")
