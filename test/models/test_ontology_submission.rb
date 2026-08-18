@@ -323,6 +323,37 @@ SELECT DISTINCT * WHERE {
     assert_equal ['La première ontologie déddiée aux concepts de la médecine associée'], sub.notes
   end
 
+  # IAO:0000700 ("has ontology root term") declared on the ontology is extracted
+  # into the submission's hasOntologyRootTerm attribute (a list of class URIs).
+  def test_extract_ontology_root_terms
+    submission_parse("ROOTTERMS", "Root terms TEST",
+                     "./test/data/ontology_files/custom_root_terms.owl", 1,
+                     process_rdf: true, extract_metadata: true)
+
+    sub = LinkedData::Models::OntologySubmission
+          .where(ontology: [acronym: "ROOTTERMS"], submissionId: 1)
+          .include(:hasOntologyRootTerm).first
+    refute_nil sub
+
+    roots = Array(sub.hasOntologyRootTerm).map(&:to_s).sort
+    assert_equal ["http://bioportal.bioontology.org/ontologies/msotes#class1",
+                  "http://bioportal.bioontology.org/ontologies/msotes#class2"],
+                 roots
+  end
+
+  # An ontology without IAO:0000700 leaves hasOntologyRootTerm empty (not an error).
+  def test_extract_ontology_root_terms_absent
+    submission_parse("NOROOTTERMS", "No root terms TEST",
+                     "./test/data/ontology_files/custom_properties.owl", 1,
+                     process_rdf: true, extract_metadata: true)
+
+    sub = LinkedData::Models::OntologySubmission
+          .where(ontology: [acronym: "NOROOTTERMS"], submissionId: 1)
+          .include(:hasOntologyRootTerm).first
+    refute_nil sub
+    assert_empty Array(sub.hasOntologyRootTerm)
+  end
+
   def test_generate_language_preflabels
     submission_parse("D3OTEST", "DSMZ Digital Diversity Ontology Test",
                      "./test/data/ontology_files/d3o.owl", 1,
