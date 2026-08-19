@@ -454,4 +454,71 @@ class TestClassModel < LinkedData::TestOntologyCommon
     assert_equal String, xml_comment.class
     assert_equal comment, xml_comment
   end
+
+  # Companion to test_bro_paths_to_root, for the OBO tree property. BRO cannot
+  # cover this: owlapi asserts `rdfs:subClassOf owl:Thing` on top-level OWL
+  # classes, and the traversal treats owl:Thing as a stop sentinel. OBO
+  # submissions walk metadata:treeView, where no such sentinel exists, so the
+  # traversal has to terminate on a genuinely parentless ancestor instead.
+  # Regressing that recurses into an empty parents array and raises
+  # "undefined method `id' for nil:NilClass" in append_if_not_there_already.
+  def test_obo_paths_to_root_terminates_at_parentless_class
+    if !LinkedData::Models::Ontology.find("HPPATHSTEST").first
+      submission_parse("HPPATHSTEST", "HP paths_to_root test", "./test/data/ontology_files/hp.obo", 124,
+                       process_rdf: true, index_search: false,
+                       run_metrics: false)
+    end
+    os = LinkedData::Models::Ontology.find("HPPATHSTEST").first.latest_submission(status: [:rdf])
+
+    assert_equal 'http://data.bioontology.org/metadata/treeView',
+                 LinkedData::Models::Class.tree_view_property(os).to_s,
+                 'expected the OBO tree property, otherwise this duplicates the OWL test'
+
+    # Find a class with a parent that itself has no parents -- one hop is enough
+    # to make the traversal walk into the parentless ancestor. Candidates are
+    # sorted so the same class is picked on every backend (row order is not
+    # guaranteed and differs between 4store/AG/GraphDB/Virtuoso).
+    candidates = []
+    LinkedData::Models::Class.in(os).include(parents: [:prefLabel]).page(1, 500).each do |cls|
+      next if cls.parents.nil? || cls.parents.empty?
+
+      cls.parents.each do |parent|
+        # owl:Thing has no parents either, but the traversal stops on it via the
+        # sentinel, so it does not exercise the empty-parents branch.
+        next if parent.id.to_s['#Thing']
+
+        parent.bring(:parents) if parent.bring?(:parents)
+        next unless parent.parents.nil? || parent.parents.empty?
+
+        candidates << cls.id.to_s
+        break
+      end
+    end
+    target_id = candidates.sort.first
+    refute_nil target_id, 'expected an OBO class whose parent is parentless'
+    target = LinkedData::Models::Class.find(RDF::URI.new(target_id)).in(os).first
+
+    paths = target.paths_to_root
+    refute_empty paths, 'expected at least one path to root'
+
+    saw_parentless_terminal = false
+    paths.each do |path|
+      refute_includes path, nil, 'path contains a nil node'
+      assert_equal target.id.to_s, path.last.id.to_s, 'path must end at the requested class'
+
+      root = path.first
+      root.bring(:parents) if root.bring?(:parents)
+      root_parents = root.parents || []
+      saw_parentless_terminal ||= root_parents.empty?
+
+      # A path may also stop on the owl:Thing sentinel, which owlapi asserts on
+      # top-level classes; what must hold is that nothing traversable is left.
+      assert_empty root_parents.reject { |p| p.id.to_s['#Thing'] },
+                   "path must terminate where no parent is left to follow, got #{root.id}"
+    end
+
+    assert saw_parentless_terminal,
+           'expected at least one path to terminate at a class with no parents at all -- ' \
+           'that is the case that used to raise'
+  end
 end

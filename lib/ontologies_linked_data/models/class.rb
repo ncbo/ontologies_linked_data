@@ -704,7 +704,14 @@ eos
       end
 
       def traverse_path_to_root(parents, paths, path_i, tree = false, roots = nil)
-        return if (tree && parents.length == 0)
+        # Terminal condition: a class with no parents under the submission's tree
+        # property is the top of this path, so there is nothing left to append.
+        # Callers that pass `roots` (path_to_root / #tree) normally stop earlier in
+        # tree_root? below; callers that do not (the paths_to_root endpoint) rely on
+        # this guard, because the only other sentinel here is owl:Thing -- which
+        # owlapi asserts on top-level OWL classes but which never appears under
+        # skos:broader (SKOS) or metadata:treeView (OBO).
+        return if parents.nil? || parents.empty?
 
         recursions = [path_i]
         recurse_on_path = [false]
@@ -737,13 +744,14 @@ eos
             end
 
             if !p.loaded_attributes.include?(:parents)
-              # fail safely
+              # fail safely -- abandon this path only, the sibling paths in this
+              # frame are unaffected and must still be traversed
               logger = LinkedData::Parser.logger || Logger.new($stderr)
               logger.error("Class #{p.id.to_s} from #{p.submission.id} cannot load parents")
-              return
+              next
             end
 
-            traverse_path_to_root(p.parents.dup, paths, rec_i, tree=tree, roots=roots)
+            traverse_path_to_root((p.parents || []).dup, paths, rec_i, tree=tree, roots=roots)
           end
         end
       end
