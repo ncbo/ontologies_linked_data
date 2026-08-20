@@ -94,7 +94,11 @@ GEM
       logger
     faraday-net_http (3.4.4)
       net-http (~> 0.5)
+    ffi (1.17.4)
+    ffi (1.17.4-aarch64-linux-gnu)
     ffi (1.17.4-arm64-darwin)
+    ffi (1.17.4-x86_64-darwin)
+    ffi (1.17.4-x86_64-linux-gnu)
     hashdiff (1.2.1)
     htmlentities (4.4.2)
     http-accept (1.7.0)
