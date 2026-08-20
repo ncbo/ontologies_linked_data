@@ -1,4 +1,5 @@
 require 'minitest/autorun'
+require "rack/builder"
 require "rack/test"
 require "multi_json"
 require_relative "../../lib/ontologies_linked_data"

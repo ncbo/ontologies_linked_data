@@ -1,4 +1,5 @@
 require 'minitest/autorun'
+require "rack/builder"
 require "rack/test"
 require "json"
 require "logger"
