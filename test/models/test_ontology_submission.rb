@@ -1,6 +1,5 @@
 require_relative "./test_ontology_common"
 require "logger"
-require "rack"
 require "tempfile"
 require "mocha/minitest"
 
@@ -681,8 +680,7 @@ SELECT DISTINCT * WHERE {
   def test_download_ontology_file
     begin
       server_url, server_thread, _ = start_server
-      sleep 3  # Allow the server to startup
-      assert(server_thread.alive?, msg="Rack::Server thread should be alive, it's not!")
+      assert(server_thread.alive?, msg="WEBrick server thread should be alive, it's not!")
       _, _, ont_models = create_ontologies_and_submissions(ont_count: 1, submission_count: 1)
       ont = ont_models.first
       assert(ont.instance_of?(LinkedData::Models::Ontology), "ont is not an ontology: #{ont}")
@@ -698,9 +696,10 @@ SELECT DISTINCT * WHERE {
     ensure
       file.close! if file && file.respond_to?(:close!)
       LinkedData::TestCase.backend_4s_delete
-      Thread.kill(server_thread)  # this will shutdown Rack::Server also
+      server_thread[:webrick]&.shutdown
+      Thread.kill(server_thread)
       sleep 3
-      assert_equal(server_thread.alive?, false, msg="Rack::Server thread should be dead, it's not!")
+      assert_equal(server_thread.alive?, false, msg="WEBrick server thread should be dead, it's not!")
     end
   end
 

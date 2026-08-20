@@ -1,6 +1,5 @@
 require_relative './test_ontology_common'
 require 'logger'
-require 'rack'
 
 class TestOntologySubmission < LinkedData::TestOntologyCommon
 
