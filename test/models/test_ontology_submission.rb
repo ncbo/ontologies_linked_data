@@ -192,7 +192,7 @@ SELECT DISTINCT * WHERE {
     Goo.sparql_query_client.query(qthing).each_solution do |sol|
       count += 1
     end
-    assert count == 0
+    assert_equal 0, count
 
     qthing = <<-eos
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -204,20 +204,35 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       count += 1
       assert sol[:x].to_s["TAO_0000732"]
     end
-    assert count == 1
+    assert_equal 1, count
 
     qcount = <<-eos
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 SELECT DISTINCT * WHERE {
 <http://purl.obolibrary.org/obo/TAO_0001044>
-  <http://data.bioontology.org/metadata/obo/part_of> ?x . }
+  <http://purl.obolibrary.org/obo/OBO_REL#_part_of> ?x . }
     eos
     count = 0
     Goo.sparql_query_client.query(qcount).each_solution do |sol|
       count += 1
       assert sol[:x].to_s["TAO_0000732"]
     end
-    assert count == 1
+    assert_equal 1, count
+
+    # The owlapi-wrapper used to emit each OBO relationship twice: once under
+    # http://data.bioontology.org/metadata/obo/<rel> and again under the
+    # property's own IRI. Only the latter is emitted now, so guard against the
+    # duplicate annotation coming back.
+    qlegacy = <<-eos
+SELECT DISTINCT * WHERE {
+<http://purl.obolibrary.org/obo/TAO_0001044>
+  <http://data.bioontology.org/metadata/obo/part_of> ?x . }
+    eos
+    count = 0
+    Goo.sparql_query_client.query(qlegacy).each_solution do |sol|
+      count += 1
+    end
+    assert_equal 0, count
 
     sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: "TAO-TEST"]).first
     assert_equal(3, sub.roots.length, "Incorrect number of root classes")
