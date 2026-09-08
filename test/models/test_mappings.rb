@@ -216,13 +216,24 @@ class TestMapping < LinkedData::TestOntologyCommon
     LinkedData::Mappings.create_mapping_counts(Logger.new(TestLogFile.new))
     ct = LinkedData::Models::MappingCount.where.all.length
     assert_operator 2, :<, ct
-    mappings = LinkedData::Mappings.mappings_ontology(latest_sub, 1, 1000)
+    mappings = nil
+    queries = count_sparql_queries do
+      mappings = LinkedData::Mappings.mappings_ontology(latest_sub, 1, 1000)
+    end
+    # Query fan-out must not scale with the number of REST mappings on the page:
+    # count + mappings + one batched RestBackupMapping/process load. The old per-row
+    # lookup (find + bring_remaining) cost 2 extra queries per REST mapping (8 here).
+    assert_operator queries, :<=, 4,
+                    "expected a bounded number of SPARQL queries for a page with 3 REST mappings, got #{queries}"
     rest_mapping_count = 0
 
     mappings.each do |m|
       if m.source == "REST"
         rest_mapping_count += 1
         assert_equal 2, m.classes.length
+        refute_nil m.process
+        assert_equal "proc#{mapping_term_a.index(m.classes.find { |c| c.submission.id.to_s['TEST1'] }.id.to_s)}",
+                     m.process.name
         c1 = m.classes.select {
                         |c| c.submission.id.to_s["TEST1"] }.first
         c2 = m.classes.select {
@@ -259,6 +270,62 @@ class TestMapping < LinkedData::TestOntologyCommon
 
     mappings_created.each do |m|
       LinkedData::Mappings.delete_rest_mapping(m.id)
+    end
+  end
+
+  def test_mappings_ontology_rejects_invalid_pagination
+    delete_all_rest_mappings
+    assert create_count_mapping > 2
+    ont1 = LinkedData::Models::Ontology.where({ :acronym => ONT_ACR1 }).to_a[0]
+    latest_sub = ont1.latest_submission
+
+    # A negative size used to drop the LIMIT clause and dump every mapping for the ontology;
+    # page <= 0 produced a negative OFFSET that the triplestore rejects.
+    assert_raises(ArgumentError) { LinkedData::Mappings.mappings_ontology(latest_sub, 1, -1) }
+    assert_raises(ArgumentError) { LinkedData::Mappings.mappings_ontology(latest_sub, 0, 10) }
+    assert_raises(ArgumentError) { LinkedData::Mappings.mappings_ontology(latest_sub, -1, 10) }
+    assert_raises(ArgumentError) { LinkedData::Mappings.mappings_ontology(latest_sub, nil, 10) }
+
+    # size 0 keeps its "no pagination" contract used by the per-class mappings route
+    all = LinkedData::Mappings.mappings_ontology(latest_sub, 0, 0)
+    assert_kind_of Array, all
+    refute_kind_of Goo::Base::Page, all
+    assert_equal 18, all.length
+
+    page = LinkedData::Mappings.mappings_ontology(latest_sub, 1, 10)
+    assert_instance_of Goo::Base::Page, page
+    assert_equal 10, page.length
+    assert_operator page.total_pages, :>=, 2
+  end
+
+  def test_mappings_ontology_skips_orphaned_rest_mapping
+    delete_all_rest_mappings
+    mapping_term_a, mapping_term_b, submissions_a, submissions_b, relations, user = rest_mapping_data
+    classes = get_mapping_classes(term_a: mapping_term_a[0], term_b: mapping_term_b[0],
+                                  submissions_a: submissions_a[0], submissions_b: submissions_b[0])
+    mapping = create_rest_mapping(relation: RDF::URI.new(relations[0]), user: user,
+                                  classes: classes, name: "orphan")
+    assert create_count_mapping > 2
+    ont_id = submissions_a.first.split("/")[0..-3].join("/")
+    latest_sub = LinkedData::Models::Ontology.find(RDF::URI.new(ont_id)).first.latest_submission
+
+    begin
+      # Orphan the REST triples: remove the backup record (and its process) but leave the
+      # mappingRest triples in the submission graphs. The page must still be served.
+      LinkedData::Models::RestBackupMapping.find(mapping.id).first.delete
+      mapping.process.delete
+
+      mappings = LinkedData::Mappings.mappings_ontology(latest_sub, 1, 1000)
+      assert_equal 0, mappings.count { |m| m.source == "REST" }
+      assert_equal 18, mappings.length
+    ensure
+      rest_predicate = LinkedData::Mappings.mapping_predicates["REST"][0]
+      classes.each do |c|
+        sub = LinkedData::Models::Ontology.find(c.submission.ontology.id).first.latest_submission
+        graph_delete = RDF::Graph.new
+        graph_delete << [RDF::URI.new(c.id), RDF::URI.new(rest_predicate), mapping.id]
+        Goo.sparql_update_client.delete_data(graph_delete, graph: sub.id)
+      end
     end
   end
 

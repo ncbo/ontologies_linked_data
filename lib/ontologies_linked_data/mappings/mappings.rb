@@ -156,7 +156,22 @@ module LinkedData
         return p
     end
 
+      # Pagination contract: `size == 0` means "no pagination, return an Array" (used by
+      # the per-class mappings route); otherwise `size >= 1` and `page >= 1`. Anything else
+      # used to leak into the SPARQL query: a negative size dropped the LIMIT clause entirely
+      # (a full dump of every mapping for the ontology), and page <= 0 produced a negative
+      # OFFSET that the triplestore rejects with a parser error.
+      def self.validate_pagination(page, size)
+        unless size.is_a?(Integer) && size >= 0
+          raise ArgumentError, "size must be a non-negative integer (0 disables pagination), got #{size.inspect}"
+        end
+        if size > 0 && !(page.is_a?(Integer) && page >= 1)
+          raise ArgumentError, "page must be an integer >= 1, got #{page.inspect}"
+        end
+      end
+
       def self.mappings_ontologies(sub1, sub2, page, size, classId = nil, reload_cache = false)
+        validate_pagination(page, size)
         sub1, acr1 = extract_acronym(sub1)
         sub2, acr2 = extract_acronym(sub2)
 
@@ -178,24 +193,30 @@ module LinkedData
         s1 = nil
         s1 = RDF::URI.new(classId.to_s) unless classId.nil?
 
+        # One batched lookup for every REST row on the page instead of two queries per row.
+        backups = rest_backup_mappings_by_id(solutions)
+
         solutions.each do |sol|
           graph2 = sub2.nil? ? sol[:g] : sub2
           s1 = sol[:s1] if classId.nil?
+          source = sol[:source].to_s
           backup_mapping = nil
 
-          if sol[:source].to_s == "REST"
-            backup_mapping = LinkedData::Models::RestBackupMapping
-                               .find(sol[:o]).include(:process, :class_urns).first
-            backup_mapping.process.bring_remaining
+          if source == "REST"
+            backup_mapping = backups[sol[:o].to_s]
+            # An orphaned REST triple whose RestBackupMapping (and therefore its process)
+            # has been deleted. It can't be served by /mappings/:id either, so skip it
+            # rather than failing the whole page.
+            next if backup_mapping.nil?
           end
 
           classes = get_mapping_classes_instance(s1, sub1, sol[:s2], graph2)
 
           mapping = if backup_mapping.nil?
-                      LinkedData::Models::Mapping.new(classes, sol[:source].to_s)
+                      LinkedData::Models::Mapping.new(classes, source)
                     else
                       LinkedData::Models::Mapping.new(
-                        classes, sol[:source].to_s,
+                        classes, source,
                         backup_mapping.process, backup_mapping.id)
                     end
 
@@ -208,6 +229,25 @@ module LinkedData
 
         page = Goo::Base::Page.new(page, size, persistent_count, mappings)
         return page
+      end
+
+      # Load the RestBackupMapping (with its fully populated process) for every REST solution
+      # in one query per slice of ids, keyed by backup id string. Ids with no backup are absent.
+      def self.rest_backup_mappings_by_id(solutions)
+        # RDF::Query::Solutions overrides #select as a variable projection, so collect explicitly.
+        ids = []
+        solutions.each { |sol| ids << sol[:o] if sol[:source].to_s == "REST" }
+        ids.uniq!
+        return {} if ids.empty?
+
+        process_attrs = LinkedData::Models::MappingProcess.attributes
+        by_id = {}
+        ids.each_slice(Goo.slice_loading_size) do |slice|
+          LinkedData::Models::RestBackupMapping.where.ids(slice)
+                .include(process: process_attrs)
+                .all.each { |backup| by_id[backup.id.to_s] = backup }
+        end
+        by_id
       end
 
     def self.mappings_ontology(sub,page,size,classId=nil,reload_cache=false)
