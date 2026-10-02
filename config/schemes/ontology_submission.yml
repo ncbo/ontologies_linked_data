@@ -1412,7 +1412,7 @@ translationOfWork:
 
 #Ontology root term(s)
 hasOntologyRootTerm:
-  display: "relations"
+  display: "content"
   label: "Ontology root term(s)"
   helpText: "Class(es) the ontology declares as its display roots, used to start the class hierarchy below owl:Thing and upper-ontology terms."
   example: 'http://purl.obolibrary.org/obo/CL_0000000'
