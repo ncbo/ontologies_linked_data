@@ -3,5 +3,5 @@
 use LinkedData::Serializer
 
 map '/' do
-  run Proc.new { |env| [200, {'Content-Type' => 'text/html'}, ['success']] }
+  run Proc.new { |env| [200, {'content-type' => 'text/html'}, ['success']] }
 end

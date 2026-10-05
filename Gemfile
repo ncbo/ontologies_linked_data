@@ -11,7 +11,7 @@ gem 'multi_json', '~> 1.0'
 gem 'oj', '~> 3.0'
 gem 'omni_logger'
 gem 'pony'
-gem 'rack'
+gem 'rack', '~> 3.2'
 gem 'rake'
 gem 'request_store'
 gem 'rest-client'
@@ -28,7 +28,7 @@ group :test do
   gem 'mock_redis', '~> 0.5'
   gem 'ontoportal_testkit', github: 'alexskr/ontoportal_testkit', branch: 'main'
   gem 'pry'
-  gem 'rack-test', '~> 0.6'
+  gem 'rack-test', '~> 2.1'
   gem 'simplecov'
   gem 'simplecov-cobertura' # for codecov.io
   gem 'webrick'
@@ -39,7 +39,7 @@ group :development do
   gem 'rubocop', require: false
 end
 # NCBO gems (can be from a local dev path or from rubygems/git)
-gem 'goo', github: 'ncbo/goo', branch: 'development'
+gem 'goo', github: 'ncbo/goo', branch: 'main'
 
 
 gem 'public_suffix', '~> 5.1.1'
