@@ -8,8 +8,8 @@ GIT
 
 GIT
   remote: https://github.com/ncbo/goo.git
-  revision: c56f3d67e2c4d1280cd510caf84b7a1e2e93f450
-  branch: main
+  revision: abc18c8bc30ec6ae3f2fede2e03914c5e2a5f0a3
+  branch: development
   specs:
     goo (0.0.2)
       activesupport
@@ -22,7 +22,7 @@ GIT
       redis
       request_store
       rest-client
-      rsolr
+      rsolr (>= 2.6.0)
       sparql-client (= 3.2.2)
       stoplight (~> 5.0)
       uuid
