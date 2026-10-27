@@ -322,6 +322,33 @@ SELECT DISTINCT * WHERE {
     assert_equal ['La première ontologie déddiée aux concepts de la médecine associée'], sub.notes
   end
 
+  def test_submission_parse_refreshes_inherited_obo_version
+    [true, false].each_with_index do |heavy, index|
+      submission_parse('VERSIONTEST', 'Version refresh test',
+                       './test/data/ontology_files/version_refresh.obo', index + 1,
+                       {process_rdf: true, extract_metadata: heavy, generate_missing_labels: false},
+                       {version: '4.1.195'})
+
+      sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: 'VERSIONTEST'], submissionId: index + 1)
+                                                 .include(:version).first
+      assert_equal '4.2.11', sub.version
+    end
+  end
+
+  def test_submission_parse_preserves_explicit_obo_version
+    [true, false].each_with_index do |heavy, index|
+      submission_parse('VERSIONTEST', 'Version override test',
+                       './test/data/ontology_files/version_refresh.obo', index + 1,
+                       {process_rdf: true, extract_metadata: heavy, generate_missing_labels: false,
+                        params: {version: 'User release'}},
+                       {version: 'User release'})
+
+      sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: 'VERSIONTEST'], submissionId: index + 1)
+                                                 .include(:version).first
+      assert_equal 'User release', sub.version
+    end
+  end
+
   # IAO:0000700 ("has ontology root term") declared on the ontology is extracted
   # into the submission's hasOntologyRootTerm attribute (a list of class URIs).
   def test_extract_ontology_root_terms

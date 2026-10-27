@@ -31,6 +31,22 @@ module LinkedData
           end
         end
 
+        # Refresh inherited versions from the parser, while preserving explicit overrides.
+        # Heavy extraction runs afterwards so its mapped version retains precedence.
+        unless user_provided_value?(user_params, :version)
+          version_info = extract_version
+
+          unless empty_value?(version_info)
+            old_version = @submission.version
+            @submission.version = version_info
+
+            unless @submission.valid?
+              logger.error("The extracted submission version \"#{version_info}\" is invalid. Discarding...")
+              @submission.version = old_version
+            end
+          end
+        end
+
         if heavy_extraction
           begin
             # Extract metadata directly from the ontology
@@ -39,21 +55,6 @@ module LinkedData
           rescue StandardError => e
             message = e.message + "\n\n  " + e.backtrace.join("\n  ")
             logger.error("Error while extracting additional metadata: #{message}")
-          end
-        end
-
-        version_exists = @submission.version
-
-        if version_exists.to_s.strip.empty?
-          version_info = extract_version
-
-          if version_info
-            @submission.version = version_info
-
-            unless @submission.valid?
-              logger.error("The extracted submission version \"#{version_info}\" is invalid. Discarding...")
-              @submission.version = nil
-            end
           end
         end
 
@@ -96,7 +97,7 @@ module LinkedData
           attr_settings = LinkedData::Models::OntologySubmission.attribute_settings(attr)
 
           # Check if the user provided a non-empty value for this attribute
-          user_provided_value = user_params.key?(attr) && !empty_value?(user_params[attr])
+          user_provided_value = user_provided_value?(user_params, attr)
           # Proceed only if the attribute is marked as extractable and the user did NOT provide a value
           should_extract = attr_settings[:extractedMetadata] && !user_provided_value
           next unless should_extract
@@ -143,6 +144,12 @@ module LinkedData
         value.nil? || (value.is_a?(Array) && value.empty?) || value.to_s.strip.empty?
       end
 
+      def user_provided_value?(user_params, attr)
+        user_params && [attr, attr.to_s].any? do |key|
+          user_params.key?(key) && !empty_value?(user_params[key])
+        end
+      end
+
       def value(attr, type)
         val = @submission.send(attr.to_s)
         type.eql?(:list) ? Array(val) || [] : val || ''
@@ -172,8 +179,10 @@ module LinkedData
         else
           new_value = new_value.is_a?(Hash)? new_value.values.first : new_value.to_s
           new_value = find_or_create_agent(attr, nil, logger) if enforce?(attr, :Agent)
+          # Restore the current value on failure, including metadata accepted earlier
+          # in this extraction, rather than the value from the last persistence cycle.
+          old_val = @submission.send(attr)
           @submission.send("#{attr}=", new_value)
-          old_val = @submission.previous_values&.key?(attr) ? @submission.previous_values[attr] : nil
           single_extracted = true
         end
 
