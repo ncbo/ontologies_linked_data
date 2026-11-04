@@ -164,97 +164,61 @@ module LinkedData
         sub.class.model_settings[:attributes][:hasPart][:enforce].append(:include_ontology_views)
       end
 
+      ##
+      # The submission with the highest submissionId whose statuses match options[:status]
+      # (default :ready; see SubmissionStatus.status_codes_for), or nil.
+      #
+      # options[:include] lists extra submission attributes to load, in goo include
+      # syntax, e.g. include: [ontology: [:acronym], metrics: :classes]. submissionId and
+      # submissionStatus are always loaded.
+      #
+      # If this ontology already has its submissions loaded, the matching instance from
+      # that list is returned, so attributes the caller loaded on it are kept.
       def latest_submission(options = {})
+        # Callers such as ProvisionalClass#index_id read ontology.acronym afterwards.
         self.bring(:acronym) if self.bring?(:acronym)
         submission_id = highest_submission_id(options)
-        return nil if submission_id.nil? || submission_id == 0
+        return nil if submission_id.nil? || submission_id.zero?
 
-        self.submissions.each do |s|
-          return s if s.submissionId == submission_id
-        end
-        nil
+        submission(submission_id, include: options[:include])
       end
 
-      def submission(submission_id)
+      ##
+      # The submission with the given submissionId, or nil. Same include: option as
+      # latest_submission.
+      def submission(submission_id, include: nil)
         submission_id = submission_id.to_i
         self.bring(:acronym) if self.bring?(:acronym)
-        if self.loaded_attributes.include?(:submissions)
-          self.submissions.each do |s|
-            s.bring(:submissionId) if s.bring?(:submissionId)
-            if s.submissionId == submission_id
-              s.bring(:submissionStatus) if s.bring?(:submissionStatus)
-              return s
-            end
-          end
+        return nil unless submission_id.positive?
+
+        attrs = submission_attributes_to_load(include)
+        sub = loaded_submission(submission_id)
+        if sub
+          missing = attrs.select { |a| sub.bring?(a.is_a?(Hash) ? a.keys.first : a) }
+          sub.bring(*missing) unless missing.empty?
+          return sub
         end
-        OntologySubmission.where(ontology: [ acronym: acronym ], submissionId: submission_id.to_i)
-                                .include(:submissionStatus)
-                                .include(:submissionId).first
+
+        OntologySubmission.where(ontology: self, submissionId: submission_id).include(*attrs).first
       end
 
       def next_submission_id
-        self.bring(:submissions)
         (highest_submission_id(status: :any) || 1) + 1
       end
 
+      ##
+      # The highest submissionId among this ontology's submissions whose statuses match
+      # options[:status] (default :ready; see SubmissionStatus.status_codes_for).
+      # Returns 0 if the ontology has no submissions, nil if none of them match.
+      #
+      # Uses one pattern query per required status code, so the query does not grow with
+      # the number of submissions. Ontologies such as GO have well over a thousand.
       def highest_submission_id(options = {})
-        reload = options[:reload] || false
-        status = options[:status] || :ready
+        codes = LinkedData::Models::SubmissionStatus.status_codes_for(options[:status] || :ready)
+        ids = codes.nil? ? submission_ids : codes.map { |code| submission_ids(code) }.reduce(:&)
+        return ids.max unless ids.empty?
 
-        LinkedData::Models::Ontology.where.models([self])
-                    .include(submissions: [:submissionId, :submissionStatus])
-                    .to_a
-
-        # TODO: this code was added to deal with intermittent issues with 4store, where
-        # self.submissions was being reported as not loaded for no apparent reason
-        subs = nil
-
-        begin
-          subs = self.submissions
-        rescue Exception
-          i = 0
-          num_calls = LinkedData.settings.num_retries_4store
-          subs = nil
-
-          while subs.nil? && i < num_calls do
-            i += 1
-            puts "Exception while getting submissions for #{self.id.to_s}. Retrying #{i} times..."
-            sleep(1)
-
-            begin
-              self.bring(:submissions)
-              subs = self.submissions
-              puts "Success getting submissions for #{self.id.to_s} after retrying #{i} times..."
-            rescue Exception => e1
-              subs = nil
-
-              if i == num_calls
-                puts "Exception while getting submissions for #{self.id.to_s} after retrying #{i} times: #{e1.class}: #{e1.message}\n#{e1.backtrace.join("\n")}"
-              end
-            end
-          end
-        end
-
-        return 0 if subs.nil? || subs.empty?
-
-        subs.each do |s|
-          if !s.loaded_attributes.include?(:submissionId)
-            s.bring(:submissionId)
-          end
-          if !s.loaded_attributes.include?(:submissionStatus)
-            s.bring(:submissionStatus)
-          end
-        end
-
-        # Try to get a new one based on the old
-        submission_ids = []
-
-        subs.each do |s|
-          next if !s.ready?({status: status})
-          submission_ids << s.submissionId.to_i
-        end
-
-        submission_ids.max
+        codes.nil? || submission_ids.empty? ? 0 : nil
       end
 
       def properties(sub=nil)
@@ -521,6 +485,45 @@ module LinkedData
           return true if self.acl.map {|u| u.id.to_s}.include?(user.id.to_s) || self.administeredBy.map {|u| u.id.to_s}.include?(user.id.to_s)
         end
         false
+      end
+
+      private
+
+      ##
+      # submissionIds of this ontology's submissions, optionally only those with the given
+      # status code. Filtering on submissionStatus here would also restrict which statuses
+      # goo loads, so callers that need a submission's statuses must load it separately.
+      def submission_ids(status_code = nil)
+        pattern = { ontology: self }
+        pattern[:submissionStatus] = [code: status_code] if status_code
+        OntologySubmission.where(pattern).include(:submissionId).all.map { |s| s.submissionId.to_i }
+      end
+
+      ##
+      # The instance with this submissionId from already-loaded submissions, or nil when
+      # submissions are not loaded or the list does not have it.
+      def loaded_submission(submission_id)
+        return nil unless loaded_attributes.include?(:submissions)
+
+        subs = submissions || []
+        without_id = subs.select { |s| s.bring?(:submissionId) }
+        OntologySubmission.where.models(without_id).include(:submissionId).all unless without_id.empty?
+        subs.find { |s| s.submissionId.to_i == submission_id }
+      end
+
+      ##
+      # submissionId, submissionStatus and the caller's extra attributes, as a list of
+      # symbols and single-key hashes with no attribute listed twice.
+      def submission_attributes_to_load(extra)
+        specs = { submissionId: :submissionId, submissionStatus: :submissionStatus }
+        (extra.is_a?(Array) ? extra : [extra]).compact.each do |attr|
+          if attr.is_a?(Hash)
+            attr.each { |key, value| specs[key] = { key => value } }
+          else
+            specs[attr] = attr
+          end
+        end
+        specs.values
       end
     end
   end

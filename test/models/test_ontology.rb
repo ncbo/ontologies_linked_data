@@ -64,6 +64,15 @@ class TestOntology < LinkedData::TestOntologyCommon
     o.delete unless o.nil?
   end
 
+  def _add_statuses(ont, submission_id, codes)
+    sub = LinkedData::Models::OntologySubmission.where(ontology: ont, submissionId: submission_id).first
+    sub.bring(*LinkedData::Models::OntologySubmission.attributes)
+    codes.each do |code|
+      sub.add_submission_status(LinkedData::Models::SubmissionStatus.find(code).include(:code).first)
+    end
+    sub.save
+  end
+
   def test_ontology_acronym_existence
     o = LinkedData::Models::Ontology.new
     o.name = @name
@@ -431,6 +440,88 @@ class TestOntology < LinkedData::TestOntologyCommon
     ont.bring(:submissions)
     all_submissions = ont.submissions
     assert_equal 3, all_submissions.length
+  end
+
+  def test_latest_submission_by_status
+    _, acronyms, onts = create_ontologies_and_submissions(ont_count: 1, submission_count: 4)
+    _add_statuses(onts.first, 1, %w[RDF METRICS])
+    _add_statuses(onts.first, 2, %w[RDF])
+    _add_statuses(onts.first, 3, %w[ERROR_RDF])
+
+    ont = LinkedData::Models::Ontology.find(acronyms.first).first
+    assert_equal 2, ont.latest_submission.submissionId
+    assert_equal 2, ont.latest_submission(status: :rdf).submissionId
+    assert_equal 2, ont.latest_submission(status: [:RDF]).submissionId
+    assert_equal 1, ont.latest_submission(status: [:rdf, :metrics]).submissionId
+    assert_equal 3, ont.latest_submission(status: :error_rdf).submissionId
+    assert_equal 4, ont.latest_submission(status: :any).submissionId
+    assert_nil ont.latest_submission(status: :indexed)
+
+    # Found with pattern queries, without loading every submission of the ontology
+    refute_includes ont.loaded_attributes, :submissions
+  end
+
+  def test_highest_submission_id
+    o = LinkedData::Models::Ontology.new(acronym: @acronym, administeredBy: [@user], name: @name).save
+    assert_equal 0, o.highest_submission_id(status: :any)
+    assert_equal 0, o.highest_submission_id
+    assert_equal 1, o.next_submission_id
+
+    _, _, onts = create_ontologies_and_submissions(ont_count: 1, submission_count: 2)
+    ont = onts.first
+    assert_equal 2, ont.highest_submission_id(status: :any)
+    assert_equal 3, ont.next_submission_id
+    # Has submissions but none parsed: nil, not 0
+    assert_nil ont.highest_submission_id
+    _add_statuses(ont, 1, %w[RDF])
+    assert_equal 1, ont.highest_submission_id
+  end
+
+  def test_submission_lookup_include
+    _, acronyms, onts = create_ontologies_and_submissions(ont_count: 1, submission_count: 3)
+    _add_statuses(onts.first, 3, %w[RDF])
+    ont = LinkedData::Models::Ontology.find(acronyms.first).first
+
+    latest = ont.latest_submission(status: :rdf, include: [ontology: [:acronym], hasOntologyLanguage: [:acronym]])
+    assert_equal 3, latest.submissionId
+    assert_equal acronyms.first, latest.ontology.acronym
+    assert_equal "OWL", latest.hasOntologyLanguage.acronym
+    assert_includes latest.loaded_attributes, :submissionStatus
+    assert latest.ready?(status: :rdf)
+
+    sub = ont.submission("2", include: :description)
+    assert_equal 2, sub.submissionId
+    assert_equal "Description 2", sub.description
+    assert_nil ont.submission(99)
+    assert_nil ont.submission("not-a-number")
+  end
+
+  def test_latest_submission_from_loaded_submissions
+    _, acronyms, _ = create_ontologies_and_submissions(ont_count: 1, submission_count: 3)
+
+    # The instance from the caller's list is returned, with the attributes they loaded
+    ont = LinkedData::Models::Ontology.find(acronyms.first).include(submissions: [:submissionId, :description]).first
+    latest = ont.latest_submission(status: :any)
+    assert_same ont.submissions.find { |s| s.submissionId == 3 }, latest
+    assert_equal "Description 3", latest.description
+    assert_includes latest.loaded_attributes, :submissionStatus
+
+    # Submissions loaded without attributes get their submissionIds filled in
+    ont = LinkedData::Models::Ontology.find(acronyms.first).first
+    ont.bring(:submissions)
+    assert_equal 2, ont.submission(2).submissionId
+    assert ont.submissions.all? { |s| s.loaded_attributes.include?(:submissionId) }
+  end
+
+  def test_status_codes_for
+    status = LinkedData::Models::SubmissionStatus
+    assert_nil status.status_codes_for(:any)
+    assert_nil status.status_codes_for([])
+    assert_nil status.status_codes_for([:rdf, :any])
+    assert_equal ["RDF"], status.status_codes_for(:ready)
+    assert_equal ["RDF"], status.status_codes_for(:rdf)
+    assert_equal ["RDF"], status.status_codes_for("RDF")
+    assert_equal ["RDF", "METRICS"], status.status_codes_for([:rdf, :metrics])
   end
 
   def test_duplicate_contacts
