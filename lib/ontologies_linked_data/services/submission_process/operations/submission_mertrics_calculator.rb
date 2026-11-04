@@ -85,6 +85,13 @@ module LinkedData
         metrics.properties = prop_count
         logger.info('properties finished')
         logger.flush
+        if @submission.skos?
+          LinkedData::Metrics.skos_metrics(@submission, logger).each do |k, v|
+            metrics.send("#{k}=", v)
+          end
+          logger.info('skos metrics finished')
+          logger.flush
+        end
         # re-generate metrics file
         generate_metrics_file(cls_metrics[:classes], indiv_count, prop_count, cls_metrics[:maxDepth])
         logger.info('generation of metrics file finished')

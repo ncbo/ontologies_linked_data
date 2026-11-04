@@ -1199,6 +1199,10 @@ eos
     assert_equal 165, metrics.classes
     assert_equal 78, metrics.properties
     assert_equal 26, metrics.individuals
+    assert_nil metrics.concepts
+    assert_nil metrics.conceptSchemes
+    assert_nil metrics.collections
+    assert_nil metrics.skosxlLabels
     assert_equal 15, metrics.classesWithOneChild
     assert_equal 139, metrics.classesWithNoDefinition
     assert_equal 0, metrics.classesWithMoreThan25Children
@@ -1271,6 +1275,59 @@ eos
     metrics = sub.metrics
     metrics.bring_remaining
     assert_equal 133, metrics.classes
+  end
+
+  def skos_metrics_for(acronym, file)
+    submission_parse(acronym, "#{acronym} testing SKOS metrics", file, 1,
+                     process_rdf: true, extract_metadata: false,
+                     index_search: false, run_metrics: true, diff: false)
+    sub = LinkedData::Models::Ontology.find(acronym).first.latest_submission(status: :any)
+    sub.bring_remaining
+    sub.bring(:submissionStatus)
+    assert_includes sub.submissionStatus.map(&:get_code_from_id), "METRICS"
+    metrics = sub.metrics
+    metrics.bring_remaining
+    [sub, metrics]
+  end
+
+  # Expected counts are distinct non-blank subjects of each rdf:type in the fixture files.
+  def test_skos_submission_metrics_count_concepts
+    sub, metrics = skos_metrics_for("SKOS-METRICS", "./test/data/ontology_files/efo_gwas.skos.owl")
+    logger = Logger.new(TestLogFile.new)
+
+    # The concept count is what the classes endpoint pages over (?s a skos:Concept)
+    concepts = LinkedData::Models::Class.in(sub).count
+    assert_equal 364, concepts
+    assert_equal concepts, metrics.concepts
+    assert_equal 2, metrics.conceptSchemes
+    assert_equal 2, metrics.collections
+    assert_equal 0, metrics.skosxlLabels
+    assert_equal concepts, sub.class_count(logger)
+    # OWLAPI's numbers count more than concepts; class_count used to return their sum
+    refute_equal concepts, metrics.classes + metrics.individuals
+  end
+
+  def test_skos_submission_metrics_count_collections_and_xl_labels
+    _sub, metrics = skos_metrics_for("SKOS-METRICS-XL",
+                                     "./test/data/ontology_files/thesaurusINRAE_nouv_structure.skos")
+
+    assert_equal 15632, metrics.concepts
+    assert_equal 66, metrics.conceptSchemes
+    assert_equal 2, metrics.collections
+    assert_equal 2, metrics.skosxlLabels
+  end
+
+  def test_skos_submission_metrics_without_concepts
+    # ncbo/ontologies_linked_data#271: a SKOS-registered RDFS vocabulary like DCTERMS has no
+    # skos:Concept, so its classes endpoint has no pages; class_count should say so.
+    sub, metrics = skos_metrics_for("SKOS-METRICS-DCT", "./test/data/ontology_files/dcterms_like.skos.rdf")
+    logger = Logger.new(TestLogFile.new)
+
+    assert_equal 0, LinkedData::Models::Class.in(sub).count
+    assert_equal 0, metrics.concepts
+    assert_equal 0, metrics.conceptSchemes
+    assert_operator metrics.classes + metrics.individuals, :>, 0
+    assert_equal 0, sub.class_count(logger)
   end
 
   def test_class_count_without_metrics
@@ -1674,12 +1731,21 @@ eos
                      process_rdf: true, extract_metadata: false,
                      index_search: false, run_metrics: true, diff: false)
 
+    # Production metrics were computed before metrics counted SKOS concepts, so class_count
+    # falls back to OWLAPI classes + individuals. Drop the concept count to get there.
+    sub = LinkedData::Models::Ontology.find(acronym).first.latest_submission(status: :any)
+    sub.bring(:metrics)
+    metrics = sub.metrics
+    metrics.bring_remaining
+    metrics.concepts = nil
+    metrics.save
+
     sub = LinkedData::Models::Ontology.find(acronym).first.latest_submission(status: :any)
     sub.bring_remaining
     sub.ontology.bring_remaining
     logger = Logger.new(TestLogFile.new)
     assert_operator sub.class_count(logger), :>, 0,
-                    "metrics from the first run should report a non-zero count for this fixture"
+                    "metrics without a concept count should report a non-zero count for this fixture"
     assert_equal 0, LinkedData::Models::Class.in(sub).count
 
     sub.generate_missing_labels(logger)
