@@ -18,6 +18,14 @@ module LinkedData
       attribute :classesWithMoreThan25Children, enforce: [:integer,:existence]
       attribute :classesWithNoDefinition, enforce: [:integer,:existence]
 
+      # SKOS only: distinct resources typed as skos:Concept, skos:ConceptScheme,
+      # skos:Collection and skosxl:Label in the submission graph. Not set for other formats,
+      # and not set on metrics computed before these attributes existed.
+      attribute :concepts, enforce: [:integer]
+      attribute :conceptSchemes, enforce: [:integer]
+      attribute :collections, enforce: [:integer]
+      attribute :skosxlLabels, enforce: [:integer]
+
       cache_timeout 14400 # 4 hours
 
       # Hypermedia links
