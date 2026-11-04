@@ -173,7 +173,11 @@ module LinkedData
       # submissionStatus are always loaded.
       #
       # If this ontology already has its submissions loaded, the matching instance from
-      # that list is returned, so attributes the caller loaded on it are kept.
+      # that list is returned, so attributes the caller loaded on it are kept, and the
+      # requested attributes it lacks are brought, nested ones included.
+      #
+      # The submission's ontology is this ontology object (attributes requested under
+      # :ontology are loaded on it), unless the caller already loaded or set it.
       def latest_submission(options = {})
         # Callers such as ProvisionalClass#index_id read ontology.acronym afterwards.
         self.bring(:acronym) if self.bring?(:acronym)
@@ -192,26 +196,29 @@ module LinkedData
         return nil unless submission_id.positive?
 
         attrs = submission_attributes_to_load(include)
+        # The ontology is linked to self below rather than loaded as a separate object
+        ontology_spec = attrs.find { |a| include_key(a) == :ontology }
+        attrs.delete(ontology_spec)
+
         sub = loaded_submission(submission_id)
         if sub
-          missing = attrs.select { |a| sub.bring?(a.is_a?(Hash) ? a.keys.first : a) }
-          sub.bring(*missing) unless missing.empty?
-          return sub
+          bring_missing(sub, attrs)
+        else
+          sub = OntologySubmission.where(ontology: self, submissionId: submission_id).include(*attrs).first
+          return nil unless sub
         end
 
-        sub = OntologySubmission.where(ontology: self, submissionId: submission_id).include(*attrs).first
         # Point the submission back at this ontology object, as goo does for submissions
         # loaded through Ontology#submissions. Saving the submission re-indexes its
-        # metadata with sub.ontology embedded, and an ontology with no attributes loaded
-        # indexes as a bare id. on_load: true sets it without marking it modified.
-        if sub && attrs.none? { |a| a == :ontology || (a.is_a?(Hash) && a.key?(:ontology)) }
-          sub.send(:ontology=, self, on_load: true)
-        end
+        # metadata with sub.ontology embedded, and an ontology with too few attributes
+        # loaded indexes as a bare id. on_load: true sets it without marking it modified.
+        sub.send(:ontology=, self, on_load: true) if sub.bring?(:ontology)
+        bring_missing(sub, [ontology_spec]) if ontology_spec
         sub
       end
 
       def next_submission_id
-        (highest_submission_id(status: :any) || 1) + 1
+        highest_submission_id(status: :any) + 1
       end
 
       ##
@@ -219,14 +226,19 @@ module LinkedData
       # options[:status] (default :ready; see SubmissionStatus.status_codes_for).
       # Returns 0 if the ontology has no submissions, nil if none of them match.
       #
-      # Uses one pattern query per required status code, so the query does not grow with
-      # the number of submissions. Ontologies such as GO have well over a thousand.
+      # Uses pattern queries, so neither the query nor its result grows with the number
+      # of submissions (GO has well over a thousand). :any or a single status code is one
+      # query returning one row. Several codes intersect the ids found for each code.
       def highest_submission_id(options = {})
         codes = LinkedData::Models::SubmissionStatus.status_codes_for(options[:status] || :ready)
-        ids = codes.nil? ? submission_ids : codes.map { |code| submission_ids(code) }.reduce(:&)
-        return ids.max unless ids.empty?
+        id = if codes.nil? || codes.one?
+               max_submission_id(codes&.first)
+             else
+               codes.map { |code| submission_ids(code) }.reduce(:&).max
+             end
+        return id if id
 
-        codes.nil? || submission_ids.empty? ? 0 : nil
+        codes.nil? || max_submission_id.nil? ? 0 : nil
       end
 
       def properties(sub=nil)
@@ -502,20 +514,41 @@ module LinkedData
       # status code. Filtering on submissionStatus here would also restrict which statuses
       # goo loads, so callers that need a submission's statuses must load it separately.
       def submission_ids(status_code = nil)
+        submission_id_query(status_code).all.map { |s| s.submissionId.to_i }
+      end
+
+      ##
+      # The highest submissionId, optionally among submissions with the given status code,
+      # or nil if there is none. submissionId is an xsd:integer, so it sorts numerically.
+      # no_count skips the COUNT query goo otherwise runs for a page.
+      def max_submission_id(status_code = nil)
+        submission_id_query(status_code).order_by(submissionId: :desc).page(1, 1).no_count.all
+                                        .first&.submissionId&.to_i
+      end
+
+      def submission_id_query(status_code)
         pattern = { ontology: self }
         pattern[:submissionStatus] = [code: status_code] if status_code
-        OntologySubmission.where(pattern).include(:submissionId).all.map { |s| s.submissionId.to_i }
+        OntologySubmission.where(pattern).include(:submissionId)
       end
 
       ##
       # The instance with this submissionId from already-loaded submissions, or nil when
       # submissions are not loaded or the list does not have it.
+      #
+      # Fills in missing submissionIds on the list (ncbo_cron's archive_old_submissions
+      # reads them after latest_submission) from one pattern query, matched by IRI. A
+      # where.models query would list every submission IRI, as the old lookup did.
       def loaded_submission(submission_id)
         return nil unless loaded_attributes.include?(:submissions)
 
         subs = submissions || []
         without_id = subs.select { |s| s.bring?(:submissionId) }
-        OntologySubmission.where.models(without_id).include(:submissionId).all unless without_id.empty?
+        unless without_id.empty?
+          ids = submission_id_query(nil).all.to_h { |s| [s.id.to_s, s.submissionId] }
+          # nil for a submission that is on the list but no longer in the store
+          without_id.each { |s| s.send(:submissionId=, ids[s.id.to_s], on_load: true) }
+        end
         subs.find { |s| s.submissionId.to_i == submission_id }
       end
 
@@ -524,14 +557,50 @@ module LinkedData
       # symbols and single-key hashes with no attribute listed twice.
       def submission_attributes_to_load(extra)
         specs = { submissionId: :submissionId, submissionStatus: :submissionStatus }
-        (extra.is_a?(Array) ? extra : [extra]).compact.each do |attr|
-          if attr.is_a?(Hash)
-            attr.each { |key, value| specs[key] = { key => value } }
+        include_specs(extra).each { |spec| specs[include_key(spec)] = spec }
+        specs.values
+      end
+
+      ##
+      # A goo include value (a symbol, a hash, or a list of either) as a list of symbols
+      # and single-key hashes.
+      def include_specs(spec)
+        (spec.is_a?(Array) ? spec : [spec]).compact.flat_map do |s|
+          s.is_a?(Hash) ? s.map { |key, value| { key => value } } : [s]
+        end
+      end
+
+      def include_key(spec)
+        spec.is_a?(Hash) ? spec.keys.first : spec
+      end
+
+      ##
+      # Brings the attributes in specs (goo include syntax) that the instances do not have
+      # loaded. For a nested spec whose attribute is already loaded, brings the nested
+      # attributes on its values instead, which a plain bring? check on the key skips.
+      # Instances of one class that lack the same attributes are loaded in one query.
+      def bring_missing(instances, specs)
+        instances = Array(instances).select { |i| i.is_a?(Goo::Base::Resource) }.uniq(&:__id__)
+        specs = include_specs(specs)
+        return if instances.empty? || specs.empty?
+
+        missing = instances.to_h { |i| [i.__id__, specs.select { |spec| i.bring?(include_key(spec)) }] }
+        instances.group_by { |i| [i.class, missing[i.__id__]] }.each do |(klass, attrs), group|
+          next if attrs.empty?
+
+          # goo's bring handles collections and method-based attributes; where.models doesn't
+          if group.length > 1 && klass.collection_opts.nil? && attrs.none? { |a| klass.handler?(include_key(a)) }
+            klass.where.models(group).include(*attrs).all
           else
-            specs[attr] = attr
+            group.each { |i| i.bring(*attrs) }
           end
         end
-        specs.values
+
+        specs.grep(Hash).each do |spec|
+          key, nested = spec.first
+          loaded = instances.reject { |i| missing[i.__id__].include?(spec) }
+          bring_missing(loaded.flat_map { |i| Array(i.send(key)) }, nested)
+        end
       end
     end
   end

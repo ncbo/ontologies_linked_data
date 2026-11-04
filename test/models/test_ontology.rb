@@ -492,10 +492,11 @@ class TestOntology < LinkedData::TestOntologyCommon
     sub = ont.submission("2", include: :description)
     assert_equal 2, sub.submissionId
     assert_equal "Description 2", sub.description
-    # Linked back to this ontology object, unmodified, unless include: asks for :ontology
+    # Linked back to this ontology object, unmodified, also when include: asks for :ontology
     assert_same ont, sub.ontology
     refute_includes sub.modified_attributes, :ontology
-    refute_same ont, latest.ontology
+    assert_same ont, latest.ontology
+    refute_includes latest.modified_attributes, :ontology
     assert_nil ont.submission(99)
     assert_nil ont.submission("not-a-number")
   end
@@ -515,6 +516,76 @@ class TestOntology < LinkedData::TestOntologyCommon
     ont.bring(:submissions)
     assert_equal 2, ont.submission(2).submissionId
     assert ont.submissions.all? { |s| s.loaded_attributes.include?(:submissionId) }
+  end
+
+  def test_loaded_submissions_bring_nested_include
+    _, acronyms, _ = create_ontologies_and_submissions(ont_count: 1, submission_count: 2)
+
+    # hasOntologyLanguage is loaded on the caller's list, but its acronym is not
+    ont = LinkedData::Models::Ontology.find(acronyms.first)
+                                      .include(submissions: [:submissionId, :hasOntologyLanguage]).first
+    latest = ont.latest_submission(status: :any, include: [hasOntologyLanguage: [:acronym]])
+    assert_same ont.submissions.find { |s| s.submissionId == 2 }, latest
+    assert_equal "OWL", latest.hasOntologyLanguage.acronym
+  end
+
+  def test_loaded_submissions_bring_nested_list_include
+    _, acronyms, onts = create_ontologies_and_submissions(ont_count: 1, submission_count: 1)
+    _add_statuses(onts.first, 1, %w[RDF METRICS])
+
+    # The statuses are loaded on the caller's list, but not their codes
+    ont = LinkedData::Models::Ontology.find(acronyms.first)
+                                      .include(submissions: [:submissionId, :submissionStatus]).first
+    latest = ont.latest_submission(status: :any, include: [submissionStatus: [:code]])
+    assert_operator latest.submissionStatus.length, :>=, 2
+    assert latest.submissionStatus.all? { |s| s.loaded_attributes.include?(:code) }
+    assert_includes latest.submissionStatus.map(&:code), "METRICS"
+  end
+
+  def test_loaded_submissions_fill_ids_by_iri
+    _, acronyms, _ = create_ontologies_and_submissions(ont_count: 1, submission_count: 3)
+    ont = LinkedData::Models::Ontology.find(acronyms.first).first
+    ont.bring(:submissions)
+
+    # Deleted after the list was loaded: it stays on the list, without an id
+    deleted = LinkedData::Models::OntologySubmission.where(ontology: ont, submissionId: 1).first
+    deleted.delete
+    stale = ont.submissions.find { |s| s.id == deleted.id }
+
+    assert_equal 3, ont.latest_submission(status: :any).submissionId
+    assert_nil stale.submissionId
+    assert_equal [2, 3], ont.submissions.reject { |s| s.equal?(stale) }.map(&:submissionId).sort
+  end
+
+  def test_highest_submission_id_sorts_numerically
+    _, _, onts = create_ontologies_and_submissions(ont_count: 1, submission_count: 11,
+                                                     submissions_to_process: [])
+    ont = onts.first
+    _add_statuses(ont, 9, %w[RDF])
+    _add_statuses(ont, 10, %w[RDF])
+
+    # As strings, "9" would sort above "10" and "11"
+    assert_equal 11, ont.highest_submission_id(status: :any)
+    assert_equal 10, ont.highest_submission_id(status: :rdf)
+    assert_equal 12, ont.next_submission_id
+  end
+
+  # Saving a submission re-indexes its metadata with its ontology embedded. An ontology
+  # with too few attributes loaded indexes as a bare id, so the name drops out.
+  def test_saved_submission_keeps_ontology_metadata_indexed
+    _, acronyms, _ = create_ontologies_and_submissions(ont_count: 1, submission_count: 1)
+    [nil, [ontology: [:acronym]]].each_with_index do |include, i|
+      ont = LinkedData::Models::Ontology.find(acronyms.first).include(LinkedData::Models::Ontology.attributes).first
+      ont.name = "Renamed ontology #{i}"
+      ont.save
+
+      sub = ont.latest_submission(status: :any, include: include).bring_remaining
+      sub.description = "Saved after lookup #{i}"
+      sub.save
+
+      doc = LinkedData::Models::OntologySubmission.search('*:*', fq: "id:\"#{sub.id}\"")['response']['docs'].first
+      assert_equal "Renamed ontology #{i}", doc['ontology_name_text'], "include: #{include.inspect}"
+    end
   end
 
   def test_status_codes_for
