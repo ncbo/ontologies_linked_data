@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Minimal fixture shaped like BioPortal's DCTERMS submission
+  (http://dublincore.org/2012/06/14/dcterms.rdf), which is registered as SKOS
+  but is an RDFS vocabulary: rdfs:Class, rdf:Property, rdfs:Datatype and
+  dcam:VocabularyEncodingScheme resources with rdfs:label and skos:note, and
+  no skos:Concept or skos:ConceptScheme.
+-->
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+         xmlns:dcam="http://purl.org/dc/dcam/"
+         xmlns:dcterms="http://purl.org/dc/terms/">
+  <rdf:Description rdf:about="http://example.org/dcterms-like/">
+    <dcterms:title xml:lang="en">DCTERMS-like test vocabulary</dcterms:title>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://example.org/dcterms-like/Agent">
+    <rdfs:label xml:lang="en">Agent</rdfs:label>
+    <rdfs:comment xml:lang="en">A resource that acts or has the power to act.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://example.org/dcterms-like/"/>
+    <rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://example.org/dcterms-like/AgentClass">
+    <rdfs:label xml:lang="en">Agent Class</rdfs:label>
+    <rdfs:comment xml:lang="en">A group of agents.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://example.org/dcterms-like/"/>
+    <rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://example.org/dcterms-like/FileFormat">
+    <rdfs:label xml:lang="en">File Format</rdfs:label>
+    <rdfs:comment xml:lang="en">A digital resource format.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://example.org/dcterms-like/"/>
+    <rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
+    <rdfs:subClassOf rdf:resource="http://example.org/dcterms-like/MediaType"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://example.org/dcterms-like/MediaType">
+    <rdfs:label xml:lang="en">Media Type</rdfs:label>
+    <rdfs:comment xml:lang="en">A file format or physical medium.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://example.org/dcterms-like/"/>
+    <rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://example.org/dcterms-like/title">
+    <rdfs:label xml:lang="en">Title</rdfs:label>
+    <rdfs:comment xml:lang="en">A name given to the resource.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://example.org/dcterms-like/"/>
+    <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://example.org/dcterms-like/subject">
+    <rdfs:label xml:lang="en">Subject</rdfs:label>
+    <rdfs:comment xml:lang="en">The topic of the resource.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://example.org/dcterms-like/"/>
+    <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+    <skos:note xml:lang="en">This term is intended to be used with non-literal values.</skos:note>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://example.org/dcterms-like/creator">
+    <rdfs:label xml:lang="en">Creator</rdfs:label>
+    <rdfs:comment xml:lang="en">An entity primarily responsible for making the resource.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://example.org/dcterms-like/"/>
+    <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+    <rdfs:range rdf:resource="http://example.org/dcterms-like/Agent"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://example.org/dcterms-like/W3CDTF">
+    <rdfs:label xml:lang="en">W3C-DTF</rdfs:label>
+    <rdfs:comment xml:lang="en">The set of dates and times constructed according to the W3C Date and Time Formats Specification.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://example.org/dcterms-like/"/>
+    <rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Datatype"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://example.org/dcterms-like/IMT">
+    <rdfs:label xml:lang="en">IMT</rdfs:label>
+    <rdfs:comment xml:lang="en">The set of media types specified by the Internet Assigned Numbers Authority.</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="http://example.org/dcterms-like/"/>
+    <rdf:type rdf:resource="http://purl.org/dc/dcam/VocabularyEncodingScheme"/>
+  </rdf:Description>
+</rdf:RDF>
