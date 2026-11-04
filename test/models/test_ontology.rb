@@ -570,8 +570,7 @@ class TestOntology < LinkedData::TestOntologyCommon
     assert_equal 12, ont.next_submission_id
   end
 
-  # Saving a submission re-indexes its metadata with its ontology embedded. An ontology
-  # with too few attributes loaded indexes as a bare id, so the name drops out.
+  # Saving a submission embeds its ontology in the metadata index
   def test_saved_submission_keeps_ontology_metadata_indexed
     _, acronyms, _ = create_ontologies_and_submissions(ont_count: 1, submission_count: 1)
     [nil, [ontology: [:acronym]]].each_with_index do |include, i|

@@ -21,9 +21,7 @@ class TestHTTPCache < LinkedData::TestCase
     end
   end
 
-  # One parsed ontology shared by the read-only tests. Only the RDF is needed (classes to
-  # cache), so skip search indexing, metrics and the rest of the processing pipeline.
-  # Tests that save or delete an ontology must use their own (see _standalone_ontology).
+  # Shared by the read-only tests; tests that save or delete use _standalone_ontology
   def _ontology_and_class
     results = create_ontologies_and_submissions(ont_count: 1, submission_count: 1, process_submission: true,
                                                 process_options: { process_rdf: true, extract_metadata: false })
@@ -32,8 +30,6 @@ class TestHTTPCache < LinkedData::TestCase
     return ontology, cls
   end
 
-  # A new ontology with no submissions, so saving or deleting it leaves the shared
-  # TEST-ONT-0 alone.
   def _standalone_ontology(acronym)
     LinkedData::Models::Ontology.find(acronym).first&.delete
     user, = ontology_objects

@@ -116,13 +116,8 @@ module LinkedData
         return (ready_status_codes - status_codes).size == 0
       end
 
-      ##
-      # The status codes a submission must all have to match `status`, the value taken by
-      # OntologySubmission#ready? and Ontology#latest_submission:
-      #   :any (or an empty list) => nil, no requirement
-      #   :ready                  => get_ready_status
-      #   a code or list of codes => those codes, upcased (:rdf, "RDF", [:rdf, :metrics])
-      # A list that includes :any or :ready is treated as that value alone.
+      # The codes a submission must all have to match a status option: nil for :any,
+      # get_ready_status for :ready, otherwise the given codes upcased.
       def self.status_codes_for(status)
         status = Array(status)
         return nil if status.empty? || status.include?(:any)
