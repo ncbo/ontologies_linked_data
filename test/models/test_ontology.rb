@@ -492,6 +492,10 @@ class TestOntology < LinkedData::TestOntologyCommon
     sub = ont.submission("2", include: :description)
     assert_equal 2, sub.submissionId
     assert_equal "Description 2", sub.description
+    # Linked back to this ontology object, unmodified, unless include: asks for :ontology
+    assert_same ont, sub.ontology
+    refute_includes sub.modified_attributes, :ontology
+    refute_same ont, latest.ontology
     assert_nil ont.submission(99)
     assert_nil ont.submission("not-a-number")
   end

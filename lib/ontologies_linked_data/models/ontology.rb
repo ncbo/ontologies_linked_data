@@ -199,7 +199,15 @@ module LinkedData
           return sub
         end
 
-        OntologySubmission.where(ontology: self, submissionId: submission_id).include(*attrs).first
+        sub = OntologySubmission.where(ontology: self, submissionId: submission_id).include(*attrs).first
+        # Point the submission back at this ontology object, as goo does for submissions
+        # loaded through Ontology#submissions. Saving the submission re-indexes its
+        # metadata with sub.ontology embedded, and an ontology with no attributes loaded
+        # indexes as a bare id. on_load: true sets it without marking it modified.
+        if sub && attrs.none? { |a| a == :ontology || (a.is_a?(Hash) && a.key?(:ontology)) }
+          sub.send(:ontology=, self, on_load: true)
+        end
+        sub
       end
 
       def next_submission_id
