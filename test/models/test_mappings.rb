@@ -72,6 +72,18 @@ class TestMapping < LinkedData::TestOntologyCommon
     LinkedData::Models::MappingCount.where.all(&:delete)
   end
 
+  def test_internal_mapping_predicate_sources
+    predicates = LinkedData::Mappings.internal_mapping_predicates
+    expected = {
+      "SKOS:EXACT_MATCH" => "http://www.w3.org/2004/02/skos/core#exactMatch",
+      "SKOS:CLOSE_MATCH" => "http://www.w3.org/2004/02/skos/core#closeMatch",
+      "SKOS:BROAD_MATCH" => "http://www.w3.org/2004/02/skos/core#broadMatch",
+      "SKOS:NARROW_MATCH" => "http://www.w3.org/2004/02/skos/core#narrowMatch",
+      "SKOS:RELATED_MATCH" => "http://www.w3.org/2004/02/skos/core#relatedMatch"
+    }
+    assert_equal expected, predicates.transform_values(&:first)
+  end
+
 
 
   def test_mappings_ontology
