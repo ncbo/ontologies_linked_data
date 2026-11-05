@@ -155,7 +155,6 @@ class TestOntology < LinkedData::TestOntologyCommon
     props = ont.properties()
     assert_equal 86, props.length
 
-    # The batched hasChildren lookup must agree with the per-property query.
     props.each do |prop|
       fresh = prop.class.find(prop.id).in(sub).first
       fresh.load_has_children

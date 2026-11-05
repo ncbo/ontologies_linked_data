@@ -159,18 +159,8 @@ module LinkedData
         @intlHasChildren = has_c
       end
 
-      # Resolves hasChildren for many properties with one SPARQL query instead of
-      # one has_children_query round-trip per property. Ontology#properties used to
-      # call #load_has_children on every property, so a submission with ~70k
-      # properties (DDSS) issued ~70k queries per request, and even when they were
-      # all goo Redis cache hits that was ~140k sequential Redis calls.
-      #
-      # The query is deliberately unconstrained: it returns every distinct
-      # rdfs:subPropertyOf object in the submission graph, a set bounded by the
-      # number of subPropertyOf edges, and membership in it is exactly what
-      # has_children_query tests. That avoids building FILTER disjunctions over
-      # tens of thousands of ids (4store ignores VALUES; see
-      # Class.load_has_children_batch).
+      # Fetches all subPropertyOf objects in the graph rather than filtering by
+      # model ids, since 4store ignores VALUES.
       def self.load_has_children_batch(models, submission)
         models = models.to_a.compact.select { |m| m.instance_variable_get("@intlHasChildren").nil? }
         return if models.empty?
@@ -409,9 +399,6 @@ eos
         root_node.children.each { |ch| self.sort_tree_children(ch) }
       end
 
-      # sort_by computes each property's key once (n) instead of twice per
-      # comparison (2 n log n), which matters when the key falls back to a
-      # generated label. Ordering is the same as compare_properties.
       def self.sort_properties(props)
         props.sort_by { |prop| self.property_sort_key(prop) }
       end
