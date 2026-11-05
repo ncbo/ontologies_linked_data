@@ -1,0 +1,9 @@
+format-version: 1.2
+data-version: 4.2.11
+date: 25:10:2026 12:00
+default-namespace: MS
+ontology: ms
+
+[Term]
+id: MS:1000000
+name: mass spectrometry term

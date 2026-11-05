@@ -7,6 +7,6 @@ map '/ontologies' do
   run Proc.new { |env|
     user = env["REMOTE_USER"]
     apikey = user ? user.apikey : "NO USER FOUND"
-    [200, {'Content-Type' => 'text/html'}, [apikey.to_json]]
+    [200, {'content-type' => 'text/html'}, [apikey.to_json]]
   }
 end

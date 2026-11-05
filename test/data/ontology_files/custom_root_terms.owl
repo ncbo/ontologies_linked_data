@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+
+
+<!DOCTYPE rdf:RDF [
+    <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+    <!ENTITY obo "http://purl.obolibrary.org/obo/" >
+    <!ENTITY msotes "http://bioportal.bioontology.org/ontologies/msotes#" >
+]>
+
+
+<rdf:RDF xmlns="http://bioportal.bioontology.org/ontologies/msotes#"
+     xml:base="http://bioportal.bioontology.org/ontologies/msotes"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:obo="http://purl.obolibrary.org/obo/"
+     xmlns:msotes="http://bioportal.bioontology.org/ontologies/msotes#">
+
+    <!-- The ontology declares two display roots via IAO:0000700 (has ontology
+         root term): class1 and class2. class1 is a true top; class2 is nested
+         under class1, so this also exercises "declared root that is not a
+         structural owl:Thing child". -->
+    <owl:Ontology rdf:about="http://bioportal.bioontology.org/ontologies/msotes">
+        <obo:IAO_0000700 rdf:resource="&msotes;class1"/>
+        <obo:IAO_0000700 rdf:resource="&msotes;class2"/>
+    </owl:Ontology>
+
+    <!-- IAO:0000700 as an annotation property (so the source is well-formed). -->
+    <owl:AnnotationProperty rdf:about="&obo;IAO_0000700"/>
+
+    <owl:Class rdf:about="&msotes;class1">
+        <rdfs:label>class 1</rdfs:label>
+    </owl:Class>
+
+    <owl:Class rdf:about="&msotes;class2">
+        <rdfs:subClassOf rdf:resource="&msotes;class1"/>
+        <rdfs:label>class 2</rdfs:label>
+    </owl:Class>
+
+    <owl:Class rdf:about="&msotes;class3">
+        <rdfs:subClassOf rdf:resource="&msotes;class1"/>
+        <rdfs:label>class 3</rdfs:label>
+    </owl:Class>
+</rdf:RDF>

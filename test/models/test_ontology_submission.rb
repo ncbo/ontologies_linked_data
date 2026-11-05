@@ -1,6 +1,5 @@
 require_relative "./test_ontology_common"
 require "logger"
-require "rack"
 require "tempfile"
 require "mocha/minitest"
 
@@ -192,7 +191,7 @@ SELECT DISTINCT * WHERE {
     Goo.sparql_query_client.query(qthing).each_solution do |sol|
       count += 1
     end
-    assert count == 0
+    assert_equal 0, count
 
     qthing = <<-eos
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -204,20 +203,35 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       count += 1
       assert sol[:x].to_s["TAO_0000732"]
     end
-    assert count == 1
+    assert_equal 1, count
 
     qcount = <<-eos
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 SELECT DISTINCT * WHERE {
 <http://purl.obolibrary.org/obo/TAO_0001044>
-  <http://data.bioontology.org/metadata/obo/part_of> ?x . }
+  <http://purl.obolibrary.org/obo/OBO_REL#_part_of> ?x . }
     eos
     count = 0
     Goo.sparql_query_client.query(qcount).each_solution do |sol|
       count += 1
       assert sol[:x].to_s["TAO_0000732"]
     end
-    assert count == 1
+    assert_equal 1, count
+
+    # The owlapi-wrapper used to emit each OBO relationship twice: once under
+    # http://data.bioontology.org/metadata/obo/<rel> and again under the
+    # property's own IRI. Only the latter is emitted now, so guard against the
+    # duplicate annotation coming back.
+    qlegacy = <<-eos
+SELECT DISTINCT * WHERE {
+<http://purl.obolibrary.org/obo/TAO_0001044>
+  <http://data.bioontology.org/metadata/obo/part_of> ?x . }
+    eos
+    count = 0
+    Goo.sparql_query_client.query(qlegacy).each_solution do |sol|
+      count += 1
+    end
+    assert_equal 0, count
 
     sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: "TAO-TEST"]).first
     assert_equal(3, sub.roots.length, "Incorrect number of root classes")
@@ -306,6 +320,64 @@ SELECT DISTINCT * WHERE {
     assert_equal version, sub.version
     assert_equal 'http://www.semanticweb.org/associatedmedicine/lavima/2011/10/Ontology1.owl', sub.uri.to_s
     assert_equal ['La première ontologie déddiée aux concepts de la médecine associée'], sub.notes
+  end
+
+  def test_submission_parse_refreshes_inherited_obo_version
+    [true, false].each_with_index do |heavy, index|
+      submission_parse('VERSIONTEST', 'Version refresh test',
+                       './test/data/ontology_files/version_refresh.obo', index + 1,
+                       {process_rdf: true, extract_metadata: heavy, generate_missing_labels: false},
+                       {version: '4.1.195'})
+
+      sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: 'VERSIONTEST'], submissionId: index + 1)
+                                                 .include(:version).first
+      assert_equal '4.2.11', sub.version
+    end
+  end
+
+  def test_submission_parse_preserves_explicit_obo_version
+    [true, false].each_with_index do |heavy, index|
+      submission_parse('VERSIONTEST', 'Version override test',
+                       './test/data/ontology_files/version_refresh.obo', index + 1,
+                       {process_rdf: true, extract_metadata: heavy, generate_missing_labels: false,
+                        params: {version: 'User release'}},
+                       {version: 'User release'})
+
+      sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: 'VERSIONTEST'], submissionId: index + 1)
+                                                 .include(:version).first
+      assert_equal 'User release', sub.version
+    end
+  end
+
+  # IAO:0000700 ("has ontology root term") declared on the ontology is extracted
+  # into the submission's hasOntologyRootTerm attribute (a list of class URIs).
+  def test_extract_ontology_root_terms
+    submission_parse("ROOTTERMS", "Root terms TEST",
+                     "./test/data/ontology_files/custom_root_terms.owl", 1,
+                     process_rdf: true, extract_metadata: true)
+
+    sub = LinkedData::Models::OntologySubmission
+          .where(ontology: [acronym: "ROOTTERMS"], submissionId: 1)
+          .include(:hasOntologyRootTerm).first
+    refute_nil sub
+
+    roots = Array(sub.hasOntologyRootTerm).map(&:to_s).sort
+    assert_equal ["http://bioportal.bioontology.org/ontologies/msotes#class1",
+                  "http://bioportal.bioontology.org/ontologies/msotes#class2"],
+                 roots
+  end
+
+  # An ontology without IAO:0000700 leaves hasOntologyRootTerm empty (not an error).
+  def test_extract_ontology_root_terms_absent
+    submission_parse("NOROOTTERMS", "No root terms TEST",
+                     "./test/data/ontology_files/custom_properties.owl", 1,
+                     process_rdf: true, extract_metadata: true)
+
+    sub = LinkedData::Models::OntologySubmission
+          .where(ontology: [acronym: "NOROOTTERMS"], submissionId: 1)
+          .include(:hasOntologyRootTerm).first
+    refute_nil sub
+    assert_empty Array(sub.hasOntologyRootTerm)
   end
 
   def test_generate_language_preflabels
@@ -666,8 +738,7 @@ SELECT DISTINCT * WHERE {
   def test_download_ontology_file
     begin
       server_url, server_thread, _ = start_server
-      sleep 3  # Allow the server to startup
-      assert(server_thread.alive?, msg="Rack::Server thread should be alive, it's not!")
+      assert(server_thread.alive?, msg="WEBrick server thread should be alive, it's not!")
       _, _, ont_models = create_ontologies_and_submissions(ont_count: 1, submission_count: 1)
       ont = ont_models.first
       assert(ont.instance_of?(LinkedData::Models::Ontology), "ont is not an ontology: #{ont}")
@@ -683,9 +754,10 @@ SELECT DISTINCT * WHERE {
     ensure
       file.close! if file && file.respond_to?(:close!)
       LinkedData::TestCase.backend_4s_delete
-      Thread.kill(server_thread)  # this will shutdown Rack::Server also
+      server_thread[:webrick]&.shutdown
+      Thread.kill(server_thread)
       sleep 3
-      assert_equal(server_thread.alive?, false, msg="Rack::Server thread should be dead, it's not!")
+      assert_equal(server_thread.alive?, false, msg="WEBrick server thread should be dead, it's not!")
     end
   end
 

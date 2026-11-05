@@ -1,6 +1,5 @@
 require_relative "./test_ontology_common"
 require_relative "../../lib/ontologies_linked_data/purl/purl_client"
-require 'rack'
 
 class TestOntology < LinkedData::TestOntologyCommon
 
@@ -9,6 +8,7 @@ class TestOntology < LinkedData::TestOntologyCommon
   end
 
   def self.after_suite
+    @@thread[:webrick]&.shutdown
     Thread.kill(@@thread)
   end
 

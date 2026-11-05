@@ -79,7 +79,8 @@ module LinkedData
       content_type = options[:content_type] || "text/plain"
       content_length = options[:content_length] || body.bytesize.to_s
       raise ArgumentError("Body must be a string") unless body.kind_of?(String)
-      headers.merge!({"Content-Type" => content_type, "Content-Length" => content_length})
+      # Rack 3 requires response header keys to be lowercase
+      headers.merge!({"content-type" => content_type, "content-length" => content_length})
       [status, headers, [body]]
     end
 

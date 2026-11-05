@@ -147,6 +147,12 @@ module LinkedData
       attribute :usedBy, namespace: :voaf, type: %i[uri list]
       attribute :workTranslation, namespace: :schema, type: %i[uri list]
       attribute :translationOfWork, namespace: :schema, type: %i[uri list]
+      # Class(es) the ontology declares as display roots via IAO:0000700. No
+      # namespace: the source property has a numeric local name (IAO_0000700), so
+      # it is stored under the default :metadata namespace and read from the source
+      # IRI via metadataMappings in config/schemes/ontology_submission.yml (same
+      # pattern as obsoleteParent).
+      attribute :hasOntologyRootTerm, type: %i[list uri]
 
       # Content metadata
       attribute :uriRegexPattern, namespace: :void

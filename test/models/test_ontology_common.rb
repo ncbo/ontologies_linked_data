@@ -1,5 +1,5 @@
 require_relative "../test_case"
-require 'rack'
+require 'webrick'
 
 # STOPGAP query counter for N+1 regression guards.
 #
@@ -263,15 +263,22 @@ eos
       raise "Could not find an available port after #{max_retries} retries" if retries >= max_retries
 
       server_url = 'http://localhost:' + server_port.to_s
-      server_thread = Thread.new do
-        Rack::Server.start(
-          app: lambda do |e|
-            [200, {'Content-Type' => 'text/plain'}, ['test file']]
-          end,
-          Port: server_port
-        )
+
+      ready = Queue.new
+      server = WEBrick::HTTPServer.new(
+        Port: server_port,
+        Logger: WEBrick::Log.new(File::NULL),
+        AccessLog: [],
+        StartCallback: -> { ready << :up }
+      )
+      server.mount_proc('/') do |_req, res|
+        res['Content-Type'] = 'text/plain'
+        res.body = 'test file'
       end
-      Thread.pass
+
+      server_thread = Thread.new { server.start }
+      server_thread[:webrick] = server  # so callers can shut down cleanly
+      ready.pop                         # block until the socket is accepting
 
       [server_url, server_thread, server_port]
     end
