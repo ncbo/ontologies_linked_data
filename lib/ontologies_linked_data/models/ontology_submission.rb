@@ -560,12 +560,19 @@ module LinkedData
         self.bring(:hasOntologyLanguage) unless self.loaded_attributes.include?(:hasOntologyLanguage)
 
         if mx
-          mx.bring(:classes) if mx.bring?(:classes)
-          count = mx.classes
-
           if self.hasOntologyLanguage.skos?
-            mx.bring(:individuals) if mx.bring?(:individuals)
-            count += mx.individuals
+            mx.bring(:concepts) if mx.bring?(:concepts)
+            count = mx.concepts
+            # Metrics computed before the SKOS concept count existed: OWLAPI classes plus
+            # individuals, which also counts rdfs:Class, schemes and other non-concepts.
+            if count.nil?
+              mx.bring(:classes) if mx.bring?(:classes)
+              mx.bring(:individuals) if mx.bring?(:individuals)
+              count = mx.classes + mx.individuals
+            end
+          else
+            mx.bring(:classes) if mx.bring?(:classes)
+            count = mx.classes
           end
           count_set = true
         end
