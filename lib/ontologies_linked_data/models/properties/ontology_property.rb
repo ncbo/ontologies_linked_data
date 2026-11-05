@@ -159,6 +159,37 @@ module LinkedData
         @intlHasChildren = has_c
       end
 
+      # Resolves hasChildren for many properties with one SPARQL query instead of
+      # one has_children_query round-trip per property. Ontology#properties used to
+      # call #load_has_children on every property, so a submission with ~70k
+      # properties (DDSS) issued ~70k queries per request, and even when they were
+      # all goo Redis cache hits that was ~140k sequential Redis calls.
+      #
+      # The query is deliberately unconstrained: it returns every distinct
+      # rdfs:subPropertyOf object in the submission graph, a set bounded by the
+      # number of subPropertyOf edges, and membership in it is exactly what
+      # has_children_query tests. That avoids building FILTER disjunctions over
+      # tens of thousands of ids (4store ignores VALUES; see
+      # Class.load_has_children_batch).
+      def self.load_has_children_batch(models, submission)
+        models = models.to_a.compact.select { |m| m.instance_variable_get("@intlHasChildren").nil? }
+        return if models.empty?
+
+        graph = submission.id.to_s
+        query = <<~EOS
+          SELECT DISTINCT ?parent WHERE {
+            GRAPH <#{graph}> {
+              ?c <#{RDF::RDFS[:subPropertyOf]}> ?parent .
+            }
+          }
+        EOS
+        with_children = Set.new
+        Goo.sparql_query_client.query(query, query_options: { rules: :NONE }, graphs: [graph])
+           .each { |sol| with_children << sol[:parent].to_s }
+
+        models.each { |m| m.instance_variable_set("@intlHasChildren", with_children.include?(m.id.to_s)) }
+      end
+
       def has_children_query(class_id, submission_id)
         property_tree = RDF::RDFS[:subPropertyOf]
         safe_class_id_uri = class_id.to_s.gsub(' ', '%20').gsub('<', '%3C').gsub('>', '%3E').gsub('[', '%5B').gsub(']', '%5D')
@@ -378,13 +409,38 @@ eos
         root_node.children.each { |ch| self.sort_tree_children(ch) }
       end
 
+      # sort_by computes each property's key once (n) instead of twice per
+      # comparison (2 n log n), which matters when the key falls back to a
+      # generated label. Ordering is the same as compare_properties.
       def self.sort_properties(props)
-        props.sort { |prop_a, prop_b| self.compare_properties(prop_a, prop_b) }
+        props.sort_by { |prop| self.property_sort_key(prop) }
       end
 
       def self.sort_properties!(props)
-        props.sort! { |prop_a, prop_b| self.compare_properties(prop_a, prop_b) }
+        props.sort_by! { |prop| self.property_sort_key(prop) }
         props
+      end
+
+      def self.property_sort_key(prop)
+        prop.bring(:label) if prop.bring?(:label)
+        label_full = []
+        label = ""
+        begin
+          if !prop.label.nil? && !prop.label.empty?
+            label = prop.label[0]
+            label_full = prop.label
+          end
+        rescue Goo::Base::AttributeNotLoaded
+          label = ""
+          label_full = []
+        end
+
+        if label.empty?
+          generated = LinkedData::Utils::Triples.generated_label(prop.id, label_full)
+          label = generated.empty? ? "" : generated[0]
+        end
+
+        label.downcase
       end
 
       def self.compare_properties(prop_a, prop_b)
