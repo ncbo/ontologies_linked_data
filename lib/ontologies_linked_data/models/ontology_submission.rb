@@ -650,21 +650,11 @@ module LinkedData
       # submission in this context
       def ready?(options={})
         self.bring(:submissionStatus) if self.bring?(:submissionStatus)
-        status = options[:status] || :ready
-        status = status.is_a?(Array) ? status : [status]
-        return true if status.include?(:any)
+        codes = LinkedData::Models::SubmissionStatus.status_codes_for(options[:status] || :ready)
+        return true if codes.nil?
         return false unless self.submissionStatus
 
-        if status.include? :ready
-          return LinkedData::Models::SubmissionStatus.status_ready?(self.submissionStatus)
-        else
-          status.each do |x|
-            return false if self.submissionStatus.select { |x1|
-              x1.get_code_from_id() == x.to_s.upcase
-            }.length == 0
-          end
-          return true
-        end
+        (codes - LinkedData::Models::SubmissionStatus.get_status_codes(self.submissionStatus)).empty?
       end
 
       def archived?
