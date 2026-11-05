@@ -1203,6 +1203,7 @@ eos
     assert_nil metrics.conceptSchemes
     assert_nil metrics.collections
     assert_nil metrics.skosxlLabels
+    assert_equal 165, sub.class_count(Logger.new(TestLogFile.new))
     assert_equal 15, metrics.classesWithOneChild
     assert_equal 139, metrics.classesWithNoDefinition
     assert_equal 0, metrics.classesWithMoreThan25Children
