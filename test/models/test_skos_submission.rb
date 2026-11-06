@@ -231,37 +231,13 @@ SELECT ?children WHERE {
     # Descend one level from a root so the path is non-trivial (root -> target).
     # Ids are sorted so the same concept is picked on every backend -- row order
     # is not guaranteed and differs between 4store/AG/GraphDB/Virtuoso.
-    child_ids = []
-    roots.sort_by { |r| r.id.to_s }.each do |r|
-      LinkedData::Models::Class.in(sub).models([r]).include(children: [:prefLabel]).all
-      child_ids += r.children.map { |c| c.id.to_s }
-    end
-    target_id = child_ids.sort.first
+    LinkedData::Models::Class.in(sub).models(roots).include(children: [:prefLabel]).all
+    target_id = roots.flat_map { |r| r.children.map { |c| c.id.to_s } }.min
     refute_nil target_id, 'expected a SKOS root with at least one child'
     target = LinkedData::Models::Class.find(RDF::URI.new(target_id)).in(sub).first
 
-    paths = target.paths_to_root
-    refute_empty paths, 'expected at least one path to root'
-
-    saw_parentless_terminal = false
-    paths.each do |path|
-      refute_includes path, nil, 'path contains a nil node'
-      assert_equal target.id.to_s, path.last.id.to_s, 'path must end at the requested class'
-
-      root = path.first
-      root.bring(:parents) if root.bring?(:parents)
-      root_parents = root.parents || []
-      saw_parentless_terminal ||= root_parents.empty?
-
-      # skos:broader has no owl:Thing sentinel, so the only way to stop is to run
-      # out of parents; the reject keeps this symmetric with the OBO guard.
-      assert_empty root_parents.reject { |p| p.id.to_s['#Thing'] },
-                   "path must terminate where no parent is left to follow, got #{root.id}"
-    end
-
-    assert saw_parentless_terminal,
-           'expected at least one path to terminate at a concept with no broader -- ' \
-           'that is the case that used to raise'
+    # Strict: skos:broader has no owl:Thing sentinel to stop on.
+    assert_paths_terminate_at_parentless(target)
   end
 
   # N+1 guard for the class-tree endpoint (SKOS). Same contract as the OWL guard
