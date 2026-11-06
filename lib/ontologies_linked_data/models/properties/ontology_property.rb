@@ -325,10 +325,10 @@ eos
           p.bring(parents: %i[label definition]) if p.bring?(:parents)
 
           unless p.loaded_attributes.include?(:parents)
-            # fail safely
+            # fail safely -- abandon this path only, not its siblings
             logger = LinkedData::Parser.logger || Logger.new($stderr)
             logger.error("Property #{p.id.to_s} from #{p.submission.id.to_s} cannot load parents")
-            return
+            next
           end
 
           if (!top_property || !p.id.to_s[top_property]) && recurse_on_path[i] && p.parents && p.parents.length > 0

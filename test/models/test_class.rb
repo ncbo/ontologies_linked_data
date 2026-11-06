@@ -148,7 +148,10 @@ class TestClassModel < LinkedData::TestOntologyCommon
     cls = LinkedData::Models::Class.find(class_id).in(os).first
 
     paths = cls.paths_to_root
-    assert paths.length == 7
+    # class3 and class4 form a cycle; each path through it must be listed once.
+    path_ids = paths.map { |p| p.map { |c| c.id.to_s.split('#').last } }
+    assert_equal [%w[class1 class2 class_5], %w[class3 class4 class_5], %w[class3 class_5],
+                  %w[class4 class3 class_5], %w[class4 class_5]], path_ids.sort
     # sort the array by the 0s element id
     paths = paths.sort {|a, b| a[0].nil? ? -1 : b[0].nil? ? 1 : a[0].id.to_s <=> b[0].id.to_s}.select { |x| x.length == 3 }
     path = paths[0]
@@ -453,5 +456,112 @@ class TestClassModel < LinkedData::TestOntologyCommon
     xml_comment = cls_hash[:properties]["http://www.w3.org/2000/01/rdf-schema#comment"].first
     assert_equal String, xml_comment.class
     assert_equal comment, xml_comment
+  end
+
+  # Companion to test_bro_paths_to_root, for the OBO tree property. BRO cannot
+  # cover this: owlapi asserts `rdfs:subClassOf owl:Thing` on top-level OWL
+  # classes, and the traversal treats owl:Thing as a stop sentinel. OBO
+  # submissions walk metadata:treeView, where no such sentinel exists, so the
+  # traversal has to terminate on a genuinely parentless ancestor instead.
+  # Regressing that recurses into an empty parents array and raises
+  # "undefined method `id' for nil:NilClass" in append_if_not_there_already.
+  def test_obo_paths_to_root_terminates_at_parentless_class
+    if !LinkedData::Models::Ontology.find("HPPATHSTEST").first
+      submission_parse("HPPATHSTEST", "HP paths_to_root test", "./test/data/ontology_files/hp.obo", 124,
+                       process_rdf: true, index_search: false,
+                       run_metrics: false)
+    end
+    os = LinkedData::Models::Ontology.find("HPPATHSTEST").first.latest_submission(status: [:rdf])
+
+    assert_equal 'http://data.bioontology.org/metadata/treeView',
+                 LinkedData::Models::Class.tree_view_property(os).to_s,
+                 'expected the OBO tree property, otherwise this duplicates the OWL test'
+
+    # Find a class with a parent that itself has no parents -- one hop is enough
+    # to make the traversal walk into the parentless ancestor. Candidates are
+    # sorted so the same class is picked on every backend (row order is not
+    # guaranteed and differs between 4store/AG/GraphDB/Virtuoso).
+    # owl:Thing has no parents either, but the traversal stops on it via the
+    # sentinel, so it does not exercise the empty-parents branch.
+    classes = LinkedData::Models::Class.in(os)
+                                       .include(parents: [:prefLabel, parents: [:prefLabel]])
+                                       .page(1, 500).to_a
+    target_id = classes.select do |cls|
+      (cls.parents || []).any? { |p| !p.id.to_s['#Thing'] && (p.parents || []).empty? }
+    end.map { |cls| cls.id.to_s }.min
+    refute_nil target_id, 'expected an OBO class whose parent is parentless'
+    target = LinkedData::Models::Class.find(RDF::URI.new(target_id)).in(os).first
+
+    # A path may also stop on the owl:Thing sentinel, which owlapi asserts on
+    # top-level classes.
+    assert_paths_terminate_at_parentless(target, allow_thing: true)
+  end
+
+  # The remaining paths_to_root tests drive the traversal directly with stub
+  # nodes, so they need no triplestore and pin exact path shapes.
+  class StubNode
+    attr_reader :id, :loaded_attributes, :submission, :brings
+    attr_accessor :parents
+
+    # loaded: false with no load_parents models a class whose parents cannot load.
+    def initialize(id, parents: [], loaded: true, load_parents: nil)
+      @id = RDF::URI.new("http://example.org/#{id}")
+      @parents = parents
+      @loaded_attributes = Set.new(loaded ? [:parents] : [])
+      @load_parents = load_parents
+      @submission = Struct.new(:id).new('http://example.org/sub')
+      @brings = 0
+    end
+
+    def bring?(attr)
+      attr == :parents && !@loaded_attributes.include?(:parents) && !@load_parents.nil?
+    end
+
+    def bring(*)
+      @brings += 1
+      @parents = @load_parents.call
+      @loaded_attributes << :parents
+    end
+  end
+
+  def stub_paths(target)
+    paths = [[target]]
+    LinkedData::Models::Class.new.send(:traverse_path_to_root, target.parents.dup, paths, 0)
+    paths.map { |p| p.map { |n| n.id.to_s.split('/').last } }
+  end
+
+  def test_paths_to_root_keeps_siblings_when_a_parent_cannot_load
+    top = StubNode.new('top')
+    good = StubNode.new('good', parents: [top])
+    broken = StubNode.new('broken', loaded: false)
+    target = StubNode.new('target', parents: [broken, good])
+
+    # broken is first, so a `return` in the fail-safe would cut off good's path.
+    assert_equal [%w[target broken], %w[target good top]].sort, stub_paths(target).sort
+  end
+
+  def test_paths_to_root_drops_cycle_parents_without_duplicate_paths
+    top = StubNode.new('top')
+    target = StubNode.new('target')
+    a = StubNode.new('a', parents: [target, top])
+    target.parents = [a]
+
+    # a's parent `target` closes a cycle. It must not leave a second, unextended
+    # copy of [target, a] next to the real path.
+    assert_equal [%w[target a top]], stub_paths(target)
+  end
+
+  def test_paths_to_root_loads_a_shared_ancestor_once
+    top = StubNode.new('top')
+    # Two separately loaded instances of the same ancestor, as goo returns them
+    # when it reaches `shared` through two different parents.
+    shared_via_a = StubNode.new('shared', loaded: false, load_parents: -> { [top] })
+    shared_via_b = StubNode.new('shared', loaded: false, load_parents: -> { [top] })
+    a = StubNode.new('a', parents: [shared_via_a])
+    b = StubNode.new('b', parents: [shared_via_b])
+    target = StubNode.new('target', parents: [a, b])
+
+    assert_equal [%w[target a shared top], %w[target b shared top]].sort, stub_paths(target).sort
+    assert_equal 1, shared_via_a.brings + shared_via_b.brings, 'shared ancestor loaded more than once'
   end
 end
