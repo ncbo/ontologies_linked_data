@@ -164,6 +164,13 @@ class TestOntology < LinkedData::TestOntologyCommon
     props = ont.properties()
     assert_equal 86, props.length
 
+    props.each do |prop|
+      fresh = prop.class.find(prop.id).in(sub).first
+      fresh.load_has_children
+      assert_equal fresh.hasChildren, prop.hasChildren, "hasChildren mismatch for #{prop.id}"
+    end
+    assert props.any?(&:hasChildren)
+
     # verify sorting
     assert_equal "http://bioontology.org/ontologies/BiomedicalResourceOntology.owl#AlgorithmPurpose", props[0].id.to_s
     assert_equal "http://www.w3.org/2004/02/skos/core#altLabel", props[1].id.to_s

@@ -229,10 +229,12 @@ module LinkedData
         prop_classes.each do |c|
           props = c.in(sub).include(:label, :definition, :parents).all()
           parents = []
-          props.each { |p| p.load_has_children; p.parents.each {|parent| parents << parent} }
+          props.each { |p| p.parents.each {|parent| parents << parent} }
           c.in(sub).models(parents).include(:label, :definition).all()
           all_props.concat(props)
         end
+
+        LinkedData::Models::OntologyProperty.load_has_children_batch(all_props, sub)
 
         LinkedData::Models::OntologyProperty.sort_properties(all_props)
       end
