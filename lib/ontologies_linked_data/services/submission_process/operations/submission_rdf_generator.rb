@@ -63,6 +63,8 @@ module LinkedData
         mime_type = nil
 
         if @submission.hasOntologyLanguage.umls?
+          # UMLS skips the OWLAPI parse, the only other caller of unzip_submission
+          @submission.unzip_submission(logger)
           triples_file_path = @submission.triples_file_path
           logger.info("UMLS turtle file found; doing OWLAPI parse to extract metrics")
           logger.flush
