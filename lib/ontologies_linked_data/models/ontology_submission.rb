@@ -499,12 +499,12 @@ module LinkedData
       def triples_file_path
         self.bring(:uploadFilePath) if self.bring?(:uploadFilePath)
         self.bring(:masterFileName) if self.bring?(:masterFileName)
-        triples_file_name = File.basename(self.uploadFilePath.to_s)
-        full_file_path = File.join(File.expand_path(self.data_folder.to_s), triples_file_name)
-        zip = zipped? full_file_path
-        triples_file_name = File.basename(self.masterFileName.to_s) if zip && self.masterFileName
-        file_name = File.join(File.expand_path(self.data_folder.to_s), triples_file_name)
-        File.expand_path(file_name)
+        full_file_path = File.join(File.expand_path(self.data_folder.to_s), File.basename(self.uploadFilePath.to_s))
+        if zipped?(full_file_path) && self.masterFileName
+          return File.expand_path(File.join(self.zip_folder, File.basename(self.masterFileName.to_s)))
+        end
+
+        File.expand_path(full_file_path)
       end
 
       def unzip_submission(logger)

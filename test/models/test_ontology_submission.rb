@@ -789,6 +789,64 @@ SELECT DISTINCT * WHERE {
     assert_equal 133, metrics[1][0].to_i
   end
 
+  UMLS_TTL = "./test/data/ontology_files/umls_semantictypes.ttl"
+
+  def test_umls_gzip_submission
+    Dir.mktmpdir do |dir|
+      gz_path = File.join(dir, "umls_semantictypes.ttl.gz")
+      Zlib::GzipWriter.open(gz_path) do |gz|
+        gz.orig_name = "umls_semantictypes.ttl"
+        gz.write(File.binread(UMLS_TTL))
+      end
+      assert_compressed_umls_submission("UMLS-GZ-TST", gz_path)
+    end
+  end
+
+  def test_umls_zip_submission
+    Dir.mktmpdir do |dir|
+      zip_path = File.join(dir, "umls_semantictypes.ttl.zip")
+      Zip::File.open(zip_path, create: true) do |zip|
+        zip.add("umls_semantictypes.ttl", File.expand_path(UMLS_TTL))
+      end
+      assert_compressed_umls_submission("UMLS-ZIP-TST", zip_path)
+    end
+  end
+
+  def test_umls_uncompressed_triples_file_path
+    acronym = "UMLS-PLAIN-TST"
+    submission_parse(acronym, "Test UMLS uncompressed", UMLS_TTL, 1,
+                     process_rdf: true, index_search: false,
+                     run_metrics: false, reasoning: false)
+    sub = LinkedData::Models::Ontology.find(acronym).first.latest_submission(status: [:rdf])
+    sub.bring_remaining
+    refute sub.zipped?
+    assert_equal File.expand_path(sub.uploadFilePath), sub.triples_file_path
+    refute Dir.exist?(sub.zip_folder), "uncompressed submission must not be extracted"
+    assert_equal 133, LinkedData::Models::Class.in(sub).read_only.to_a.length
+  end
+
+  def assert_compressed_umls_submission(acronym, archive_path)
+    submission_parse(acronym, "Test compressed UMLS", archive_path, 1,
+                     process_rdf: true, index_search: false,
+                     run_metrics: false, reasoning: false)
+    sub = LinkedData::Models::Ontology.find(acronym).first.latest_submission(status: [:rdf])
+    refute_nil sub, "compressed UMLS submission did not reach RDF status"
+    sub.bring_remaining
+    assert sub.zipped?
+    assert_equal "umls_semantictypes.ttl", sub.masterFileName
+    assert_equal File.expand_path(File.join(sub.zip_folder, "umls_semantictypes.ttl")), sub.triples_file_path
+    assert File.file?(sub.uploadFilePath), "compressed upload must be kept"
+    refute File.exist?(sub.triples_file_path), "extracted UMLS file should be removed after loading"
+
+    classes = LinkedData::Models::Class.in(sub).include(:prefLabel).read_only.to_a
+    assert_equal 133, classes.length
+    classes.each { |cls| assert_instance_of String, cls.prefLabel }
+
+    metrics = sub.metrics_from_file(Logger.new(sub.parsing_log_path))
+    refute_empty metrics
+    assert_equal 133, metrics[1][0].to_i
+  end
+
   def test_discover_obo_in_owl_obsolete
     acr = "OBSPROPSDISCOVER"
     init_test_ontology_msotest acr
