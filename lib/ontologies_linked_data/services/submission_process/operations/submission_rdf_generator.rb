@@ -61,11 +61,13 @@ module LinkedData
 
       def generate_rdf(logger, reasoning: true)
         mime_type = nil
+        extracted_file = nil
 
         if @submission.hasOntologyLanguage.umls?
           # UMLS skips the OWLAPI parse, the only other caller of unzip_submission
-          @submission.unzip_submission(logger)
+          extracted = @submission.unzip_submission(logger)
           triples_file_path = @submission.triples_file_path
+          extracted_file = triples_file_path if extracted
           logger.info("UMLS turtle file found; doing OWLAPI parse to extract metrics")
           logger.flush
           mime_type = LinkedData::MediaTypes.media_type_from_base(LinkedData::MediaTypes::TURTLE)
@@ -108,7 +110,16 @@ module LinkedData
         rescue => e
           logger.error("Error sending data to triple store - #{e.response.code} #{e.class}: #{e.response.body}") if e.response&.body
           raise e
+        ensure
+          # Only the load reads the extracted file; later steps just write next to it
+          remove_extracted_umls_file(extracted_file, logger) if extracted_file
         end
+      end
+
+      def remove_extracted_umls_file(path, logger)
+        FileUtils.rm_f(path)
+        logger.info("Removed extracted UMLS file #{path}")
+        logger.flush
       end
 
       def delete_and_append(triples_file_path, logger, mime_type = nil)

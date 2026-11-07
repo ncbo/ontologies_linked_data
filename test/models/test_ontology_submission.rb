@@ -835,7 +835,8 @@ SELECT DISTINCT * WHERE {
     assert sub.zipped?
     assert_equal "umls_semantictypes.ttl", sub.masterFileName
     assert_equal File.expand_path(File.join(sub.zip_folder, "umls_semantictypes.ttl")), sub.triples_file_path
-    assert File.file?(sub.triples_file_path), "extracted UMLS file is missing: #{sub.triples_file_path}"
+    assert File.file?(sub.uploadFilePath), "compressed upload must be kept"
+    refute File.exist?(sub.triples_file_path), "extracted UMLS file should be removed after loading"
 
     classes = LinkedData::Models::Class.in(sub).include(:prefLabel).read_only.to_a
     assert_equal 133, classes.length
