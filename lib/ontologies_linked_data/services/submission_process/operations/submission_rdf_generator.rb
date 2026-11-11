@@ -61,14 +61,14 @@ module LinkedData
 
       def generate_rdf(logger, reasoning: true)
         mime_type = nil
-        extracted_file = nil
+        extracted_folder = nil
 
         if @submission.hasOntologyLanguage.umls?
-          # UMLS skips the OWLAPI parse, the only other caller of unzip_submission
-          extracted = @submission.unzip_submission(logger)
-          triples_file_path = @submission.triples_file_path
-          extracted_file = triples_file_path if extracted
-          logger.info("UMLS turtle file found; doing OWLAPI parse to extract metrics")
+          # UMLS Turtle is loaded as is, without the OWLAPI parse that would
+          # otherwise extract a compressed upload
+          extracted_folder = @submission.unzip_submission(logger)
+          triples_file_path = @submission.master_file_path
+          logger.info("UMLS turtle file found; skipping OWLAPI parse")
           logger.flush
           mime_type = LinkedData::MediaTypes.media_type_from_base(LinkedData::MediaTypes::TURTLE)
           SubmissionMetricsCalculator.new(@submission).generate_umls_metrics_file(triples_file_path)
@@ -110,15 +110,19 @@ module LinkedData
         rescue => e
           logger.error("Error sending data to triple store - #{e.response.code} #{e.class}: #{e.response.body}") if e.response&.body
           raise e
-        ensure
-          # Only the load reads the extracted file; later steps just write next to it
-          remove_extracted_umls_file(extracted_file, logger) if extracted_file
         end
+      ensure
+        # Only the metrics scan and the load read the extracted files
+        remove_extracted_files(extracted_folder, logger) if extracted_folder
       end
 
-      def remove_extracted_umls_file(path, logger)
-        FileUtils.rm_f(path)
-        logger.info("Removed extracted UMLS file #{path}")
+      # unzip_submission empties the folder before extracting, so every file in
+      # it is extracted content. Folders stay: missing labels and obsolete
+      # classes write their output next to the master file.
+      def remove_extracted_files(folder, logger)
+        files = Dir.glob(File.join(folder, '**', '*')).select { |path| File.file?(path) }
+        FileUtils.rm_f(files)
+        logger.info("Removed #{files.length} extracted file(s) from #{folder}")
         logger.flush
       end
 

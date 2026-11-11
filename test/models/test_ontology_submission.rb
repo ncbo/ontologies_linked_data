@@ -812,6 +812,30 @@ SELECT DISTINCT * WHERE {
     end
   end
 
+  def test_umls_zip_submission_nested_entry
+    Dir.mktmpdir do |dir|
+      zip_path = File.join(dir, "umls_nested.ttl.zip")
+      Zip::File.open(zip_path, create: true) do |zip|
+        zip.add("release/umls_semantictypes.ttl", File.expand_path(UMLS_TTL))
+      end
+      assert_compressed_umls_submission("UMLS-NESTED-TST", zip_path, master: "release/umls_semantictypes.ttl")
+    end
+  end
+
+  def test_umls_zip_submission_multiple_entries
+    Dir.mktmpdir do |dir|
+      readme = File.join(dir, "README.txt")
+      File.write(readme, "release notes")
+      zip_path = File.join(dir, "umls_multi.ttl.zip")
+      Zip::File.open(zip_path, create: true) do |zip|
+        zip.add("umls_semantictypes.ttl", File.expand_path(UMLS_TTL))
+        zip.add("README.txt", readme)
+      end
+      assert_compressed_umls_submission("UMLS-MULTI-TST", zip_path,
+                                        master: "umls_semantictypes.ttl", choose_master: true)
+    end
+  end
+
   def test_umls_uncompressed_triples_file_path
     acronym = "UMLS-PLAIN-TST"
     submission_parse(acronym, "Test UMLS uncompressed", UMLS_TTL, 1,
@@ -825,18 +849,20 @@ SELECT DISTINCT * WHERE {
     assert_equal 133, LinkedData::Models::Class.in(sub).read_only.to_a.length
   end
 
-  def assert_compressed_umls_submission(acronym, archive_path)
-    submission_parse(acronym, "Test compressed UMLS", archive_path, 1,
-                     process_rdf: true, index_search: false,
-                     run_metrics: false, reasoning: false)
+  def assert_compressed_umls_submission(acronym, archive_path, master: "umls_semantictypes.ttl", choose_master: false)
+    parse_options = { process_rdf: true, index_search: false, run_metrics: false, reasoning: false }
+    parse_options[:masterFileName] = master if choose_master
+    submission_parse(acronym, "Test compressed UMLS", archive_path, 1, parse_options)
     sub = LinkedData::Models::Ontology.find(acronym).first.latest_submission(status: [:rdf])
     refute_nil sub, "compressed UMLS submission did not reach RDF status"
     sub.bring_remaining
     assert sub.zipped?
-    assert_equal "umls_semantictypes.ttl", sub.masterFileName
-    assert_equal File.expand_path(File.join(sub.zip_folder, "umls_semantictypes.ttl")), sub.triples_file_path
+    assert_equal master, sub.masterFileName
+    assert_equal File.expand_path(File.join(sub.zip_folder, master)), sub.triples_file_path
     assert File.file?(sub.uploadFilePath), "compressed upload must be kept"
-    refute File.exist?(sub.triples_file_path), "extracted UMLS file should be removed after loading"
+    LinkedData::Utils::FileHelpers.filenames_in_archive(sub.uploadFilePath).each do |entry|
+      refute File.exist?(File.join(sub.zip_folder, entry)), "extracted #{entry} should be removed after loading"
+    end
 
     classes = LinkedData::Models::Class.in(sub).include(:prefLabel).read_only.to_a
     assert_equal 133, classes.length
