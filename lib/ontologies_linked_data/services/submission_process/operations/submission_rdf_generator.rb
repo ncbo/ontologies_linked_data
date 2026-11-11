@@ -61,12 +61,11 @@ module LinkedData
 
       def generate_rdf(logger, reasoning: true)
         mime_type = nil
-        extracted_folder = nil
 
         if @submission.hasOntologyLanguage.umls?
           # UMLS Turtle is loaded as is, without the OWLAPI parse that would
           # otherwise extract a compressed upload
-          extracted_folder = @submission.unzip_submission(logger)
+          @submission.unzip_submission(logger)
           triples_file_path = @submission.master_file_path
           logger.info("UMLS turtle file found; skipping OWLAPI parse")
           logger.flush
@@ -111,19 +110,6 @@ module LinkedData
           logger.error("Error sending data to triple store - #{e.response.code} #{e.class}: #{e.response.body}") if e.response&.body
           raise e
         end
-      ensure
-        # Only the metrics scan and the load read the extracted files
-        remove_extracted_files(extracted_folder, logger) if extracted_folder
-      end
-
-      # unzip_submission empties the folder before extracting, so every file in
-      # it is extracted content. Folders stay: missing labels and obsolete
-      # classes write their output next to the master file.
-      def remove_extracted_files(folder, logger)
-        files = Dir.glob(File.join(folder, '**', '*')).select { |path| File.file?(path) }
-        FileUtils.rm_f(files)
-        logger.info("Removed #{files.length} extracted file(s) from #{folder}")
-        logger.flush
       end
 
       def delete_and_append(triples_file_path, logger, mime_type = nil)

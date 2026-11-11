@@ -860,8 +860,9 @@ SELECT DISTINCT * WHERE {
     assert_equal master, sub.masterFileName
     assert_equal File.expand_path(File.join(sub.zip_folder, master)), sub.triples_file_path
     assert File.file?(sub.uploadFilePath), "compressed upload must be kept"
+    # Extracted files stay until archiving, as for every other format
     LinkedData::Utils::FileHelpers.filenames_in_archive(sub.uploadFilePath).each do |entry|
-      refute File.exist?(File.join(sub.zip_folder, entry)), "extracted #{entry} should be removed after loading"
+      assert File.file?(File.join(sub.zip_folder, entry)), "extracted #{entry} should be kept after loading"
     end
 
     classes = LinkedData::Models::Class.in(sub).include(:prefLabel).read_only.to_a
