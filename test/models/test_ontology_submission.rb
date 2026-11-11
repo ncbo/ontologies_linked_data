@@ -836,6 +836,29 @@ SELECT DISTINCT * WHERE {
     end
   end
 
+  def test_unzip_submission_names_master_file
+    Dir.mktmpdir do |dir|
+      zip_path = File.join(dir, "umls_nested.ttl.zip")
+      Zip::File.open(zip_path, create: true) do |zip|
+        zip.add("release/umls_semantictypes.ttl", File.expand_path(UMLS_TTL))
+      end
+      acronym = "UMLS-UNZIP-TST"
+      submission_parse(acronym, "Test unzip_submission", zip_path, 1,
+                       process_rdf: false, index_search: false, run_metrics: false)
+      sub = LinkedData::Models::Ontology.find(acronym).first.latest_submission(status: :any)
+      sub.bring_remaining
+
+      # FileHelpers.unzip returns absolute paths; the master file keeps its folder in the archive
+      sub.masterFileName = nil
+      sub.unzip_submission(nil)
+      assert_equal "release/umls_semantictypes.ttl", sub.masterFileName
+      assert File.file?(sub.master_file_path)
+
+      assert_equal "umls_semantictypes.ttl", sub.send(:archive_entry_name, "/elsewhere/umls_semantictypes.ttl", sub.zip_folder)
+      assert_nil sub.send(:archive_entry_name, nil, sub.zip_folder)
+    end
+  end
+
   def test_umls_uncompressed_triples_file_path
     acronym = "UMLS-PLAIN-TST"
     submission_parse(acronym, "Test UMLS uncompressed", UMLS_TTL, 1,
