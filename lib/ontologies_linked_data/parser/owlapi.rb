@@ -1,4 +1,5 @@
 require 'open3'
+require 'shellwords'
 
 module LinkedData
   module Parser
@@ -9,6 +10,8 @@ module LinkedData
     class MasterFileMissingException < Parser::ParserException
     end
     class RDFFileNotGeneratedException < Parser::ParserException
+    end
+    class OWLAPITimeoutException < Parser::OWLAPIParserException
     end
 
     class OWLAPICommand
@@ -22,6 +25,7 @@ module LinkedData
         @missing_imports = nil
         @reasoning = true
         @java_heap_size = LinkedData.settings.java_max_heap_size
+        @timeout = opts[:timeout] || LinkedData.settings.owlapi_parse_timeout
       end
 
       def setup_environment
@@ -51,83 +55,73 @@ module LinkedData
         options = []
         if not @input_file.nil?
           if @master_file.nil?
-            options << "-m #{Shellwords.escape(@input_file.to_s)}" #if no master file the input repo is a unique file.
+            options += ["-m", @input_file.to_s] #if no master file the input repo is a unique file.
           else
-            options << "-i #{Shellwords.escape(@input_file.to_s)}"
+            options += ["-i", @input_file.to_s]
           end
         end
         if not @master_file.nil?
-          options << "-m #{Shellwords.escape(@master_file.to_s)}"
+          options += ["-m", @master_file.to_s]
         end
         if not @output_repo.nil?
-          options << "-o #{Shellwords.escape(@output_repo.to_s)}"
+          options += ["-o", @output_repo.to_s]
         end
-        options << "-r #{@reasoning ? "true" : "false"}"
+        options += ["-r", @reasoning ? "true" : "false"]
 
-        if options.length == 0
-          raise ArgumentError, "Cannot call OWLAPI Java command without options."
-        end
-        options = options.join ' '
         errors_log = File.join([@output_repo, "errors.log"])
         if File.exist? errors_log
           File.delete errors_log
         end
-        command_call = "java -DentityExpansionLimit=2500000 -Xmx#{@java_heap_size} -jar #{@owlapi_wrapper_jar_path} #{options}"
+        output_rdf = File.join([@output_repo, "owlapi.xrdf"])
+        # An argument list runs java without a shell, so the pid we kill on
+        # timeout is the JVM itself
+        command = ["java", "-DentityExpansionLimit=2500000", "-Xmx#{@java_heap_size}",
+                   "-jar", @owlapi_wrapper_jar_path, *options]
+        command_call = Shellwords.join(command)
         @logger.info("Java call [#{command_call}]")
-        Open3.popen3(command_call) do |i,o,e,w|
+        Open3.popen3(*command) do |i, o, e, w|
           i.close
+          # Drain both pipes at once; reading one to EOF first can block the
+          # JVM on a full buffer of the other
+          stdout_reader = Thread.new { o.read }
+          stderr_reader = Thread.new { e.read }
 
-          begin
-            Timeout.timeout(60 * 40) do #20 minutes
-              buffer = []
-              stdout = ""
-              stderr = ""
-
-              read_array = [o, e]
-              loop do
-                ready_to_read = IO.select(read_array)
-
-                if ready_to_read[0].include? o
-                  o.each_line do |line|
-                    buffer << line
-                  end
-                  stdout = buffer.join "\n"
-                  read_array.delete(o)
-                end
-
-                if ready_to_read[0].include? e
-                  e.each_line do |line|
-                    buffer << line
-                  end
-                  stderr = buffer.join "\n"
-                  read_array.delete(e)
-                end
-
-                break if read_array.empty?
-              end
-              
-              if not w.value.success?
-                @logger.error("OWLAPI Java command: parsing error occurred.")
-                @logger.error("stderr: " + stderr)
-                @logger.error("stdout: " + stdout)
-                raise Parser::OWLAPIParserException, "OWLAPI Java command exited with status #{w.value.exitstatus}. Check parser log for details."
-              else
-                @logger.info(stdout)
-                @logger.info("OWLAPI Java command: parsing finished successfully.")
-              end
-
+          unless w.join(@timeout)
+            begin
+              Process.kill("KILL", w.pid)
+            rescue Errno::ESRCH
+              # exited between the timeout and the kill
             end
-          rescue Timeout::Error
-            Process.kill("KILL", w.pid)
-            @logger.error("OWLAPI Java command: killed due to timeout.")
+            w.join
+            [stdout_reader, stderr_reader].each { |reader| reader.join(5) }
+            # Whatever the killed run left behind is partial and must not be loaded
+            FileUtils.rm_f(output_rdf)
+            @logger.error("OWLAPI Java command: killed after #{@timeout} seconds.")
             @logger.error("cmd process: #{command_call}")
+            @logger.flush
+            raise OWLAPITimeoutException, "OWLAPI Java command did not finish within #{@timeout} seconds."
           end
-          if not File.exist?(File.join([@output_repo, "owlapi.xrdf"]))
-            raise Parser::OWLAPIParserException, "OWLAPI java command exited with"+
-            "  #{w.value.exitstatus}. " + \
-            "Output file #{File.join([@output_repo, "owlapi.xrdf"])} cannot be found."
+
+          stdout = stdout_reader.value
+          stderr = stderr_reader.value
+          status = w.value
+
+          if not status.success?
+            @logger.error("OWLAPI Java command: parsing error occurred.")
+            @logger.error("stderr: " + stderr)
+            @logger.error("stdout: " + stdout)
+            raise Parser::OWLAPIParserException, "OWLAPI Java command exited with status #{status.exitstatus}. Check parser log for details."
+          end
+
+          @logger.info(stdout)
+          @logger.info("OWLAPI Java command: parsing finished successfully.")
+
+          if not File.exist?(output_rdf)
+            raise Parser::OWLAPIParserException, "OWLAPI java command exited with " +
+            "#{status.exitstatus}. " + \
+            "Output file #{output_rdf} cannot be found."
           else
-            @file_triples_path = File.join([@output_repo, "owlapi.xrdf"])
+            @file_triples_path = output_rdf
             @logger.info("Output size #{File.stat(@file_triples_path).size} in `#{@file_triples_path}`")
           end
         end
