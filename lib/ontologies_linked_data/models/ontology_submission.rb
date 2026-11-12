@@ -892,15 +892,6 @@ module LinkedData
         parsable
       end
 
-      def owlapi_parser(logger: Logger.new($stdout))
-        unzip_submission(logger)
-        LinkedData::Parser::OWLAPICommand.new(
-          owlapi_parser_input,
-          File.expand_path(self.data_folder.to_s),
-          master_file: self.masterFileName,
-          logger: logger)
-      end
-
       private
 
       def owlapi_parser_input
