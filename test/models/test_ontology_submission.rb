@@ -787,6 +787,9 @@ SELECT DISTINCT * WHERE {
     metrics.each { |m| assert_equal 4, m.length }
     assert_equal "Individual Count", metrics[0][1]
     assert_equal 133, metrics[1][0].to_i
+    # Max depth comes from the OWLAPI parse; its RDF/XML output is not kept
+    assert_equal 8, metrics[1][3].to_i
+    refute File.exist?(sub.rdf_path), "owlapi.xrdf should be deleted for UMLS"
   end
 
   UMLS_TTL = "./test/data/ontology_files/umls_semantictypes.ttl"
@@ -895,6 +898,7 @@ SELECT DISTINCT * WHERE {
     metrics = sub.metrics_from_file(Logger.new(sub.parsing_log_path))
     refute_empty metrics
     assert_equal 133, metrics[1][0].to_i
+    assert_equal 8, metrics[1][3].to_i
   end
 
   def test_discover_obo_in_owl_obsolete
@@ -1379,6 +1383,7 @@ eos
     metrics = sub.metrics
     metrics.bring_remaining
     assert_equal 133, metrics.classes
+    assert_equal 8, metrics.maxDepth
   end
 
   def test_class_count_without_metrics

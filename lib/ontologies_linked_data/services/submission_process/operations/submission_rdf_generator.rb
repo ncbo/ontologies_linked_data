@@ -63,45 +63,19 @@ module LinkedData
         mime_type = nil
 
         if @submission.hasOntologyLanguage.umls?
-          # UMLS Turtle is loaded as is, without the OWLAPI parse that would
-          # otherwise extract a compressed upload
-          @submission.unzip_submission(logger)
+          # UMLS Turtle is loaded as is. OWLAPI still parses it, to check the
+          # file and to write metrics.csv, which holds the max depth.
+          logger.info("UMLS turtle file found; OWLAPI parse for checks and metrics only")
+          owlapi_rdf = owlapi_parse(logger, reasoning: false)
+          FileUtils.rm_f(owlapi_rdf)
           triples_file_path = @submission.master_file_path
-          logger.info("UMLS turtle file found; skipping OWLAPI parse")
-          logger.flush
           mime_type = LinkedData::MediaTypes.media_type_from_base(LinkedData::MediaTypes::TURTLE)
           SubmissionMetricsCalculator.new(@submission).generate_umls_metrics_file(triples_file_path)
         else
-          output_rdf = @submission.rdf_path
-
-          if File.exist?(output_rdf)
-            logger.info("deleting old owlapi.xrdf ..")
-            deleted = FileUtils.rm(output_rdf)
-
-            if deleted.length > 0
-              logger.info("deleted")
-            else
-              logger.info("error deleting owlapi.rdf")
-            end
-          end
-
-          owlapi = @submission.owlapi_parser(logger: logger)
-          owlapi.disable_reasoner unless reasoning
-          triples_file_path, missing_imports = owlapi.parse
-
-          if missing_imports && missing_imports.length > 0
-            @submission.missingImports = missing_imports
-
-            missing_imports.each do |imp|
-              logger.info("OWL_IMPORT_MISSING: #{imp}")
-            end
-          else
-            @submission.missingImports = nil
-          end
-          logger.flush
+          triples_file_path = owlapi_parse(logger, reasoning: reasoning)
           # debug code when you need to avoid re-generating the owlapi.xrdf file,
-          # comment out the block above and uncomment the line below
-          # triples_file_path = output_rdf
+          # comment out the line above and uncomment the line below
+          # triples_file_path = @submission.rdf_path
         end
 
         begin
@@ -110,6 +84,34 @@ module LinkedData
           logger.error("Error sending data to triple store - #{e.response.code} #{e.class}: #{e.response.body}") if e.response&.body
           raise e
         end
+      end
+
+      # Runs OWLAPI on the submission and returns the path of its owlapi.xrdf.
+      # OWLAPI also writes metrics.csv next to it.
+      def owlapi_parse(logger, reasoning:)
+        output_rdf = @submission.rdf_path
+
+        # A stale file would hide a parse that timed out without writing one
+        if File.exist?(output_rdf)
+          logger.info("deleting old owlapi.xrdf ..")
+          FileUtils.rm(output_rdf)
+        end
+
+        owlapi = @submission.owlapi_parser(logger: logger)
+        owlapi.disable_reasoner unless reasoning
+        triples_file_path, missing_imports = owlapi.parse
+
+        if missing_imports && missing_imports.length > 0
+          @submission.missingImports = missing_imports
+
+          missing_imports.each do |imp|
+            logger.info("OWL_IMPORT_MISSING: #{imp}")
+          end
+        else
+          @submission.missingImports = nil
+        end
+        logger.flush
+        triples_file_path
       end
 
       def delete_and_append(triples_file_path, logger, mime_type = nil)
