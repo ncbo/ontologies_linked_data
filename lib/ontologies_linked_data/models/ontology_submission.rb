@@ -499,12 +499,7 @@ module LinkedData
       def triples_file_path
         self.bring(:uploadFilePath) if self.bring?(:uploadFilePath)
         self.bring(:masterFileName) if self.bring?(:masterFileName)
-        triples_file_name = File.basename(self.uploadFilePath.to_s)
-        full_file_path = File.join(File.expand_path(self.data_folder.to_s), triples_file_name)
-        zip = zipped? full_file_path
-        triples_file_name = File.basename(self.masterFileName.to_s) if zip && self.masterFileName
-        file_name = File.join(File.expand_path(self.data_folder.to_s), triples_file_name)
-        File.expand_path(file_name)
+        master_file_path
       end
 
       def unzip_submission(logger)
@@ -523,7 +518,7 @@ module LinkedData
           if extracted.length == 1 && self.masterFileName.nil?
             first = extracted.first
 
-            self.masterFileName =
+            name =
               if first.respond_to?(:name)
                 first.name
               elsif first.is_a?(Hash)
@@ -531,9 +526,10 @@ module LinkedData
               else
                 first.to_s
               end
+            self.masterFileName = archive_entry_name(name, zip_dst)
             self.save
           end
-          self.masterFileName = File.basename(self.masterFileName.to_s)
+          self.masterFileName = archive_entry_name(self.masterFileName, zip_dst)
 
           if logger
             logger.info("Files extracted from zip #{extracted}")
@@ -914,6 +910,19 @@ module LinkedData
                  self.uploadFilePath
                end
         File.expand_path(path)
+      end
+
+      # The master file's path inside the archive. FileHelpers.unzip returns
+      # absolute paths, so cut those back to the part under zip_dst; keeping
+      # the subfolder lets master_file_path find nested entries.
+      def archive_entry_name(name, zip_dst)
+        return nil if name.nil?
+
+        name = name.to_s
+        return name unless name.start_with?(File::SEPARATOR)
+
+        root = File.expand_path(zip_dst) + File::SEPARATOR
+        name.start_with?(root) ? name.delete_prefix(root) : File.basename(name)
       end
 
       def self.loom_transform_literal(lit)
