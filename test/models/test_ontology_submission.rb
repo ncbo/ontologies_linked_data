@@ -787,6 +787,9 @@ SELECT DISTINCT * WHERE {
     metrics.each { |m| assert_equal 4, m.length }
     assert_equal "Individual Count", metrics[0][1]
     assert_equal 133, metrics[1][0].to_i
+    # Max depth comes from the OWLAPI parse; its RDF/XML output is not kept
+    assert_equal 8, metrics[1][3].to_i
+    refute File.exist?(sub.rdf_path), "owlapi.xrdf should be deleted for UMLS"
   end
 
   UMLS_TTL = "./test/data/ontology_files/umls_semantictypes.ttl"
@@ -859,6 +862,44 @@ SELECT DISTINCT * WHERE {
     end
   end
 
+  def test_umls_owlapi_parse_turned_off
+    old_setting = LinkedData.settings.umls_owlapi_parse
+    Dir.mktmpdir do |dir|
+      gz_path = File.join(dir, "umls_semantictypes.ttl.gz")
+      Zlib::GzipWriter.open(gz_path) do |gz|
+        gz.orig_name = "umls_semantictypes.ttl"
+        gz.write(File.binread(UMLS_TTL))
+      end
+      acronym = "UMLS-NOOWL-TST"
+      # The first parse runs OWLAPI and writes metrics.csv, as ncbo_cron's parsable? check does
+      submission_parse(acronym, "Test UMLS without OWLAPI", gz_path, 1,
+                       process_rdf: true, index_search: false, run_metrics: false, reasoning: false)
+      sub = LinkedData::Models::Ontology.find(acronym).first.latest_submission(status: [:rdf])
+      sub.bring_remaining
+      assert_equal 8, sub.metrics_from_file[1][3].to_i
+
+      LinkedData.settings.umls_owlapi_parse = false
+      LinkedData::Models::OntologySubmission.any_instance.expects(:owlapi_parser).never
+      # Turned off, the upload must still be extracted before loading
+      FileUtils.rm_rf(sub.zip_folder)
+      logger = Logger.new(StringIO.new)
+
+      sub.generate_rdf(logger, reasoning: false)
+      assert File.file?(sub.master_file_path), "compressed upload was not extracted"
+      assert_equal 133, LinkedData::Models::Class.in(sub).read_only.to_a.length
+      metrics = sub.metrics_from_file
+      assert_equal 133, metrics[1][0].to_i
+      assert_equal 8, metrics[1][3].to_i, "max depth from the existing metrics.csv should be kept"
+
+      FileUtils.rm_f(sub.metrics_path)
+      sub.generate_rdf(logger, reasoning: false)
+      assert_equal 0, sub.metrics_from_file[1][3].to_i
+      refute File.exist?(sub.rdf_path)
+    end
+  ensure
+    LinkedData.settings.umls_owlapi_parse = old_setting
+  end
+
   def test_umls_uncompressed_triples_file_path
     acronym = "UMLS-PLAIN-TST"
     submission_parse(acronym, "Test UMLS uncompressed", UMLS_TTL, 1,
@@ -895,6 +936,7 @@ SELECT DISTINCT * WHERE {
     metrics = sub.metrics_from_file(Logger.new(sub.parsing_log_path))
     refute_empty metrics
     assert_equal 133, metrics[1][0].to_i
+    assert_equal 8, metrics[1][3].to_i
   end
 
   def test_discover_obo_in_owl_obsolete
@@ -1379,6 +1421,7 @@ eos
     metrics = sub.metrics
     metrics.bring_remaining
     assert_equal 133, metrics.classes
+    assert_equal 8, metrics.maxDepth
   end
 
   def test_class_count_without_metrics
