@@ -1751,9 +1751,9 @@ eos
   def test_skos_submission_without_skos_concept_processes_without_error
     # Regression for GH-274: SKOS submissions with no skos:Concept previously entered the
     # retry path and failed during missing-label generation because the CSV class_count
-    # fallback reported a non-zero count that disagreed with the SPARQL result. With the
-    # fallback removed, class_count returns -1, total_pages stays 0, and the loop exits
-    # cleanly without entering the retry path.
+    # fallback reported a non-zero count that disagreed with the SPARQL result. Missing labels
+    # now counts SKOS concepts with the paging query, so total_pages stays 0 and the loop
+    # exits cleanly without entering the retry path.
     submission_parse("SKOS-NO-CONCEPT",
                      "SKOS without Concept",
                      "./test/data/ontology_files/no_concepts.skos.rdf", 1,
@@ -1761,6 +1761,38 @@ eos
                      index_search: false, run_metrics: false, diff: false)
 
     sub = LinkedData::Models::Ontology.find("SKOS-NO-CONCEPT").first.latest_submission(status: :any)
+    sub.bring(:submissionStatus)
+    codes = sub.submissionStatus.map { |status| status.get_code_from_id }
+
+    assert_includes codes, "RDF_LABELS"
+    refute_includes codes, "ERROR_RDF_LABELS"
+    assert_nil RequestStore.store[:requested_lang]
+  end
+
+  def test_skos_submission_without_skos_concept_reprocesses_with_existing_metrics
+    # Regression for ncbo/ontologies_linked_data#271: DCTERMS is registered as SKOS but is
+    # an RDFS vocabulary with no skos:Concept. Missing labels runs before metrics, so on
+    # reprocessing it read the previous run's metrics (OWLAPI classes + individuals), which
+    # count rdfs:Class and other resources. The page query only selects skos:Concept, so
+    # page 1 came back empty although the count promised a page, and the submission failed.
+    acronym = "SKOS-DCT-LIKE"
+    submission_parse(acronym,
+                     "SKOS shaped like DCTERMS",
+                     "./test/data/ontology_files/dcterms_like.skos.rdf", 1,
+                     process_rdf: true, extract_metadata: false,
+                     index_search: false, run_metrics: true, diff: false)
+
+    sub = LinkedData::Models::Ontology.find(acronym).first.latest_submission(status: :any)
+    sub.bring_remaining
+    sub.ontology.bring_remaining
+    logger = Logger.new(TestLogFile.new)
+    assert_operator sub.class_count(logger), :>, 0,
+                    "metrics from the first run should report a non-zero count for this fixture"
+    assert_equal 0, LinkedData::Models::Class.in(sub).count
+
+    sub.generate_missing_labels(logger)
+
+    sub = LinkedData::Models::Ontology.find(acronym).first.latest_submission(status: :any)
     sub.bring(:submissionStatus)
     codes = sub.submissionStatus.map { |status| status.get_code_from_id }
 
