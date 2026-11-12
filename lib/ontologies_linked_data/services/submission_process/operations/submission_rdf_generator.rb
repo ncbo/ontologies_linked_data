@@ -65,9 +65,17 @@ module LinkedData
         if @submission.hasOntologyLanguage.umls?
           # UMLS Turtle is loaded as is. OWLAPI still parses it, to check the
           # file and to write metrics.csv, which holds the max depth.
-          logger.info("UMLS turtle file found; OWLAPI parse for checks and metrics only")
-          owlapi_rdf = owlapi_parse(logger, reasoning: false)
-          FileUtils.rm_f(owlapi_rdf)
+          if LinkedData.settings.umls_owlapi_parse
+            logger.info("UMLS turtle file found; OWLAPI parse for checks and metrics only")
+            owlapi_rdf = owlapi_parse(logger, reasoning: false)
+            FileUtils.rm_f(owlapi_rdf)
+          else
+            # owlapi_parser would otherwise extract a compressed upload
+            @submission.unzip_submission(logger)
+            logger.warn("UMLS turtle file found; OWLAPI parse is turned off (umls_owlapi_parse), " \
+                        "so the max depth comes from an existing metrics.csv, or is 0")
+            logger.flush
+          end
           triples_file_path = @submission.master_file_path
           mime_type = LinkedData::MediaTypes.media_type_from_base(LinkedData::MediaTypes::TURTLE)
           SubmissionMetricsCalculator.new(@submission).generate_umls_metrics_file(triples_file_path)
