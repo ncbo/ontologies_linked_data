@@ -41,6 +41,8 @@ module LinkedData
 
     # Java/JVM options
     @settings.java_max_heap_size            ||= '10240M'
+    # Seconds an OWLAPI parse may run before it is killed and the parse fails
+    @settings.owlapi_parse_timeout          ||= 60 * 40
 
     @settings.ui_name                       ||= 'BioPortal'
     @settings.ui_host                       ||= 'bioportal.bioontology.org'
