@@ -40,9 +40,8 @@ module LinkedData
     @settings.skip_connect_goo              ||= ENV['LINKEDDATA_SKIP_CONNECT_GOO'] == 'true'
 
     # Run OWLAPI on UMLS submissions in the RDF step, to check the file and get
-    # its max depth. Off, the max depth comes from an existing metrics.csv, or
-    # is 0. A nil check rather than ||=, so a false set before this runs is kept.
-    @settings.umls_owlapi_parse = true if @settings.umls_owlapi_parse.nil?
+    # its max depth. Off, the max depth comes from an existing metrics.csv, or is 0
+    @settings.umls_owlapi_parse             ||= true
 
     # Java/JVM options
     @settings.java_max_heap_size            ||= '10240M'
