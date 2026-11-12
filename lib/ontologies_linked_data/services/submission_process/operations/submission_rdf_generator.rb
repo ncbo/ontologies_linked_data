@@ -99,7 +99,7 @@ module LinkedData
       def owlapi_parse(logger, reasoning:)
         output_rdf = @submission.rdf_path
 
-        # A stale file would hide a parse that timed out without writing one
+        # A leftover file would hide a run that exits 0 without writing one
         if File.exist?(output_rdf)
           logger.info("deleting old owlapi.xrdf ..")
           FileUtils.rm(output_rdf)
