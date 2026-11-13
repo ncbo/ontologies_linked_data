@@ -211,6 +211,16 @@ module LinkedData
         @obsolete || false
       end
 
+      # The indexer loads attributes with map_attributes(include_languages: true),
+      # which leaves single-valued attributes as arrays (e.g. [true]) or
+      # language-keyed hashes. Solr's boolean field reads "[true]" as false, so
+      # reduce whatever shape obsolete has to a boolean.
+      def obsolete_for_index
+        values = obsolete
+        values = values.values if values.is_a?(Hash)
+        Array(values).flatten.any? { |v| v == true || %w[true 1].include?(v.to_s.strip.downcase) }
+      end
+
       def index_id()
         self.bring(:submission) if self.bring?(:submission)
         return nil unless self.submission
@@ -299,7 +309,7 @@ module LinkedData
           doc[:submissionAcronym] = acronym
           doc[:submissionId] = self.submission.submissionId
           doc[:ontologyType] = self.submission.ontology.ontologyType.get_code_from_id
-          doc[:obsolete] = self.obsolete.to_s
+          doc[:obsolete] = obsolete_for_index.to_s
           doc[:ontologyRank] = self.class.ontology_rank_for_index(acronym)
 
           all_attrs = self.to_hash

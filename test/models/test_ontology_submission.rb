@@ -960,6 +960,7 @@ SELECT DISTINCT * WHERE {
         assert_equal(false, c.obsolete, "Class should not be obsolete: #{c.id}")
       end
     end
+    assert_obsolete_indexed(ont_sub, classes)
   end
 
   def test_custom_obsolete_property
@@ -984,6 +985,7 @@ SELECT DISTINCT * WHERE {
         assert_equal(false, c.obsolete, "Class should not be obsolete: #{c.id}")
       end
     end
+    assert_obsolete_indexed(ont_sub, classes)
   end
 
   def test_custom_obsolete_branch
@@ -1008,6 +1010,32 @@ SELECT DISTINCT * WHERE {
         assert_equal(false, c.obsolete, "Class should not be obsolete: #{c.id}")
       end
     end
+    assert_obsolete_indexed(ont_sub, classes)
+  end
+
+  # Index the submission's terms and check that each class's search document
+  # carries the same obsolete flag as the class itself, and that the
+  # obsolete:false filter used by default search excludes obsolete classes.
+  def assert_obsolete_indexed(ont_sub, classes)
+    expected = classes.to_h { |c| [c.id.to_s, c.obsolete] }
+    assert expected.values.include?(true), 'Test ontology should have obsolete classes'
+    assert expected.values.include?(false), 'Test ontology should have non-obsolete classes'
+
+    ont_sub.index_terms(Logger.new(TestLogFile.new), commit: true, generate_csv: false)
+    acronym = ont_sub.ontology.acronym
+    fq = "submissionAcronym:#{acronym}"
+    docs = LinkedData::Models::Class.search('*:*', fq: fq, rows: 1000)['response']['docs']
+    indexed = docs.to_h { |d| [d['resource_id'], d['obsolete']] }
+
+    expected.each do |id, obsolete|
+      assert indexed.key?(id), "Class not indexed: #{id}"
+      assert_equal obsolete, indexed[id], "Wrong obsolete value in search index for #{id}"
+    end
+
+    non_obsolete = LinkedData::Models::Class.search('*:*', fq: "#{fq} AND obsolete:false", rows: 1000)['response']['docs']
+    assert_equal expected.reject { |_, o| o }.keys.sort, non_obsolete.map { |d| d['resource_id'] }.sort
+  ensure
+    LinkedData::Models::Class.unindexByQuery("submissionAcronym:#{ont_sub.ontology.acronym}") rescue nil
   end
 
   def test_custom_property_generation

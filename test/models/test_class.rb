@@ -564,4 +564,25 @@ class TestClassModel < LinkedData::TestOntologyCommon
     assert_equal [%w[target a shared top], %w[target b shared top]].sort, stub_paths(target).sort
     assert_equal 1, shared_via_a.brings + shared_via_b.brings, 'shared ancestor loaded more than once'
   end
+
+  def test_obsolete_for_index
+    cls = LinkedData::Models::Class.new
+    {
+      nil => false,
+      true => true,
+      false => false,
+      [true] => true,
+      [false] => false,
+      [] => false,
+      'true' => true,
+      ['true'] => true,
+      ['1'] => true,
+      ['false'] => false,
+      { none: ['true'] } => true,
+      { none: ['false'] } => false
+    }.each do |value, expected|
+      cls.instance_variable_set(:@obsolete, value)
+      assert_equal expected, cls.obsolete_for_index, "obsolete_for_index for #{value.inspect}"
+    end
+  end
 end
