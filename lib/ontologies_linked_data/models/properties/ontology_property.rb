@@ -159,10 +159,22 @@ module LinkedData
         @intlHasChildren = has_c
       end
 
-      # Fetches all subPropertyOf objects in the graph rather than filtering by
+      # Uses a children count or loaded children when present (both match
+      # has_children_query), otherwise one query for the rest. The query
+      # fetches all subPropertyOf objects in the graph rather than filtering by
       # model ids, since 4store ignores VALUES.
       def self.load_has_children_batch(models, submission)
         models = models.to_a.compact.select { |m| m.instance_variable_get("@intlHasChildren").nil? }
+        models = models.reject do |m|
+          agg = m.aggregates&.find { |x| x.attribute == :children && x.aggregate == :count }
+          has_c = if agg
+                    agg.value > 0
+                  elsif m.loaded_attributes.include?(:children)
+                    !m.children.empty?
+                  end
+          m.instance_variable_set("@intlHasChildren", has_c) unless has_c.nil?
+          !has_c.nil?
+        end
         return if models.empty?
 
         graph = submission.id.to_s

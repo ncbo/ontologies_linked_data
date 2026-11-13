@@ -291,7 +291,6 @@ module LinkedData
           roots = where.all
 
           roots.select! { |prop|
-            prop.load_has_children if extra_include.include?(:hasChildren)
             is_root = !prop.respond_to?(:parents) || prop.parents.nil? || prop.parents.empty?
             prop.loaded_attributes.delete?(:parents)
             is_root
@@ -300,6 +299,8 @@ module LinkedData
           c.partially_load_children(roots, threshold, sub) if extra_include.include?(:children)
           all_roots.concat(roots)
         end
+
+        LinkedData::Models::OntologyProperty.load_has_children_batch(all_roots, sub) if extra_include.include?(:hasChildren)
 
         LinkedData::Models::OntologyProperty.sort_properties(all_roots)
       end

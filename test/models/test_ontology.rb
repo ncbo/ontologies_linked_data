@@ -236,6 +236,20 @@ class TestOntology < LinkedData::TestOntologyCommon
                                   "http://www.w3.org/2004/02/skos/core#narrowMatch"].include?(p.id.to_s) },
                  "Non-root nodes found where roots are expected"
 
+    pr.each do |prop|
+      fresh = prop.class.find(prop.id).in(sub).first
+      fresh.load_has_children
+      assert_equal fresh.hasChildren, prop.hasChildren, "hasChildren mismatch for root #{prop.id}"
+    end
+    assert pr.any?(&:hasChildren)
+
+    # with children loaded, hasChildren comes from the children count, no query
+    expected = pr.map(&:hasChildren)
+    pr.each { |p| p.instance_variable_set("@intlHasChildren", nil) }
+    queries = Goo.count_sparql_queries { LinkedData::Models::OntologyProperty.load_has_children_batch(pr, sub) }
+    assert_equal 0, queries
+    assert_equal expected, pr.map(&:hasChildren)
+
     # test property trees
     close_match_prop = LinkedData::Models::ObjectProperty.find(RDF::URI.new("http://www.w3.org/2004/02/skos/core#closeMatch")).in(sub).include(:parents).first()
     tree = close_match_prop.tree
