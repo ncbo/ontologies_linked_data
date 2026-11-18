@@ -211,6 +211,16 @@ module LinkedData
         @obsolete || false
       end
 
+      # The indexer loads attributes with map_attributes(include_languages: true),
+      # which leaves single-valued attributes as arrays (e.g. [true]) or
+      # language-keyed hashes. Solr's boolean field reads "[true]" as false, so
+      # reduce whatever shape obsolete has to a boolean.
+      def obsolete_for_index
+        values = obsolete
+        values = values.values if values.is_a?(Hash)
+        Array(values).flatten.any? { |v| v == true || %w[true 1].include?(v.to_s.strip.downcase) }
+      end
+
       def index_id()
         self.bring(:submission) if self.bring?(:submission)
         return nil unless self.submission
@@ -299,7 +309,7 @@ module LinkedData
           doc[:submissionAcronym] = acronym
           doc[:submissionId] = self.submission.submissionId
           doc[:ontologyType] = self.submission.ontology.ontologyType.get_code_from_id
-          doc[:obsolete] = self.obsolete.to_s
+          doc[:obsolete] = obsolete_for_index.to_s
           doc[:ontologyRank] = self.class.ontology_rank_for_index(acronym)
 
           all_attrs = self.to_hash
@@ -703,8 +713,21 @@ eos
         path << r
       end
 
-      def traverse_path_to_root(parents, paths, path_i, tree = false, roots = nil)
-        return if (tree && parents.length == 0)
+      # `loaded` maps class id => an instance whose parents are loaded, so an
+      # ancestor shared by many paths is queried once, not once per path.
+      def traverse_path_to_root(parents, paths, path_i, tree = false, roots = nil, loaded = {})
+        # A parent already on this path closes a cycle. Drop it here rather than
+        # letting append_if_not_there_already reject it below, which would leave
+        # an unextended clone of the path behind as a duplicate.
+        unless tree || parents.nil?
+          on_path = paths[path_i].map { |x| x.id.to_s }
+          parents = parents.reject { |r| on_path.include?(r.id.to_s) }
+        end
+
+        # A class with no parents under the tree property ends the path. The
+        # paths_to_root endpoint passes no `roots`, and owl:Thing never appears
+        # under skos:broader or metadata:treeView, so this is its only stop.
+        return if parents.nil? || parents.empty?
 
         recursions = [path_i]
         recurse_on_path = [false]
@@ -733,17 +756,23 @@ eos
 
           if !tree_root?(p, roots) && recurse_on_path[i]
             if p.bring?(:parents)
-              p.bring(parents: [:prefLabel, :synonym, :definition, :inScheme, parents: [:prefLabel, :synonym, :definition, :inScheme]])
+              if (cached = loaded[p.id.to_s])
+                p = path[-1] = cached
+              else
+                p.bring(parents: [:prefLabel, :synonym, :definition, :inScheme, parents: [:prefLabel, :synonym, :definition, :inScheme]])
+              end
             end
 
             if !p.loaded_attributes.include?(:parents)
-              # fail safely
+              # fail safely -- abandon this path only, the sibling paths in this
+              # frame are unaffected and must still be traversed
               logger = LinkedData::Parser.logger || Logger.new($stderr)
               logger.error("Class #{p.id.to_s} from #{p.submission.id} cannot load parents")
-              return
+              next
             end
 
-            traverse_path_to_root(p.parents.dup, paths, rec_i, tree=tree, roots=roots)
+            loaded[p.id.to_s] ||= p
+            traverse_path_to_root(p.parents.dup, paths, rec_i, tree, roots, loaded)
           end
         end
       end

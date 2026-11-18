@@ -19,10 +19,10 @@ module LinkedData
           prop_count += 1 if line =~ /owl:DatatypeProperty/
         end
 
-        # Get max depth from the metrics.csv file which is already generated
-        # by owlapi_wrapper when new submission of UMLS ontology is created.
-        # Ruby code/sparql for calculating max_depth fails for large UMLS
-        # ontologies with AllegroGraph backend
+        # Keep the max depth from the metrics.csv that the OWLAPI parse in
+        # SubmissionRDFGenerator just wrote; the counts above replace OWLAPI's.
+        # The SPARQL max_depth calculation fails for large UMLS ontologies
+        # with the AllegroGraph backend
         metrics_from_owlapi = @submission.metrics_from_file
         max_depth = metrics_from_owlapi[1][3] unless metrics_from_owlapi.empty?
 
