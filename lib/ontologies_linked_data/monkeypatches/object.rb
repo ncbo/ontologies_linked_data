@@ -119,6 +119,14 @@ class Object
       hash.delete_if {|k,v| v.nil?}
     end
 
+    # Optional computed fields can be absent without changing the nil behavior
+    # of other attributes. Apply this before JSON/XML add their response metadata.
+    if cls.ancestors.include?(LinkedData::Hypermedia::Resource)
+      cls.hypermedia_settings[:serialize_omit_nil].each do |attribute|
+        hash.delete(attribute) if hash[attribute].nil?
+      end
+    end
+
     # Provide the hash for serialization processes to add data
     yield hash, self if block_given?
 

@@ -101,11 +101,12 @@ module LinkedData
       embed :children, :ancestors, :descendants, :parents, :prefLabelXl, :altLabelXl, :hiddenLabelXl
       serialize_default :prefLabel, :synonym, :definition, :cui, :semanticType, :obsolete, :matchType,
                         :ontologyType, :provisional, # an attribute used in Search (not shown out of context)
-                        :created, :modified, :memberOf, :inScheme
-      serialize_methods :properties, :childrenCount, :hasChildren
+                        :created, :modified, :memberOf, :inScheme, :oboId
+      serialize_methods :properties, :childrenCount, :hasChildren, :oboId
+      serialize_omit_nil :oboId
       serialize_never :submissionAcronym, :submissionId, :submission, :descendants
       aggregates childrenCount: [:count, :children]
-      links_load submission: [ontology: [:acronym]]
+      links_load submission: [:uri, { ontology: [:acronym] }]
       do_not_load :descendants, :ancestors
       prevent_serialize_when_nested :properties, :parents, :children, :ancestors, :descendants, :memberOf
       link_to LinkedData::Hypermedia::Link.new("self", lambda {|s| "ontologies/#{s.submission.ontology.acronym}/classes/#{CGI.escape(s.id.to_s)}"}, self.uri_type),
@@ -376,18 +377,52 @@ module LinkedData
         doc
       end
 
-      def set_oboid_fields(class_id, ontology_iri, ontology_acronym, index_doc)
+      # Shared by indexing and REST serialization. Only positive acronym matches
+      # are returned so merging these fields cannot clear a match from notation.
+      def self.oboid_fields(class_id, ontology_iri = nil, ontology_acronym = nil)
+        class_id = class_id.to_s
         short_id = LinkedData::Utils::Triples.last_iri_fragment(class_id)
-        matched = short_id.match(/([A-Za-z]+)_([0-9]+)$/) do |m|
-          index_doc[:oboId] = "#{m[1]}:#{m[2]}"
-          index_doc[:idAcronymMatch] = true if m[1].upcase === ontology_acronym.upcase
-          true
-        end
+        fields = {}
+        match = short_id.match(/([A-Za-z]+)_([0-9]+)$/)
 
-        if !matched && ontology_iri && class_id.start_with?(ontology_iri)
-          index_doc[:oboId] = "#{ontology_acronym}:#{short_id}"
-          index_doc[:idAcronymMatch] = true
+        if match
+          fields[:oboId] = "#{match[1]}:#{match[2]}"
+          if ontology_acronym && match[1].upcase == ontology_acronym.upcase
+            fields[:idAcronymMatch] = true
+          end
+        elsif ontology_iri && ontology_acronym && class_id.start_with?(ontology_iri.to_s)
+          fields[:oboId] = "#{ontology_acronym}:#{short_id}"
+          fields[:idAcronymMatch] = true
         end
+        fields
+      end
+
+      def set_oboid_fields(class_id, ontology_iri, ontology_acronym, index_doc)
+        index_doc.merge!(self.class.oboid_fields(class_id, ontology_iri, ontology_acronym))
+      end
+
+      # This is a computed identifier, not an RDF annotation. Search responses
+      # use the stored Solr field on their read-only objects instead.
+      def oboId
+        # Ordinary OBO identifiers do not require submission metadata.
+        obo_id = self.class.oboid_fields(id)[:oboId]
+        return obo_id if obo_id
+
+        bring(:submission) if bring?(:submission)
+        sub = submission
+        return nil unless sub
+
+        # Guard lazy loads: classes in a collection share the submission, so its
+        # ontology IRI is loaded once even when it was not preloaded by a caller.
+        sub.bring(:uri) if sub.bring?(:uri)
+        return nil unless sub.uri
+
+        sub.bring(:ontology) if sub.bring?(:ontology)
+        ontology = sub.ontology
+        return nil unless ontology
+
+        ontology.bring(:acronym) if ontology.bring?(:acronym)
+        self.class.oboid_fields(id, sub.uri, ontology.acronym)[:oboId]
       end
 
       def notation_acronym_match(notation, ontology_acronym)
