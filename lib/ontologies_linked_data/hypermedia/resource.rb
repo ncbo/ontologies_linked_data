@@ -34,6 +34,7 @@ module LinkedData
           :serialize_default,
           :serialize_never,
           :serialize_methods,
+          :serialize_omit_nil,
           :serialize_filter,
           :prevent_serialize_when_nested,
           :system_controlled
