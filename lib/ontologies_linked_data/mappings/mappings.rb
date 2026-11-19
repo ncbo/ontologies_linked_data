@@ -21,9 +21,9 @@ module LinkedData
         predicates = {}
         predicates["SKOS:EXACT_MATCH"] = ["http://www.w3.org/2004/02/skos/core#exactMatch"]
         predicates["SKOS:CLOSE_MATCH"] = ["http://www.w3.org/2004/02/skos/core#closeMatch"]
-        predicates["SKOS:BROAD_MATH"] = ["http://www.w3.org/2004/02/skos/core#broadMatch"]
-        predicates["SKOS:NARROW_MATH"] = ["http://www.w3.org/2004/02/skos/core#narrowMatch"]
-        predicates["SKOS:RELATED_MATH"] = ["http://www.w3.org/2004/02/skos/core#relatedMatch"]
+        predicates["SKOS:BROAD_MATCH"] = ["http://www.w3.org/2004/02/skos/core#broadMatch"]
+        predicates["SKOS:NARROW_MATCH"] = ["http://www.w3.org/2004/02/skos/core#narrowMatch"]
+        predicates["SKOS:RELATED_MATCH"] = ["http://www.w3.org/2004/02/skos/core#relatedMatch"]
 
         return predicates
       end

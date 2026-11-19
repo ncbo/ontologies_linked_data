@@ -216,6 +216,30 @@ SELECT ?children WHERE {
     assert seen_target, 'target class not found within its own tree'
   end
 
+  # Guards the terminal condition of the paths_to_root traversal. The traversal
+  # must stop when it reaches a class with no parents under the submission's tree
+  # property; it cannot rely on an owl:Thing sentinel, which never appears under
+  # skos:broader (or metadata:treeView for OBO), nor on `roots` -- the
+  # /classes/:cls/paths_to_root endpoint passes none. Regressing this recurses
+  # into an empty parents array and raises
+  # "undefined method `id' for nil:NilClass" in append_if_not_there_already.
+  def test_skos_paths_to_root_terminates_at_parentless_concept
+    sub = before_suite
+    roots = sub.roots
+    refute_empty roots, 'expected SKOS roots'
+
+    # Descend one level from a root so the path is non-trivial (root -> target).
+    # Ids are sorted so the same concept is picked on every backend -- row order
+    # is not guaranteed and differs between 4store/AG/GraphDB/Virtuoso.
+    LinkedData::Models::Class.in(sub).models(roots).include(children: [:prefLabel]).all
+    target_id = roots.flat_map { |r| r.children.map { |c| c.id.to_s } }.min
+    refute_nil target_id, 'expected a SKOS root with at least one child'
+    target = LinkedData::Models::Class.find(RDF::URI.new(target_id)).in(sub).first
+
+    # Strict: skos:broader has no owl:Thing sentinel to stop on.
+    assert_paths_terminate_at_parentless(target)
+  end
+
   # N+1 guard for the class-tree endpoint (SKOS). Same contract as the OWL guard
   # in test_class.rb: serializing a tree must resolve the submission's languages
   # once, not once per node (get_languages `bring?` guard,

@@ -1,4 +1,5 @@
 require 'minitest/autorun'
+require 'mocha/minitest'
 require_relative '../../lib/ontologies_linked_data/utils/file'
 
 class TestUtilsFile < Minitest::Test
@@ -143,5 +144,61 @@ class TestUtilsFile < Minitest::Test
     refute_empty extracted
   ensure
     FileUtils.remove_entry_secure(File.dirname(gz_path)) if gz_path && File.exist?(File.dirname(gz_path))
+  end
+
+  def test_gzip_file_keeps_original_and_round_trips
+    src = File.join(@dst, 'onto.ttl')
+    File.write(src, "<a> <b> <c> .\n" * 1000)
+
+    gz = LinkedData::Utils::FileHelpers.gzip_file(src)
+
+    assert_equal "#{src}.gz", gz
+    assert File.exist?(src)
+    Zlib::GzipReader.open(gz) do |reader|
+      assert_equal 'onto.ttl', reader.orig_name
+      assert_equal File.binread(src), reader.read
+    end
+    assert_equal ['onto.ttl', 'onto.ttl.gz'], Dir.children(@dst).sort
+  end
+
+  def test_zip_file_keeps_original_and_round_trips
+    src = File.join(@dst, 'onto.owl')
+    File.write(src, "<owl/>\n" * 1000)
+
+    zip = LinkedData::Utils::FileHelpers.zip_file(src)
+
+    assert_equal "#{src}.zip", zip
+    assert File.exist?(src)
+    Zip::File.open(zip) do |z|
+      assert_equal ['onto.owl'], z.entries.map(&:name)
+      assert_equal File.binread(src), z.read('onto.owl')
+    end
+  end
+
+  def test_zip_file_replaces_a_stale_zip
+    src = File.join(@dst, 'onto.owl')
+    File.write(src, 'new content')
+    Zip::File.open("#{src}.zip", create: true) { |z| z.get_output_stream('onto.owl') { |o| o.write('old content') } }
+
+    LinkedData::Utils::FileHelpers.zip_file(src)
+
+    Zip::File.open("#{src}.zip") { |z| assert_equal 'new content', z.read('onto.owl') }
+  end
+
+  def test_compressing_compressed_files_is_a_no_op
+    fh = LinkedData::Utils::FileHelpers
+    %w[./test/data/ontology_files/BRO_v3.2.owl.gz ./test/data/ontology_files/evoc_v2.9.zip].each do |path|
+      assert_equal path, fh.gzip_file(path)
+      assert_equal path, fh.zip_file(path)
+    end
+  end
+
+  def test_gzip_file_failed_verification_leaves_no_output
+    src = File.join(@dst, 'onto.ttl')
+    File.write(src, 'content')
+    Zlib::GzipReader.stubs(:open).returns('mismatch')
+
+    assert_raises(IOError) { LinkedData::Utils::FileHelpers.gzip_file(src) }
+    assert_equal ['onto.ttl'], Dir.children(@dst)
   end
 end

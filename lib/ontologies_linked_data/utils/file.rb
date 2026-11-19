@@ -2,6 +2,7 @@ require 'net/http'
 require 'uri'
 require 'zip'
 require 'zlib'
+require 'digest'
 require 'tmpdir'
 require 'fileutils'
 require 'down/net_http'
@@ -112,16 +113,31 @@ module LinkedData
         extracted_files
       end
 
+      # Both keep the original and return the compressed path. Callers may delete the
+      # original afterwards, so the output is verified before it is moved into place.
       def self.zip_file(file_path)
         file_path = file_path.to_s
-        return file_path if zip?(file_path)
+        return file_path if zip?(file_path) || gzip?(file_path)
 
-        zip_file_path = "#{file_path}.zip"
-        Zip::File.open(zip_file_path, create: true) do |zip_file|
-          base = File.basename(file_path)
-          zip_file.add(base, file_path) unless zip_file.find_entry(base)
+        base = File.basename(file_path)
+        write_compressed(file_path, "#{file_path}.zip") do |tmp|
+          Zip::File.open(tmp, create: true) { |zip| zip.add(base, file_path) }
+          Zip::File.open(tmp) { |zip| zip.get_input_stream(base) { |io| sha256(io) } }
         end
-        zip_file_path
+      end
+
+      def self.gzip_file(file_path, level: Zlib::BEST_COMPRESSION)
+        file_path = file_path.to_s
+        return file_path if zip?(file_path) || gzip?(file_path)
+
+        write_compressed(file_path, "#{file_path}.gz") do |tmp|
+          Zlib::GzipWriter.open(tmp, level) do |gz|
+            gz.orig_name = File.basename(file_path)
+            gz.mtime = File.mtime(file_path)
+            File.open(file_path, 'rb') { |src| IO.copy_stream(src, gz) }
+          end
+          Zlib::GzipReader.open(tmp) { |gz| sha256(gz) }
+        end
       end
 
       def self.automaster?(path, format)
@@ -189,6 +205,29 @@ module LinkedData
       rescue Down::Error, URI::InvalidURIError
         false
       end
+
+      # The block writes to tmp and returns the SHA-256 of what tmp decompresses to
+      def self.write_compressed(source, dest)
+        tmp = "#{dest}.partial"
+        FileUtils.rm_f(tmp)
+        unless yield(tmp) == File.open(source, 'rb') { |f| sha256(f) }
+          raise IOError, "#{tmp} does not decompress to the contents of #{source}"
+        end
+
+        File.rename(tmp, dest)
+        dest
+      ensure
+        FileUtils.rm_f(tmp)
+      end
+
+      def self.sha256(io)
+        digest = Digest::SHA256.new
+        until (chunk = io.read(4 * 1024 * 1024)).nil? || chunk.empty?
+          digest.update(chunk)
+        end
+        digest.hexdigest
+      end
+      private_class_method :write_compressed, :sha256
 
       # --- Utility guards / filters ---
       def self.safe_join(base, *paths)

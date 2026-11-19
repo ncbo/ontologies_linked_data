@@ -101,11 +101,12 @@ module LinkedData
       embed :children, :ancestors, :descendants, :parents, :prefLabelXl, :altLabelXl, :hiddenLabelXl
       serialize_default :prefLabel, :synonym, :definition, :cui, :semanticType, :obsolete, :matchType,
                         :ontologyType, :provisional, # an attribute used in Search (not shown out of context)
-                        :created, :modified, :memberOf, :inScheme
-      serialize_methods :properties, :childrenCount, :hasChildren
+                        :created, :modified, :memberOf, :inScheme, :oboId
+      serialize_methods :properties, :childrenCount, :hasChildren, :oboId
+      serialize_omit_nil :oboId
       serialize_never :submissionAcronym, :submissionId, :submission, :descendants
       aggregates childrenCount: [:count, :children]
-      links_load submission: [ontology: [:acronym]]
+      links_load submission: [:uri, { ontology: [:acronym] }]
       do_not_load :descendants, :ancestors
       prevent_serialize_when_nested :properties, :parents, :children, :ancestors, :descendants, :memberOf
       link_to LinkedData::Hypermedia::Link.new("self", lambda {|s| "ontologies/#{s.submission.ontology.acronym}/classes/#{CGI.escape(s.id.to_s)}"}, self.uri_type),
@@ -211,6 +212,16 @@ module LinkedData
         @obsolete || false
       end
 
+      # The indexer loads attributes with map_attributes(include_languages: true),
+      # which leaves single-valued attributes as arrays (e.g. [true]) or
+      # language-keyed hashes. Solr's boolean field reads "[true]" as false, so
+      # reduce whatever shape obsolete has to a boolean.
+      def obsolete_for_index
+        values = obsolete
+        values = values.values if values.is_a?(Hash)
+        Array(values).flatten.any? { |v| v == true || %w[true 1].include?(v.to_s.strip.downcase) }
+      end
+
       def index_id()
         self.bring(:submission) if self.bring?(:submission)
         return nil unless self.submission
@@ -299,7 +310,7 @@ module LinkedData
           doc[:submissionAcronym] = acronym
           doc[:submissionId] = self.submission.submissionId
           doc[:ontologyType] = self.submission.ontology.ontologyType.get_code_from_id
-          doc[:obsolete] = self.obsolete.to_s
+          doc[:obsolete] = obsolete_for_index.to_s
           doc[:ontologyRank] = self.class.ontology_rank_for_index(acronym)
 
           all_attrs = self.to_hash
@@ -366,18 +377,52 @@ module LinkedData
         doc
       end
 
-      def set_oboid_fields(class_id, ontology_iri, ontology_acronym, index_doc)
+      # Shared by indexing and REST serialization. Only positive acronym matches
+      # are returned so merging these fields cannot clear a match from notation.
+      def self.oboid_fields(class_id, ontology_iri = nil, ontology_acronym = nil)
+        class_id = class_id.to_s
         short_id = LinkedData::Utils::Triples.last_iri_fragment(class_id)
-        matched = short_id.match(/([A-Za-z]+)_([0-9]+)$/) do |m|
-          index_doc[:oboId] = "#{m[1]}:#{m[2]}"
-          index_doc[:idAcronymMatch] = true if m[1].upcase === ontology_acronym.upcase
-          true
-        end
+        fields = {}
+        match = short_id.match(/([A-Za-z]+)_([0-9]+)$/)
 
-        if !matched && ontology_iri && class_id.start_with?(ontology_iri)
-          index_doc[:oboId] = "#{ontology_acronym}:#{short_id}"
-          index_doc[:idAcronymMatch] = true
+        if match
+          fields[:oboId] = "#{match[1]}:#{match[2]}"
+          if ontology_acronym && match[1].upcase == ontology_acronym.upcase
+            fields[:idAcronymMatch] = true
+          end
+        elsif ontology_iri && ontology_acronym && class_id.start_with?(ontology_iri.to_s)
+          fields[:oboId] = "#{ontology_acronym}:#{short_id}"
+          fields[:idAcronymMatch] = true
         end
+        fields
+      end
+
+      def set_oboid_fields(class_id, ontology_iri, ontology_acronym, index_doc)
+        index_doc.merge!(self.class.oboid_fields(class_id, ontology_iri, ontology_acronym))
+      end
+
+      # This is a computed identifier, not an RDF annotation. Search responses
+      # use the stored Solr field on their read-only objects instead.
+      def oboId
+        # Ordinary OBO identifiers do not require submission metadata.
+        obo_id = self.class.oboid_fields(id)[:oboId]
+        return obo_id if obo_id
+
+        bring(:submission) if bring?(:submission)
+        sub = submission
+        return nil unless sub
+
+        # Guard lazy loads: classes in a collection share the submission, so its
+        # ontology IRI is loaded once even when it was not preloaded by a caller.
+        sub.bring(:uri) if sub.bring?(:uri)
+        return nil unless sub.uri
+
+        sub.bring(:ontology) if sub.bring?(:ontology)
+        ontology = sub.ontology
+        return nil unless ontology
+
+        ontology.bring(:acronym) if ontology.bring?(:acronym)
+        self.class.oboid_fields(id, sub.uri, ontology.acronym)[:oboId]
       end
 
       def notation_acronym_match(notation, ontology_acronym)
@@ -703,8 +748,21 @@ eos
         path << r
       end
 
-      def traverse_path_to_root(parents, paths, path_i, tree = false, roots = nil)
-        return if (tree && parents.length == 0)
+      # `loaded` maps class id => an instance whose parents are loaded, so an
+      # ancestor shared by many paths is queried once, not once per path.
+      def traverse_path_to_root(parents, paths, path_i, tree = false, roots = nil, loaded = {})
+        # A parent already on this path closes a cycle. Drop it here rather than
+        # letting append_if_not_there_already reject it below, which would leave
+        # an unextended clone of the path behind as a duplicate.
+        unless tree || parents.nil?
+          on_path = paths[path_i].map { |x| x.id.to_s }
+          parents = parents.reject { |r| on_path.include?(r.id.to_s) }
+        end
+
+        # A class with no parents under the tree property ends the path. The
+        # paths_to_root endpoint passes no `roots`, and owl:Thing never appears
+        # under skos:broader or metadata:treeView, so this is its only stop.
+        return if parents.nil? || parents.empty?
 
         recursions = [path_i]
         recurse_on_path = [false]
@@ -733,17 +791,23 @@ eos
 
           if !tree_root?(p, roots) && recurse_on_path[i]
             if p.bring?(:parents)
-              p.bring(parents: [:prefLabel, :synonym, :definition, :inScheme, parents: [:prefLabel, :synonym, :definition, :inScheme]])
+              if (cached = loaded[p.id.to_s])
+                p = path[-1] = cached
+              else
+                p.bring(parents: [:prefLabel, :synonym, :definition, :inScheme, parents: [:prefLabel, :synonym, :definition, :inScheme]])
+              end
             end
 
             if !p.loaded_attributes.include?(:parents)
-              # fail safely
+              # fail safely -- abandon this path only, the sibling paths in this
+              # frame are unaffected and must still be traversed
               logger = LinkedData::Parser.logger || Logger.new($stderr)
               logger.error("Class #{p.id.to_s} from #{p.submission.id} cannot load parents")
-              return
+              next
             end
 
-            traverse_path_to_root(p.parents.dup, paths, rec_i, tree=tree, roots=roots)
+            loaded[p.id.to_s] ||= p
+            traverse_path_to_root(p.parents.dup, paths, rec_i, tree, roots, loaded)
           end
         end
       end

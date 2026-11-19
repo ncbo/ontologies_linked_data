@@ -787,6 +787,156 @@ SELECT DISTINCT * WHERE {
     metrics.each { |m| assert_equal 4, m.length }
     assert_equal "Individual Count", metrics[0][1]
     assert_equal 133, metrics[1][0].to_i
+    # Max depth comes from the OWLAPI parse; its RDF/XML output is not kept
+    assert_equal 8, metrics[1][3].to_i
+    refute File.exist?(sub.rdf_path), "owlapi.xrdf should be deleted for UMLS"
+  end
+
+  UMLS_TTL = "./test/data/ontology_files/umls_semantictypes.ttl"
+
+  def test_umls_gzip_submission
+    Dir.mktmpdir do |dir|
+      gz_path = File.join(dir, "umls_semantictypes.ttl.gz")
+      Zlib::GzipWriter.open(gz_path) do |gz|
+        gz.orig_name = "umls_semantictypes.ttl"
+        gz.write(File.binread(UMLS_TTL))
+      end
+      assert_compressed_umls_submission("UMLS-GZ-TST", gz_path)
+    end
+  end
+
+  def test_umls_zip_submission
+    Dir.mktmpdir do |dir|
+      zip_path = File.join(dir, "umls_semantictypes.ttl.zip")
+      Zip::File.open(zip_path, create: true) do |zip|
+        zip.add("umls_semantictypes.ttl", File.expand_path(UMLS_TTL))
+      end
+      assert_compressed_umls_submission("UMLS-ZIP-TST", zip_path)
+    end
+  end
+
+  def test_umls_zip_submission_nested_entry
+    Dir.mktmpdir do |dir|
+      zip_path = File.join(dir, "umls_nested.ttl.zip")
+      Zip::File.open(zip_path, create: true) do |zip|
+        zip.add("release/umls_semantictypes.ttl", File.expand_path(UMLS_TTL))
+      end
+      assert_compressed_umls_submission("UMLS-NESTED-TST", zip_path, master: "release/umls_semantictypes.ttl")
+    end
+  end
+
+  def test_umls_zip_submission_multiple_entries
+    Dir.mktmpdir do |dir|
+      readme = File.join(dir, "README.txt")
+      File.write(readme, "release notes")
+      zip_path = File.join(dir, "umls_multi.ttl.zip")
+      Zip::File.open(zip_path, create: true) do |zip|
+        zip.add("umls_semantictypes.ttl", File.expand_path(UMLS_TTL))
+        zip.add("README.txt", readme)
+      end
+      assert_compressed_umls_submission("UMLS-MULTI-TST", zip_path,
+                                        master: "umls_semantictypes.ttl", choose_master: true)
+    end
+  end
+
+  def test_unzip_submission_names_master_file
+    Dir.mktmpdir do |dir|
+      zip_path = File.join(dir, "umls_nested.ttl.zip")
+      Zip::File.open(zip_path, create: true) do |zip|
+        zip.add("release/umls_semantictypes.ttl", File.expand_path(UMLS_TTL))
+      end
+      acronym = "UMLS-UNZIP-TST"
+      submission_parse(acronym, "Test unzip_submission", zip_path, 1,
+                       process_rdf: false, index_search: false, run_metrics: false)
+      sub = LinkedData::Models::Ontology.find(acronym).first.latest_submission(status: :any)
+      sub.bring_remaining
+
+      # FileHelpers.unzip returns absolute paths; the master file keeps its folder in the archive
+      sub.masterFileName = nil
+      sub.unzip_submission(nil)
+      assert_equal "release/umls_semantictypes.ttl", sub.masterFileName
+      assert File.file?(sub.master_file_path)
+
+      assert_equal "umls_semantictypes.ttl", sub.send(:archive_entry_name, "/elsewhere/umls_semantictypes.ttl", sub.zip_folder)
+      assert_nil sub.send(:archive_entry_name, nil, sub.zip_folder)
+    end
+  end
+
+  def test_umls_owlapi_parse_turned_off
+    old_setting = LinkedData.settings.umls_owlapi_parse
+    Dir.mktmpdir do |dir|
+      gz_path = File.join(dir, "umls_semantictypes.ttl.gz")
+      Zlib::GzipWriter.open(gz_path) do |gz|
+        gz.orig_name = "umls_semantictypes.ttl"
+        gz.write(File.binread(UMLS_TTL))
+      end
+      acronym = "UMLS-NOOWL-TST"
+      # The first parse runs OWLAPI and writes metrics.csv, as ncbo_cron's parsable? check does
+      submission_parse(acronym, "Test UMLS without OWLAPI", gz_path, 1,
+                       process_rdf: true, index_search: false, run_metrics: false, reasoning: false)
+      sub = LinkedData::Models::Ontology.find(acronym).first.latest_submission(status: [:rdf])
+      sub.bring_remaining
+      assert_equal 8, sub.metrics_from_file[1][3].to_i
+
+      LinkedData.settings.umls_owlapi_parse = false
+      LinkedData::Models::OntologySubmission.any_instance.expects(:owlapi_parser).never
+      # Turned off, the upload must still be extracted before loading
+      FileUtils.rm_rf(sub.zip_folder)
+      logger = Logger.new(StringIO.new)
+
+      sub.generate_rdf(logger, reasoning: false)
+      assert File.file?(sub.master_file_path), "compressed upload was not extracted"
+      assert_equal 133, LinkedData::Models::Class.in(sub).read_only.to_a.length
+      metrics = sub.metrics_from_file
+      assert_equal 133, metrics[1][0].to_i
+      assert_equal 8, metrics[1][3].to_i, "max depth from the existing metrics.csv should be kept"
+
+      FileUtils.rm_f(sub.metrics_path)
+      sub.generate_rdf(logger, reasoning: false)
+      assert_equal 0, sub.metrics_from_file[1][3].to_i
+      refute File.exist?(sub.rdf_path)
+    end
+  ensure
+    LinkedData.settings.umls_owlapi_parse = old_setting
+  end
+
+  def test_umls_uncompressed_triples_file_path
+    acronym = "UMLS-PLAIN-TST"
+    submission_parse(acronym, "Test UMLS uncompressed", UMLS_TTL, 1,
+                     process_rdf: true, index_search: false,
+                     run_metrics: false, reasoning: false)
+    sub = LinkedData::Models::Ontology.find(acronym).first.latest_submission(status: [:rdf])
+    sub.bring_remaining
+    refute sub.zipped?
+    assert_equal File.expand_path(sub.uploadFilePath), sub.triples_file_path
+    refute Dir.exist?(sub.zip_folder), "uncompressed submission must not be extracted"
+    assert_equal 133, LinkedData::Models::Class.in(sub).read_only.to_a.length
+  end
+
+  def assert_compressed_umls_submission(acronym, archive_path, master: "umls_semantictypes.ttl", choose_master: false)
+    parse_options = { process_rdf: true, index_search: false, run_metrics: false, reasoning: false }
+    parse_options[:masterFileName] = master if choose_master
+    submission_parse(acronym, "Test compressed UMLS", archive_path, 1, parse_options)
+    sub = LinkedData::Models::Ontology.find(acronym).first.latest_submission(status: [:rdf])
+    refute_nil sub, "compressed UMLS submission did not reach RDF status"
+    sub.bring_remaining
+    assert sub.zipped?
+    assert_equal master, sub.masterFileName
+    assert_equal File.expand_path(File.join(sub.zip_folder, master)), sub.triples_file_path
+    assert File.file?(sub.uploadFilePath), "compressed upload must be kept"
+    # Extracted files stay until archiving, as for every other format
+    LinkedData::Utils::FileHelpers.filenames_in_archive(sub.uploadFilePath).each do |entry|
+      assert File.file?(File.join(sub.zip_folder, entry)), "extracted #{entry} should be kept after loading"
+    end
+
+    classes = LinkedData::Models::Class.in(sub).include(:prefLabel).read_only.to_a
+    assert_equal 133, classes.length
+    classes.each { |cls| assert_instance_of String, cls.prefLabel }
+
+    metrics = sub.metrics_from_file(Logger.new(sub.parsing_log_path))
+    refute_empty metrics
+    assert_equal 133, metrics[1][0].to_i
+    assert_equal 8, metrics[1][3].to_i
   end
 
   def test_discover_obo_in_owl_obsolete
@@ -810,6 +960,7 @@ SELECT DISTINCT * WHERE {
         assert_equal(false, c.obsolete, "Class should not be obsolete: #{c.id}")
       end
     end
+    assert_obsolete_indexed(ont_sub, classes)
   end
 
   def test_custom_obsolete_property
@@ -834,6 +985,7 @@ SELECT DISTINCT * WHERE {
         assert_equal(false, c.obsolete, "Class should not be obsolete: #{c.id}")
       end
     end
+    assert_obsolete_indexed(ont_sub, classes)
   end
 
   def test_custom_obsolete_branch
@@ -858,6 +1010,32 @@ SELECT DISTINCT * WHERE {
         assert_equal(false, c.obsolete, "Class should not be obsolete: #{c.id}")
       end
     end
+    assert_obsolete_indexed(ont_sub, classes)
+  end
+
+  # Index the submission's terms and check that each class's search document
+  # carries the same obsolete flag as the class itself, and that the
+  # obsolete:false filter used by default search excludes obsolete classes.
+  def assert_obsolete_indexed(ont_sub, classes)
+    expected = classes.to_h { |c| [c.id.to_s, c.obsolete] }
+    assert expected.values.include?(true), 'Test ontology should have obsolete classes'
+    assert expected.values.include?(false), 'Test ontology should have non-obsolete classes'
+
+    ont_sub.index_terms(Logger.new(TestLogFile.new), commit: true, generate_csv: false)
+    acronym = ont_sub.ontology.acronym
+    fq = "submissionAcronym:#{acronym}"
+    docs = LinkedData::Models::Class.search('*:*', fq: fq, rows: 1000)['response']['docs']
+    indexed = docs.to_h { |d| [d['resource_id'], d['obsolete']] }
+
+    expected.each do |id, obsolete|
+      assert indexed.key?(id), "Class not indexed: #{id}"
+      assert_equal obsolete, indexed[id], "Wrong obsolete value in search index for #{id}"
+    end
+
+    non_obsolete = LinkedData::Models::Class.search('*:*', fq: "#{fq} AND obsolete:false", rows: 1000)['response']['docs']
+    assert_equal expected.reject { |_, o| o }.keys.sort, non_obsolete.map { |d| d['resource_id'] }.sort
+  ensure
+    LinkedData::Models::Class.unindexByQuery("submissionAcronym:#{ont_sub.ontology.acronym}") rescue nil
   end
 
   def test_custom_property_generation
@@ -1271,6 +1449,7 @@ eos
     metrics = sub.metrics
     metrics.bring_remaining
     assert_equal 133, metrics.classes
+    assert_equal 8, metrics.maxDepth
   end
 
   def test_class_count_without_metrics

@@ -110,6 +110,7 @@ class TestNotifications < LinkedData::TestCase
     assert_equal admin_mails.uniq.sort, all_emails.last.to.sort
 
     reset_mailer
+    ont.bring(:submissions) if ont.bring?(:submissions)
     sub = ont.submissions.sort_by { |s| s.id }.first
     sub.process_submission(Logger.new(TestLogFile.new), { archive: true })
 

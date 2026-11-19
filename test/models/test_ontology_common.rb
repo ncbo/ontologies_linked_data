@@ -33,6 +33,37 @@ module LinkedData
       Thread.current[:test_goo_query_count] = nil
     end
 
+    # Runs target.paths_to_root and checks the traversal's stop contract: every
+    # path ends at `target`, and its top has nothing left to follow -- no
+    # parents, or only parents already on the path (a cycle). allow_thing also
+    # accepts an owl:Thing parent, which owlapi asserts on top-level classes.
+    # At least one path must top out at a class with no parents at all, the
+    # case that used to raise. Returns the paths.
+    def assert_paths_terminate_at_parentless(target, allow_thing: false)
+      paths = target.paths_to_root
+      refute_empty paths, 'expected at least one path to root'
+
+      saw_parentless = false
+      paths.each do |path|
+        refute_includes path, nil, 'path contains a nil node'
+        assert_equal target.id.to_s, path.last.id.to_s, 'path must end at the requested class'
+
+        top = path.first
+        top.bring(:parents) if top.bring?(:parents)
+        top_parents = top.parents || []
+        saw_parentless ||= top_parents.empty?
+
+        on_path = path.map { |x| x.id.to_s }
+        open = top_parents.reject do |p|
+          on_path.include?(p.id.to_s) || (allow_thing && p.id.to_s['#Thing'])
+        end
+        assert_empty open, "path must stop where no parent is left to follow, got #{top.id}"
+      end
+
+      assert saw_parentless, 'expected a path to top out at a class with no parents'
+      paths
+    end
+
     def create_count_mapping
       count = LinkedData::Models::MappingCount.where.all.length
       unless count > 2

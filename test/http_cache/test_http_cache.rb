@@ -21,11 +21,19 @@ class TestHTTPCache < LinkedData::TestCase
     end
   end
 
+  # Shared by the read-only tests; tests that save or delete use _standalone_ontology
   def _ontology_and_class
-    results = create_ontologies_and_submissions(ont_count: 1, submission_count: 1, process_submission: true)
+    results = create_ontologies_and_submissions(ont_count: 1, submission_count: 1, process_submission: true,
+                                                process_options: { process_rdf: true, extract_metadata: false })
     ontology = results[2].first
     cls = LinkedData::Models::Class.where.include(:prefLabel).in(ontology.latest_submission).first
     return ontology, cls
+  end
+
+  def _standalone_ontology(acronym)
+    LinkedData::Models::Ontology.find(acronym).first&.delete
+    user, = ontology_objects
+    LinkedData::Models::Ontology.new(acronym: acronym, name: "#{acronym} Ontology", administeredBy: [user]).save
   end
 
   def setup
@@ -57,7 +65,6 @@ class TestHTTPCache < LinkedData::TestCase
   end
 
   def test_cache_segment_invalidate
-    create_ontologies_and_submissions(ont_count: 1, submission_count: 1, process_submission: true)
     classes = LinkedData::Models::Class.where.include(:prefLabel).in(@@ontology.latest_submission).page(1, 100).to_a
     classes.each {|c| c.cache_write}
     last_modified_values = classes.map {|c| c.last_modified}
@@ -68,7 +75,6 @@ class TestHTTPCache < LinkedData::TestCase
   end
 
   def test_cache_segment_invalidate_when_member_invalidates
-    create_ontologies_and_submissions(ont_count: 1, submission_count: 1, process_submission: true)
     classes = LinkedData::Models::Class.where.include(:prefLabel).in(@@ontology.latest_submission).page(1, 100).to_a
     classes.each {|c| c.cache_write}
     last_modified_values = classes.map {|c| c.last_modified}
@@ -79,21 +85,20 @@ class TestHTTPCache < LinkedData::TestCase
   end
 
   def test_ld_save_invalidates
-    results = create_ontologies_and_submissions(ont_count: 1, submission_count: 1, process_submission: false)
-    ontology = results[2].first
+    ontology = _standalone_ontology("HTTPCACHE-SAVE")
     last_modified = ontology.cache_write
-    ontology.bring_remaining
     ontology.name = "New name for save"
-    sleep(1)
+    sleep(1) # last_modified is an HTTP date, with one-second resolution
     ontology.save
     assert Time.httpdate(ontology.last_modified) > Time.httpdate(last_modified)
+  ensure
+    ontology&.delete
   end
 
   def test_ld_delete_invalidates
-    results = create_ontologies_and_submissions(ont_count: 1, submission_count: 1, process_submission: false)
-    ontology = results[2].first
-    ontology.bring_remaining
-    sleep(1)
+    ontology = _standalone_ontology("HTTPCACHE-DEL")
+    ontology.cache_write
+    assert ontology.last_modified
     ontology.delete
     refute ontology.last_modified
   end

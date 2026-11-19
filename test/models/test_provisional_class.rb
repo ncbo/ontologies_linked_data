@@ -206,10 +206,11 @@ class TestProvisionalClass < LinkedData::TestOntologyCommon
 
     assert_equal 1, ctr_class1
     assert_equal 1, ctr_class2
-    assert_equal 5, ctr_class3
-    assert_equal 5, ctr_class4
-    assert_equal 7, ctr_class5
-    assert_equal 8, ctr_pc1
+    # class3 and class4 form a cycle; each path through it is listed once.
+    assert_equal 3, ctr_class3
+    assert_equal 3, ctr_class4
+    assert_equal 5, ctr_class5
+    assert_equal 6, ctr_pc1
 
     # test for non-existent class
     pc1.subclassOf = RDF::IRI.new("http://www.yahoo.com")

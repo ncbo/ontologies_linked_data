@@ -9,6 +9,14 @@ class TestMapping < LinkedData::TestOntologyCommon
   ONT_ACR3 = 'MAPPING_TEST3'
   ONT_ACR4 = 'MAPPING_TEST4'
 
+  INTERNAL_SOURCES = {
+    "SKOS:EXACT_MATCH" => "http://www.w3.org/2004/02/skos/core#exactMatch",
+    "SKOS:CLOSE_MATCH" => "http://www.w3.org/2004/02/skos/core#closeMatch",
+    "SKOS:BROAD_MATCH" => "http://www.w3.org/2004/02/skos/core#broadMatch",
+    "SKOS:NARROW_MATCH" => "http://www.w3.org/2004/02/skos/core#narrowMatch",
+    "SKOS:RELATED_MATCH" => "http://www.w3.org/2004/02/skos/core#relatedMatch"
+  }.freeze
+
 
   def self.before_suite
     backend_4s_delete
@@ -70,6 +78,24 @@ class TestMapping < LinkedData::TestOntologyCommon
     assert result.length == 1
     assert result.first.count == 321
     LinkedData::Models::MappingCount.where.all(&:delete)
+  end
+
+  def test_internal_mapping_predicate_sources
+    predicates = LinkedData::Mappings.internal_mapping_predicates
+    assert_equal INTERNAL_SOURCES, predicates.transform_values(&:first)
+  end
+
+  # In-file SKOS mappings get their `source` from the BIND, and survive the
+  # FILTER only if the same label is listed there too.
+  def test_internal_mapping_sources_in_query
+    sub = RDF::URI.new("http://data.bioontology.org/ontologies/#{ONT_ACR1}/submissions/1")
+    query = LinkedData::Mappings.mappings_ont_build_query(nil, 1, 10, sub, nil)
+
+    INTERNAL_SOURCES.each do |source, predicate|
+      assert_includes query, "?s1 <#{predicate}> ?s2 ."
+      assert_includes query, "BIND ('#{source}' AS ?source)"
+      assert_includes query, "(?source = '#{source}')"
+    end
   end
 
 
