@@ -33,21 +33,38 @@ module LinkedData
         # Delete everything except for original ontology file.
         delete_old_graph
         delete_old_submission_files
-        @submission.uploadFilePath = zip_submission_uploaded_file
+        zip_submission_uploaded_file
       end
 
+      # The original is deleted only once the submission is saved pointing at the zip, so a
+      # submission that fails to save keeps the file its uploadFilePath names.
       def zip_submission_uploaded_file
         @submission.bring(:uploadFilePath) if @submission.bring?(:uploadFilePath)
-        return @submission.uploadFilePath if @submission.zipped?
+        old_path = @submission.uploadFilePath&.to_s
+        return if old_path.nil? || old_path.empty?
+        return if @submission.zipped?
+        return repoint_to_leftover_zip(old_path) unless File.file?(old_path)
+        return if File.size(old_path) < FILE_SIZE_ZIPPING_THRESHOLD
 
-        return @submission.uploadFilePath if @submission.uploadFilePath.nil? || @submission.uploadFilePath.empty?
+        zip_path = Utils::FileHelpers.zip_file(old_path)
+        @submission.uploadFilePath = zip_path
+        begin
+          @submission.save
+        rescue StandardError => e
+          @submission.uploadFilePath = old_path
+          # An invalid submission is rejected before anything is written. After any other
+          # error the store may hold either path, so both files are kept.
+          FileUtils.rm_f(zip_path) if e.is_a?(Goo::Base::NotValidException)
+          raise
+        end
+        FileUtils.rm_f(old_path)
+      end
 
-        return @submission.uploadFilePath if File.size(@submission.uploadFilePath) < FILE_SIZE_ZIPPING_THRESHOLD
-
-        old_path = @submission.uploadFilePath
-        zip_file = Utils::FileHelpers.zip_file(old_path)
-        FileUtils.rm(old_path, force: true)
-        zip_file
+      # Earlier versions deleted the original before saving, so a failed save left the
+      # submission pointing at a missing file with its zip next to it.
+      def repoint_to_leftover_zip(old_path)
+        zip_path = "#{old_path}.zip"
+        @submission.uploadFilePath = zip_path if Utils::FileHelpers.zip?(zip_path)
       end
 
       def delete_old_submission_files
