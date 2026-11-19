@@ -77,7 +77,10 @@ module LinkedData
         time = Benchmark.realtime do
           paging = raw_paging.page(page, size)
           cls_count_set = false
-          cls_count = submission.class_count(logger)
+          # For SKOS, the metrics count is OWLAPI classes plus individuals, not skos:Concept
+          # resources, and this step runs before metrics, so on reprocessing the count is from
+          # the previous run. Let the paging query count concepts instead, as the indexer does.
+          cls_count = submission.skos? ? -1 : submission.class_count(logger)
 
           if cls_count > -1
             # prevent a COUNT SPARQL query if possible
@@ -148,6 +151,10 @@ module LinkedData
                 logger.info("The number of pages reported for #{acr} - #{total_pages} is higher than expected #{page - 1}. Completing #{operations}...")
               else
                 logger.info("Ontology #{acr} contains #{total_pages} pages...")
+                if submission.skos?
+                  logger.warn("SKOS submission #{submission.id} has no skos:Concept resources; " \
+                              "it has no terms to browse or search")
+                end
               end
               break
             end
