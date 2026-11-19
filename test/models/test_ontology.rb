@@ -164,6 +164,13 @@ class TestOntology < LinkedData::TestOntologyCommon
     props = ont.properties()
     assert_equal 86, props.length
 
+    props.each do |prop|
+      fresh = prop.class.find(prop.id).in(sub).first
+      fresh.load_has_children
+      assert_equal fresh.hasChildren, prop.hasChildren, "hasChildren mismatch for #{prop.id}"
+    end
+    assert props.any?(&:hasChildren)
+
     # verify sorting
     assert_equal "http://bioontology.org/ontologies/BiomedicalResourceOntology.owl#AlgorithmPurpose", props[0].id.to_s
     assert_equal "http://www.w3.org/2004/02/skos/core#altLabel", props[1].id.to_s
@@ -237,6 +244,20 @@ class TestOntology < LinkedData::TestOntologyCommon
                                   "http://www.w3.org/2004/02/skos/core#exactMatch",
                                   "http://www.w3.org/2004/02/skos/core#narrowMatch"].include?(p.id.to_s) },
                  "Non-root nodes found where roots are expected"
+
+    pr.each do |prop|
+      fresh = prop.class.find(prop.id).in(sub).first
+      fresh.load_has_children
+      assert_equal fresh.hasChildren, prop.hasChildren, "hasChildren mismatch for root #{prop.id}"
+    end
+    assert pr.any?(&:hasChildren)
+
+    # with children loaded, hasChildren comes from the children count, no query
+    expected = pr.map(&:hasChildren)
+    pr.each { |p| p.instance_variable_set("@intlHasChildren", nil) }
+    queries = Goo.count_sparql_queries { LinkedData::Models::OntologyProperty.load_has_children_batch(pr, sub) }
+    assert_equal 0, queries
+    assert_equal expected, pr.map(&:hasChildren)
 
     # test property trees
     close_match_prop = LinkedData::Models::ObjectProperty.find(RDF::URI.new("http://www.w3.org/2004/02/skos/core#closeMatch")).in(sub).include(:parents).first()
