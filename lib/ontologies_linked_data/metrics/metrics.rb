@@ -263,6 +263,42 @@ eos
       return 0
     end
 
+    # Metric attribute => rdf:type counted for SKOS submissions. The types match the ones
+    # the API pages over: Class (skos:Concept), SKOS::Scheme, SKOS::Collection, SKOS::Label.
+    SKOS_TYPE_METRICS = {
+      concepts: RDF::Vocab::SKOS[:Concept],
+      conceptSchemes: RDF::Vocab::SKOS[:ConceptScheme],
+      collections: RDF::Vocab::SKOS[:Collection],
+      skosxlLabels: RDF::URI.new('http://www.w3.org/2008/05/skos-xl#Label')
+    }.freeze
+
+    # OWLAPI metrics (metrics.csv) count skos:Concept resources as named individuals, mixed
+    # in with every other individual, so SKOS constructs are counted in the graph instead.
+    def self.skos_metrics(submission, logger)
+      SKOS_TYPE_METRICS.each_with_object({}) do |(attr, rdf_type), counts|
+        t0 = Time.now
+        counts[attr] = count_distinct_type(submission.id, rdf_type)
+        logger.info("Metrics #{attr} retrieved #{counts[attr]} in #{Time.now - t0} sec.")
+        logger.flush
+      end
+    end
+
+    def self.count_distinct_type(graph, rdf_type)
+      query = <<~eos
+        SELECT (COUNT(DISTINCT ?s) as ?c) WHERE {
+          GRAPH #{RDF::URI.new(graph.to_s).to_ntriples} {
+            ?s a #{rdf_type.to_ntriples} .
+            FILTER(!isBlank(?s))
+          }
+        }
+      eos
+      rs = Goo.sparql_query_client.query(query)
+      rs.each do |sol|
+        return sol[:c].object
+      end
+      0
+    end
+
     def self.count_owl_type(graph,name)
       owl_type = Goo.namespaces[:owl][name]
       query = <<eof
