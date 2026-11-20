@@ -33,6 +33,8 @@ class TestOntology < LinkedData::TestOntologyCommon
     super
     _delete_objects
     delete_ontologies_and_submissions
+    # Ontology#delete only reaches linked submissions, so clear what the leftover tests stored
+    (@leftovers || []).each { |uri| _clear_triples(uri) }
   end
 
   def _create_ontology_with_submissions
@@ -62,6 +64,28 @@ class TestOntology < LinkedData::TestOntologyCommon
   def _delete_objects
     o = LinkedData::Models::Ontology.find(@acronym).first
     o.delete unless o.nil?
+  end
+
+  def _ontology_with_two_submissions
+    _, _, onts = create_ontologies_and_submissions(ont_count: 1, submission_count: 2, submissions_to_process: [])
+    onts.first
+  end
+
+  def _submission_uri(ont, submission_id)
+    uri = RDF::URI.new("#{ont.id}/submissions/#{submission_id}")
+    (@leftovers ||= []) << uri
+    uri
+  end
+
+  def _insert_triple(subject, predicate, object)
+    graph = RDF::Graph.new << [subject, predicate, object]
+    Goo.sparql_update_client.insert_data(graph, graph: LinkedData::Models::OntologySubmission.uri_type)
+  end
+
+  def _clear_triples(subject, predicate = nil)
+    graph = LinkedData::Models::OntologySubmission.uri_type
+    pattern = "<#{subject}> #{predicate ? "<#{predicate}>" : '?p'} ?o ."
+    Goo.sparql_update_client.update("DELETE { GRAPH <#{graph}> { #{pattern} } } WHERE { GRAPH <#{graph}> { #{pattern} } }")
   end
 
   def _add_statuses(ont, submission_id, codes)
@@ -568,6 +592,49 @@ class TestOntology < LinkedData::TestOntologyCommon
     assert_equal 11, ont.highest_submission_id(status: :any)
     assert_equal 10, ont.highest_submission_id(status: :rdf)
     assert_equal 12, ont.next_submission_id
+  end
+
+  # A submission that lost its ontology link isn't counted, so without the skip its id comes
+  # back and Goo rejects every new submission as a duplicate
+  def test_next_submission_id_skips_an_unlinked_submission
+    ont = _ontology_with_two_submissions
+    _clear_triples(_submission_uri(ont, 2), LinkedData::Models::OntologySubmission.attribute_uri(:ontology))
+
+    assert_equal 1, ont.highest_submission_id(status: :any)
+    assert_equal 3, ont.next_submission_id
+  end
+
+  # Triples left by an incomplete delete have no rdf:type; a new submission at that id would merge with them
+  def test_next_submission_id_skips_untyped_leftover_triples
+    ont = _ontology_with_two_submissions
+    _insert_triple(_submission_uri(ont, 3), RDF::URI.new("#{Goo.namespaces[:metadata]}homepage"),
+                   RDF::Literal.new('http://leftover.example.org'))
+    _insert_triple(_submission_uri(ont, 4), LinkedData::Models::OntologySubmission.attribute_uri(:submissionId),
+                   RDF::Literal.new(4))
+
+    assert_equal 5, ont.next_submission_id
+  end
+
+  def test_next_submission_id_ignores_leftovers_past_the_next_id
+    ont = _ontology_with_two_submissions
+    _insert_triple(_submission_uri(ont, 9), LinkedData::Models::OntologySubmission.attribute_uri(:submissionId),
+                   RDF::Literal.new(9))
+
+    assert_equal 3, ont.next_submission_id
+  end
+
+  def test_next_submission_id_skip_is_not_answered_from_the_query_cache
+    ont = _ontology_with_two_submissions
+    Goo.use_cache = true
+    assert_equal 3, ont.next_submission_id # cache warmed with id 3 free
+    Goo.use_cache = false
+    _insert_triple(_submission_uri(ont, 3), LinkedData::Models::OntologySubmission.attribute_uri(:submissionId),
+                   RDF::Literal.new(3))
+    Goo.use_cache = true
+
+    assert_equal 4, ont.next_submission_id
+  ensure
+    Goo.use_cache = false
   end
 
   # Saving a submission embeds its ontology in the metadata index

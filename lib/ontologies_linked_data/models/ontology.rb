@@ -201,8 +201,28 @@ module LinkedData
         sub
       end
 
+      # Highest linked submissionId + 1, skipping ids whose submission URI already holds triples.
+      # A submission that lost its `ontology` link isn't counted by highest_submission_id, so its
+      # id would be handed out again: Goo then rejects the new submission as a duplicate if the
+      # leftover is typed, or merges it with the leftover triples if it isn't.
+      MAX_SUBMISSION_ID_SKIPS = 1000
+      SubmissionIdProbe = Struct.new(:ontology, :submissionId)
+
       def next_submission_id
-        highest_submission_id(status: :any) + 1
+        first = highest_submission_id(status: :any) + 1
+        (first...(first + MAX_SUBMISSION_ID_SKIPS)).each do |id|
+          return id unless submission_id_in_use?(id)
+        end
+        raise "Submission ids #{first}..#{first + MAX_SUBMISSION_ID_SKIPS - 1} of #{acronym} are all in use; " \
+              'check for orphaned submissions'
+      end
+
+      # Any triple under the URI a submission with this id would get, typed or not. A plain
+      # string query, so Goo's query cache never answers it.
+      def submission_id_in_use?(submission_id)
+        uri = OntologySubmission.submission_id_generator(SubmissionIdProbe.new(self, submission_id))
+        query = "SELECT ?p WHERE { GRAPH <#{OntologySubmission.uri_type}> { <#{uri}> ?p ?o } } LIMIT 1"
+        Goo.sparql_query_client.query(query).any?
       end
 
       ##
