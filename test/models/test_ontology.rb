@@ -33,8 +33,9 @@ class TestOntology < LinkedData::TestOntologyCommon
     super
     _delete_objects
     delete_ontologies_and_submissions
-    # Ontology#delete only reaches linked submissions, so clear what the leftover tests stored
-    (@leftovers || []).each { |uri| _clear_triples(uri) }
+  ensure
+    # delete_ontologies_and_submissions only reaches submissions linked to an ontology
+    (@orphans || []).each { |uri| _delete_orphan(uri) }
   end
 
   def _create_ontology_with_submissions
@@ -71,21 +72,31 @@ class TestOntology < LinkedData::TestOntologyCommon
     onts.first
   end
 
-  def _submission_uri(ont, submission_id)
+  # Orphaned submission records: triples under a submission URI that has no link to an ontology
+  SUBMISSION_GRAPH = LinkedData::Models::OntologySubmission.uri_type
+
+  def _orphan_uri(ont, submission_id)
     uri = RDF::URI.new("#{ont.id}/submissions/#{submission_id}")
-    (@leftovers ||= []) << uri
+    (@orphans ||= []) << uri # removed in teardown
     uri
   end
 
-  def _insert_triple(subject, predicate, object)
-    graph = RDF::Graph.new << [subject, predicate, object]
-    Goo.sparql_update_client.insert_data(graph, graph: LinkedData::Models::OntologySubmission.uri_type)
+  # Turns saved submission N into an orphan by removing its link to the ontology
+  def _unlink_submission(ont, submission_id)
+    link = [_orphan_uri(ont, submission_id), LinkedData::Models::OntologySubmission.attribute_uri(:ontology), ont.id]
+    Goo.sparql_update_client.delete_data(RDF::Graph.new << link, graph: SUBMISSION_GRAPH)
   end
 
-  def _clear_triples(subject, predicate = nil)
-    graph = LinkedData::Models::OntologySubmission.uri_type
-    pattern = "<#{subject}> #{predicate ? "<#{predicate}>" : '?p'} ?o ."
-    Goo.sparql_update_client.update("DELETE { GRAPH <#{graph}> { #{pattern} } } WHERE { GRAPH <#{graph}> { #{pattern} } }")
+  # Stores a lone triple at submission URI N, the kind of orphan an incomplete delete leaves
+  def _create_orphan(ont, submission_id)
+    triple = [_orphan_uri(ont, submission_id), LinkedData::Models::OntologySubmission.attribute_uri(:submissionId),
+              RDF::Literal.new(submission_id)]
+    Goo.sparql_update_client.insert_data(RDF::Graph.new << triple, graph: SUBMISSION_GRAPH)
+  end
+
+  def _delete_orphan(uri)
+    pattern = "GRAPH <#{SUBMISSION_GRAPH}> { <#{uri}> ?p ?o }"
+    Goo.sparql_update_client.update("DELETE { #{pattern} } WHERE { #{pattern} }")
   end
 
   def _add_statuses(ont, submission_id, codes)
@@ -594,47 +605,34 @@ class TestOntology < LinkedData::TestOntologyCommon
     assert_equal 12, ont.next_submission_id
   end
 
-  # A submission that lost its ontology link isn't counted, so without the skip its id comes
-  # back and Goo rejects every new submission as a duplicate
-  def test_next_submission_id_skips_an_unlinked_submission
+  # The usual orphan: submission 2 lost its ontology link but is still stored
+  def test_next_submission_id_skips_unlinked_submission
     ont = _ontology_with_two_submissions
-    _clear_triples(_submission_uri(ont, 2), LinkedData::Models::OntologySubmission.attribute_uri(:ontology))
+    _unlink_submission(ont, 2)
 
-    assert_equal 1, ont.highest_submission_id(status: :any)
-    assert_equal 3, ont.next_submission_id
+    assert_equal 1, ont.highest_submission_id(status: :any) # submission 2 is no longer counted...
+    assert_equal 3, ont.next_submission_id                 # ...but its id is still taken
   end
 
-  # Triples left by an incomplete delete have no rdf:type; a new submission at that id would merge with them
-  def test_next_submission_id_skips_untyped_leftover_triples
+  def test_next_submission_id_skips_orphans_and_logs_them
     ont = _ontology_with_two_submissions
-    _insert_triple(_submission_uri(ont, 3), RDF::URI.new("#{Goo.namespaces[:metadata]}homepage"),
-                   RDF::Literal.new('http://leftover.example.org'))
-    _insert_triple(_submission_uri(ont, 4), LinkedData::Models::OntologySubmission.attribute_uri(:submissionId),
-                   RDF::Literal.new(4))
+    _create_orphan(ont, 3)
+    _create_orphan(ont, 4)
+    log = StringIO.new
 
-    assert_equal 5, ont.next_submission_id
+    assert_equal 5, ont.next_submission_id(logger: Logger.new(log))
+    assert_includes log.string, "Submission id 3 of #{ont.acronym} is taken"
+    assert_includes log.string, "Submission id 4 of #{ont.acronym} is taken"
   end
 
-  def test_next_submission_id_ignores_leftovers_past_the_next_id
+  def test_next_submission_id_raises_after_too_many_orphans
     ont = _ontology_with_two_submissions
-    _insert_triple(_submission_uri(ont, 9), LinkedData::Models::OntologySubmission.attribute_uri(:submissionId),
-                   RDF::Literal.new(9))
+    max = LinkedData::Models::Ontology::MAX_SUBMISSION_ID_SKIPS
+    (3...(3 + max)).each { |id| _create_orphan(ont, id) }
 
-    assert_equal 3, ont.next_submission_id
-  end
-
-  def test_next_submission_id_skip_is_not_answered_from_the_query_cache
-    ont = _ontology_with_two_submissions
-    Goo.use_cache = true
-    assert_equal 3, ont.next_submission_id # cache warmed with id 3 free
-    Goo.use_cache = false
-    _insert_triple(_submission_uri(ont, 3), LinkedData::Models::OntologySubmission.attribute_uri(:submissionId),
-                   RDF::Literal.new(3))
-    Goo.use_cache = true
-
-    assert_equal 4, ont.next_submission_id
-  ensure
-    Goo.use_cache = false
+    assert_raises(LinkedData::Models::Ontology::SubmissionIdError) do
+      ont.next_submission_id(logger: Logger.new(StringIO.new))
+    end
   end
 
   # Saving a submission embeds its ontology in the metadata index

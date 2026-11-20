@@ -17,6 +17,7 @@ module LinkedData
     class Ontology < LinkedData::Models::Base
       class ParsedSubmissionError < StandardError; end
       class OntologyAnalyticsError < StandardError; end
+      class SubmissionIdError < StandardError; end
 
       ONTOLOGY_RANK_REDIS_FIELD = "ontology_rank"
       DEFAULT_RANK_WEIGHT_ANALYTICS = 0.50
@@ -201,24 +202,29 @@ module LinkedData
         sub
       end
 
-      # Highest linked submissionId + 1, skipping ids whose submission URI already holds triples.
-      # A submission that lost its `ontology` link isn't counted by highest_submission_id, so its
-      # id would be handed out again: Goo then rejects the new submission as a duplicate if the
-      # leftover is typed, or merges it with the leftover triples if it isn't.
-      MAX_SUBMISSION_ID_SKIPS = 1000
+      # Workaround for orphaned submission records: triples still stored under a submission's URI
+      # after the submission lost its link to the ontology, e.g. after an incomplete delete.
+      # highest_submission_id only counts linked submissions, so it misses an orphan and would
+      # hand out the orphan's id again. Saving a new submission under that URI then fails as a
+      # duplicate, or picks up the orphan's stale values. So skip ids that are already taken, and
+      # log each one so the orphan can be found and removed.
+      MAX_SUBMISSION_ID_SKIPS = 10
       SubmissionIdProbe = Struct.new(:ontology, :submissionId)
 
-      def next_submission_id
+      def next_submission_id(logger: nil)
         first = highest_submission_id(status: :any) + 1
         (first...(first + MAX_SUBMISSION_ID_SKIPS)).each do |id|
           return id unless submission_id_in_use?(id)
+
+          logger ||= LinkedData::Parser.logger || Logger.new($stderr)
+          logger.warn("Submission id #{id} of #{acronym} is taken by an orphaned submission record; skipping it")
         end
-        raise "Submission ids #{first}..#{first + MAX_SUBMISSION_ID_SKIPS - 1} of #{acronym} are all in use; " \
-              'check for orphaned submissions'
+        raise SubmissionIdError, "Submission ids #{first}..#{first + MAX_SUBMISSION_ID_SKIPS - 1} of #{acronym} " \
+                                 'are all taken by orphaned submission records; remove them'
       end
 
-      # Any triple under the URI a submission with this id would get, typed or not. A plain
-      # string query, so Goo's query cache never answers it.
+      # True if anything is stored under the URI a submission with this id would get. A plain
+      # string query, so the answer never comes from Goo's query cache.
       def submission_id_in_use?(submission_id)
         uri = OntologySubmission.submission_id_generator(SubmissionIdProbe.new(self, submission_id))
         query = "SELECT ?p WHERE { GRAPH <#{OntologySubmission.uri_type}> { <#{uri}> ?p ?o } } LIMIT 1"

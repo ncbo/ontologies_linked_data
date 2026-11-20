@@ -66,15 +66,16 @@ module LinkedData
           max.times do
             #refresh submission to get new next submission ID after saving in a loop
             o.bring(:submissions)
+            submission_id = o.next_submission_id
             sub_options = {
               ontology: o,
               hasOntologyLanguage: of,
-              submissionId: o.next_submission_id,
+              submissionId: submission_id,
               definitionProperty: (RDF::IRI.new "http://bioontology.org/ontologies/biositemap.owl#definition"),
               contact: [contact],
               released: DateTime.now - 3,
-              uri: RDF::URI.new("https://test-#{o.next_submission_id}.com"),
-              description: "Description #{o.next_submission_id}",
+              uri: RDF::URI.new("https://test-#{submission_id}.com"),
+              description: "Description #{submission_id}",
               status: 'production'
             }
             sub_options[:prefLabelProperty] = RDF::IRI.new(pref_label_property) if pref_label_property
