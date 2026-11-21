@@ -612,6 +612,26 @@ SELECT DISTINCT * WHERE {
     end
   end
 
+  # Bubastis 1.4 (OWLAPI 4.5) aborts the diff when an import cannot be loaded,
+  # e.g. HTTP 429 from www.w3.org. The command must tell OWLAPI to skip it.
+  def test_bubastis_diff_skips_missing_imports
+    LinkedData::Diff.logger = Logger.new(TestLogFile.new)
+    Dir.mktmpdir do |dir|
+      plain = File.join(dir, 'BRO_v3.2.owl')
+      FileUtils.cp('./test/data/ontology_files/BRO_v3.2.owl', plain)
+      command = nil
+      Open3.stubs(:capture3).with { |cmd| command = cmd }.returns(['', '', stub(success?: true, exitstatus: 0)])
+
+      assert_raises(LinkedData::Diff::BubastisDiffException) do
+        LinkedData::Diff::BubastisDiffCommand.new(plain, plain, dir).diff
+      end
+      assert_includes command,
+                      '-Dorg.semanticweb.owlapi.model.parameters.ConfigurationOptions.MISSING_IMPORT_HANDLING_STRATEGY=SILENT'
+      assert_operator command.index('MISSING_IMPORT_HANDLING_STRATEGY'), :<, command.index(' -jar '),
+                      'System properties must come before -jar'
+    end
+  end
+
   def test_index_properties
     submission_parse("BRO", "BRO Ontology",
                      "./test/data/ontology_files/BRO_v3.5.owl", 1,

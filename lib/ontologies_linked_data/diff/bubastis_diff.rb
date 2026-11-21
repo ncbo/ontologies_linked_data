@@ -42,6 +42,14 @@ module LinkedData
 
       # output_repo defaults to the new file's folder, as in AgroPortal. Pass it
       # when the new file is an extracted copy in a temporary folder.
+      # The diff compares only axioms asserted in each file, never in its
+      # imports. Bubastis 1.4 (OWLAPI 4.5) aborts the whole diff when an import
+      # cannot be loaded, e.g. HTTP 429 from www.w3.org or a dead host; bubastis
+      # 1.2 (OWLAPI 3.3) skipped such imports. OWLAPI 4.5 reads this option from
+      # a system property, so no bubastis change is needed. OWLAPI 3.3 ignores it.
+      SKIP_MISSING_IMPORTS =
+        '-Dorg.semanticweb.owlapi.model.parameters.ConfigurationOptions.MISSING_IMPORT_HANDLING_STRATEGY=SILENT'.freeze
+
       def initialize(old_file_path, new_file_path, output_repo = nil)
         @bubastis_jar_path = LinkedData.bindir + "/bubastis.jar"
         @input_fileOld = old_file_path
@@ -111,7 +119,7 @@ module LinkedData
         # only failure signal. Remove the report from an earlier run, or a failed
         # re-run would pass for a success.
         File.delete @file_diff_path if @file_diff_path && File.exist?(@file_diff_path)
-        java_cmd = "java -DentityExpansionLimit=1500000 -Xmx#{@java_heap_size} -jar #{Shellwords.escape(@bubastis_jar_path)} #{options.join(' ')}"
+        java_cmd = "java -DentityExpansionLimit=1500000 #{SKIP_MISSING_IMPORTS} -Xmx#{@java_heap_size} -jar #{Shellwords.escape(@bubastis_jar_path)} #{options.join(' ')}"
         Diff.logger.info("Java call [#{java_cmd}]")
         stdout,stderr,status = Open3.capture3(java_cmd)
         if not status.success?
