@@ -610,7 +610,7 @@ SELECT DISTINCT * WHERE {
       assert_equal '<diffReport>previous</diffReport>', File.read(previous),
                    'A failed run should keep the previous report'
 
-      # Two arguments, as AgroPortal calls it: the report goes next to the new file.
+      # With two arguments, the report goes next to the new file.
       report = LinkedData::Diff::BubastisDiffCommand.new(plain, plain).diff
       assert_equal previous, report
       assert_includes File.read(report), '<numberNewClasses>'

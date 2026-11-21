@@ -1,7 +1,5 @@
 Bubastis version 1.4.1
-Built from https://github.com/ncbo/bubastis (a fork of agroportal/bubastis),
-release v1.4.1, with OWLAPI 4.5.24. Needs Java 11 or later.
-Source: https://github.com/ncbo/bubastis/releases/download/v1.4.1/bubastis-1.4.1.jar
+Built with OWLAPI 4.5.24.
 SHA-256: 48daa33e3518f98dd076c880afa845778713e58c8149ccf9f296eb072e128679
 ---
 

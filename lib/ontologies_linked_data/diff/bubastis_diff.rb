@@ -13,8 +13,7 @@ module LinkedData
 
     class BubastisDiffCommand < DiffTool
 
-      # Bubastis 1.4.1, built from https://github.com/ncbo/bubastis (a fork of
-      # agroportal/bubastis) with OWLAPI 4.5.24. Needs Java 11 or later.
+      # Bubastis 1.4.1, built with OWLAPI 4.5.24.
       # Inputs must be uncompressed: a zip or gzip input fails to load, yet
       # bubastis still exits 0. A missing output file is the only sign of failure.
       # ---
@@ -52,8 +51,8 @@ module LinkedData
       SKIP_MISSING_IMPORTS =
         '-Dorg.semanticweb.owlapi.model.parameters.ConfigurationOptions.MISSING_IMPORT_HANDLING_STRATEGY=SILENT'.freeze
 
-      # output_repo defaults to the new file's folder, as in AgroPortal. Pass it
-      # when the new file is an extracted copy in a temporary folder.
+      # output_repo defaults to the new file's folder. Pass it when the new file
+      # is an extracted copy in a temporary folder.
       def initialize(old_file_path, new_file_path, output_repo = nil)
         @bubastis_jar_path = File.join(LinkedData.bindir, BUBASTIS_JAR)
         @input_fileOld = old_file_path
