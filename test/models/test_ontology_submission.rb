@@ -586,7 +586,11 @@ SELECT DISTINCT * WHERE {
       error = assert_raises(LinkedData::Diff::BubastisDiffException) do
         LinkedData::Diff::BubastisDiffCommand.new(gzipped, plain, dir).diff
       end
-      assert_match(/cannot be found/, error.message)
+      assert_equal "Bubastis wrote no report: it could not load #{gzipped}", error.message
+      error = assert_raises(LinkedData::Diff::BubastisDiffException) do
+        LinkedData::Diff::BubastisDiffCommand.new(plain, gzipped, dir).diff
+      end
+      assert_equal "Bubastis wrote no report: it could not load #{gzipped}", error.message
       assert_equal '<diffReport>previous</diffReport>', File.read(previous),
                    'A failed run should keep the previous report'
 
@@ -630,7 +634,7 @@ SELECT DISTINCT * WHERE {
       error = assert_raises(LinkedData::Diff::BubastisDiffException) do
         LinkedData::Diff::BubastisDiffCommand.new(plain, plain, dir).diff
       end
-      assert_match(/exited with 1/, error.message)
+      assert_equal 'Bubastis java command exited with 1: java.lang.OutOfMemoryError', error.message
       assert_equal '<diffReport>previous</diffReport>', File.read(previous)
       refute File.exist?(partial), 'The partial report should have been removed'
     end

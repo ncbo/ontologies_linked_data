@@ -128,16 +128,14 @@ module LinkedData
           Diff.logger.error(stderr)
           Diff.logger.error(stdout)
           FileUtils.rm_f(partial_path)
-          raise Diff::BubastisDiffException, "Bubastis java command exited with #{status.exitstatus}. Check diff logs."
+          raise Diff::BubastisDiffException,
+                "Bubastis java command exited with #{status.exitstatus}: #{last_error_line(stderr)}"
         end
         if not File.exist?(partial_path)
-          Diff.logger.error("Bubastis exited with status=#{status.exitstatus} but wrote no output")
+          Diff.logger.error("Bubastis exited with status=#{status.exitstatus} but wrote no report")
           Diff.logger.error(stderr)
           Diff.logger.error(stdout)
-          reason = "#{stdout}\n#{stderr}".lines.reject { |l| l.start_with?('SLF4J') }
-                                      .grep(/fail|exception|error/i).first&.strip
-          raise Diff::BubastisDiffException, "Bubastis diff command exited with status=#{status.exitstatus}. " +\
-          "Output file #{partial_path} cannot be found.#{" Bubastis: #{reason}" if reason}"
+          raise Diff::BubastisDiffException, "Bubastis wrote no report: #{failure_reason(stdout, stderr)}"
         end
         File.rename(partial_path, @file_diff_path)
         Diff.logger.info("Bubastis diff finished OK.")
@@ -145,6 +143,18 @@ module LinkedData
         Diff.logger.info(stdout)
         Diff.logger.info("Output size #{File.stat(@file_diff_path).size} in `#{@file_diff_path}`")
         return @file_diff_path
+      end
+
+      def failure_reason(stdout, stderr)
+        if stdout.include?('trying load now')
+          return "it could not load #{@input_fileOld}" unless stdout.include?('loading ontology 1 complete')
+          return "it could not load #{@input_fileNew}" unless stdout.include?('loading ontology 2 complete')
+        end
+        last_error_line(stderr)
+      end
+
+      def last_error_line(stderr)
+        stderr.lines.map(&:strip).reject { |l| l.empty? || l.start_with?('SLF4J') }.last || 'no error output'
       end
     end
   end
