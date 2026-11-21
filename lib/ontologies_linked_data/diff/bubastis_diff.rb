@@ -1,4 +1,5 @@
 require 'open3'
+require 'shellwords'
 
 module LinkedData
   module Diff
@@ -14,6 +15,8 @@ module LinkedData
 
       # Bubastis version 1.2
       # 18th December 2014
+      # Inputs must be uncompressed: a zip or gzip input fails to load, yet
+      # bubastis still exits 0. A missing output file is the only sign of failure.
       # ---
       #
       # Bubastis is an ontology change tool which is able to analyse two ontologies (typically two versions of the same ontology) to highlight logical changes which have occurred and to present these changes in more or less detail, as required.
@@ -37,11 +40,21 @@ module LinkedData
       # Loading one file locally and one from the web and outputting results to plain text:
       # java -jar bubastis_1_2.jar -ontology1 "H://disease_ontology_version_1.owl" -ontology2 "http://www.disease.org/diseaseontology_latest.owl" -output "C://my_diff.txt"
 
-      def initialize(old_file_path, new_file_path, output_repo)
+      # output_repo defaults to the new file's folder, as in AgroPortal. Pass it
+      # when the new file is an extracted copy in a temporary folder.
+      # The diff compares only axioms asserted in each file, never in its
+      # imports. Bubastis 1.4 (OWLAPI 4.5) aborts the whole diff when an import
+      # cannot be loaded, e.g. HTTP 429 from www.w3.org or a dead host; bubastis
+      # 1.2 (OWLAPI 3.3) skipped such imports. OWLAPI 4.5 reads this option from
+      # a system property, so no bubastis change is needed. OWLAPI 3.3 ignores it.
+      SKIP_MISSING_IMPORTS =
+        '-Dorg.semanticweb.owlapi.model.parameters.ConfigurationOptions.MISSING_IMPORT_HANDLING_STRATEGY=SILENT'.freeze
+
+      def initialize(old_file_path, new_file_path, output_repo = nil)
         @bubastis_jar_path = LinkedData.bindir + "/bubastis.jar"
         @input_fileOld = old_file_path
         @input_fileNew = new_file_path
-        @output_repo = output_repo
+        @output_repo = output_repo || (new_file_path && File.dirname(File.expand_path(new_file_path)))
         @file_diff_path = nil
         @java_heap_size = LinkedData.settings.java_max_heap_size
       end
@@ -102,7 +115,11 @@ module LinkedData
         end
         errors_log = File.join([@output_repo, "bubastis_diff_errors.log"])
         File.delete errors_log if File.exist? errors_log
-        java_cmd = "java -DentityExpansionLimit=1500000 -Xmx#{@java_heap_size} -jar #{@bubastis_jar_path} #{options.join(' ')}"
+        # Bubastis exits 0 even when it fails, so a missing output file is the
+        # only failure signal. Remove the report from an earlier run, or a failed
+        # re-run would pass for a success.
+        File.delete @file_diff_path if @file_diff_path && File.exist?(@file_diff_path)
+        java_cmd = "java -DentityExpansionLimit=1500000 #{SKIP_MISSING_IMPORTS} -Xmx#{@java_heap_size} -jar #{Shellwords.escape(@bubastis_jar_path)} #{options.join(' ')}"
         Diff.logger.info("Java call [#{java_cmd}]")
         stdout,stderr,status = Open3.capture3(java_cmd)
         if not status.success?
@@ -110,15 +127,19 @@ module LinkedData
           Diff.logger.error(stderr)
           Diff.logger.error(stdout)
           raise Diff::BubastisDiffException, "Bubastis java command exited with #{status.exitstatus}. Check diff logs."
+        end
+        if not File.exist?(@file_diff_path)
+          Diff.logger.error("Bubastis exited with status=#{status.exitstatus} but wrote no output")
+          Diff.logger.error(stderr)
+          Diff.logger.error(stdout)
+          reason = "#{stdout}\n#{stderr}".lines.reject { |l| l.start_with?('SLF4J') }
+                                      .grep(/fail|exception|error/i).first&.strip
+          raise Diff::BubastisDiffException, "Bubastis diff command exited with status=#{status.exitstatus}. " +\
+          "Output file #{@file_diff_path} cannot be found.#{" Bubastis: #{reason}" if reason}"
         else
           Diff.logger.info("Bubastis diff finished OK.")
           Diff.logger.info(stderr)
           Diff.logger.info(stdout)
-        end
-        if not File.exist?(@file_diff_path)
-          raise Diff::BubastisDiffException, "Bubastis diff command exited with status=#{status.exitstatus}. " +\
-          "Output file #{@file_diff_path} cannot be found."
-        else
           Diff.logger.info("Output size #{File.stat(@file_diff_path).size} in `#{@file_diff_path}`")
         end
         return @file_diff_path
