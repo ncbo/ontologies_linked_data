@@ -13,8 +13,8 @@ module LinkedData
 
     class BubastisDiffCommand < DiffTool
 
-      # Bubastis version 1.2
-      # 18th December 2014
+      # Bubastis 1.4.1, built from https://github.com/ncbo/bubastis (a fork of
+      # agroportal/bubastis) with OWLAPI 4.5.24. Needs Java 11 or later.
       # Inputs must be uncompressed: a zip or gzip input fails to load, yet
       # bubastis still exits 0. A missing output file is the only sign of failure.
       # ---
@@ -23,35 +23,39 @@ module LinkedData
       #
       #
       # Usage:
-      # java -jar bubastis_1_2.jar parameters:
+      # java -jar bubastis-1.4.1.jar parameters:
       # (required)  -ontology1 location of ontology 1 either a URL for an ontology on the web or a local file location in obo or owl format. Typically the older version of the ontologies being compared
       # (required)  -ontology2 location of ontology 2 either a URL or local file location of an obo or owl format ontology. Typically the newer version of the ontologies being compared.
       # (optional)  -output location of output file to send results, default is to console.
       # (optional)  -format required format of diff report, default is plain text, value 'xml' will produce xml
       # (optional)  -xslt for xml version of the diff report this will insert an xslt location into the header for rendering these in a customised manner in a web page. Value should be location of xslt file.
+      # (optional)  -label IRI of the property used for labels.
+      # (optional)  -syn IRI of the property used for synonyms.
       #
       # Examples:
       # Loading two files locally and outputting results to console:
-      # java -jar bubastis_1_2.jar -ontology1 "H://obi_nov_08.owl" -ontology2 "H://obi_jan_09.owl"
+      # java -jar bubastis-1.4.1.jar -ontology1 "H://obi_nov_08.owl" -ontology2 "H://obi_jan_09.owl"
       #
       # Loading two files locally and output results to xml file with an xslt location inserted into header
-      # java -jar bubastis_1_2.jar -1 "H://obi_nov_08.owl" -2 "H://obi_jan_09.owl" -output "H://OBIdiff.xml" -format xml -xslt "./stylesheets/bubastis.xslt"
+      # java -jar bubastis-1.4.1.jar -ontology1 "H://obi_nov_08.owl" -ontology2 "H://obi_jan_09.owl" -output "H://OBIdiff.xml" -format xml -xslt "./stylesheets/bubastis.xslt"
       #
       # Loading one file locally and one from the web and outputting results to plain text:
-      # java -jar bubastis_1_2.jar -ontology1 "H://disease_ontology_version_1.owl" -ontology2 "http://www.disease.org/diseaseontology_latest.owl" -output "C://my_diff.txt"
+      # java -jar bubastis-1.4.1.jar -ontology1 "H://disease_ontology_version_1.owl" -ontology2 "http://www.disease.org/diseaseontology_latest.owl" -output "C://my_diff.txt"
 
-      # output_repo defaults to the new file's folder, as in AgroPortal. Pass it
-      # when the new file is an extracted copy in a temporary folder.
+      BUBASTIS_JAR = 'bubastis-1.4.1.jar'.freeze
+
       # The diff compares only axioms asserted in each file, never in its
-      # imports. Bubastis 1.4 (OWLAPI 4.5) aborts the whole diff when an import
-      # cannot be loaded, e.g. HTTP 429 from www.w3.org or a dead host; bubastis
-      # 1.2 (OWLAPI 3.3) skipped such imports. OWLAPI 4.5 reads this option from
-      # a system property, so no bubastis change is needed. OWLAPI 3.3 ignores it.
+      # imports, but bubastis still loads the imports and aborts the whole diff
+      # when one cannot be loaded, e.g. HTTP 429 from www.w3.org or a dead host.
+      # (Bubastis 1.2, on OWLAPI 3.3, skipped such imports.) OWLAPI 4.5 reads
+      # this option from a system property, so no bubastis change is needed.
       SKIP_MISSING_IMPORTS =
         '-Dorg.semanticweb.owlapi.model.parameters.ConfigurationOptions.MISSING_IMPORT_HANDLING_STRATEGY=SILENT'.freeze
 
+      # output_repo defaults to the new file's folder, as in AgroPortal. Pass it
+      # when the new file is an extracted copy in a temporary folder.
       def initialize(old_file_path, new_file_path, output_repo = nil)
-        @bubastis_jar_path = LinkedData.bindir + "/bubastis.jar"
+        @bubastis_jar_path = File.join(LinkedData.bindir, BUBASTIS_JAR)
         @input_fileOld = old_file_path
         @input_fileNew = new_file_path
         @output_repo = output_repo || (new_file_path && File.dirname(File.expand_path(new_file_path)))
