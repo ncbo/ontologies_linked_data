@@ -618,6 +618,22 @@ SELECT DISTINCT * WHERE {
     end
   end
 
+  # A diff that fails during processing marks the submission ERROR_DIFF and
+  # leaves diffFilePath unset.
+  def test_process_diff_failure_sets_error_status
+    _older, newer = create_diff_pair('DIFFFAIL', :plain, :plain)
+    LinkedData::Diff::BubastisDiffCommand.any_instance.stubs(:diff)
+                                         .raises(LinkedData::Diff::BubastisDiffException, 'no report')
+
+    newer.generate_diff(Logger.new(TestLogFile.new))
+
+    newer = LinkedData::Models::OntologySubmission.find(newer.id).include(:diffFilePath, submissionStatus: [:code]).first
+    codes = newer.submissionStatus.map { |status| status.get_code_from_id }
+    assert_includes codes, 'ERROR_DIFF'
+    refute_includes codes, 'DIFF'
+    assert_nil newer.diffFilePath
+  end
+
   # When java itself fails, e.g. out of memory, a partial report it wrote must
   # not replace the previous report.
   def test_bubastis_diff_java_failure_discards_partial_report
