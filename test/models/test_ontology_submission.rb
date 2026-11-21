@@ -618,6 +618,28 @@ SELECT DISTINCT * WHERE {
     end
   end
 
+  # When java itself fails, e.g. out of memory, a partial report it wrote must
+  # not replace the previous report.
+  def test_bubastis_diff_java_failure_discards_partial_report
+    LinkedData::Diff.logger = Logger.new(TestLogFile.new)
+    Dir.mktmpdir do |dir|
+      plain = File.join(dir, 'BRO_v3.2.owl')
+      FileUtils.cp('./test/data/ontology_files/BRO_v3.2.owl', plain)
+      previous = File.join(dir, 'bubastis_diff.xml')
+      File.write(previous, '<diffReport>previous</diffReport>')
+      partial = File.join(dir, 'bubastis_diff.partial.xml')
+      Open3.stubs(:capture3).with { File.write(partial, '<diffRep') }
+           .returns(['', 'java.lang.OutOfMemoryError', stub(success?: false, exitstatus: 1)])
+
+      error = assert_raises(LinkedData::Diff::BubastisDiffException) do
+        LinkedData::Diff::BubastisDiffCommand.new(plain, plain, dir).diff
+      end
+      assert_match(/exited with 1/, error.message)
+      assert_equal '<diffReport>previous</diffReport>', File.read(previous)
+      refute File.exist?(partial), 'The partial report should have been removed'
+    end
+  end
+
   # Bubastis 1.4 (OWLAPI 4.5) aborts the diff when an import cannot be loaded,
   # e.g. HTTP 429 from www.w3.org. The command must tell OWLAPI to skip it.
   def test_bubastis_diff_skips_missing_imports
