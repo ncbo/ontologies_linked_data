@@ -511,6 +511,107 @@ SELECT DISTINCT * WHERE {
     assert(sub35.diffFilePath != nil, 'Failed to create submission diff file.')
   end
 
+  # Bubastis cannot read zip or gzip files, so compressed uploads are resolved
+  # to a plain file for the diff. Each pair is BRO 3.4 then BRO 3.5, which adds
+  # exactly one class, Activity.owl#Catalog. Submissions are not parsed, so they
+  # have no unzipped/ folder unless a test makes one.
+  def test_submission_diff_zip_older
+    assert_catalog_diff(*create_diff_pair('DIFFZIPOLD', :zip, :plain))
+  end
+
+  def test_submission_diff_gz_older
+    assert_catalog_diff(*create_diff_pair('DIFFGZOLD', :gz, :plain))
+  end
+
+  def test_submission_diff_zip_newer
+    assert_catalog_diff(*create_diff_pair('DIFFZIPNEW', :plain, :zip))
+  end
+
+  def test_submission_diff_gz_newer
+    assert_catalog_diff(*create_diff_pair('DIFFGZNEW', :plain, :gz))
+  end
+
+  def test_submission_diff_zip_and_gz
+    assert_catalog_diff(*create_diff_pair('DIFFZIPGZ', :zip, :gz))
+  end
+
+  def test_submission_diff_gz_and_zip
+    assert_catalog_diff(*create_diff_pair('DIFFGZZIP', :gz, :zip))
+  end
+
+  # The archiver zips an archived upload and deletes unzipped/. Without a
+  # masterFileName, the single entry in the archive is the master file.
+  def test_submission_diff_archived_zip_without_master_file
+    older, newer = create_diff_pair('DIFFARCH', :plain, :gz)
+    plain_upload = older.uploadFilePath
+    older.uploadFilePath = LinkedData::Utils::FileHelpers.zip_file(plain_upload)
+    FileUtils.rm(plain_upload)
+    older.save
+    # Saving fills masterFileName in for a single-entry archive, but older data
+    # can lack it. Clear it so the single-entry fallback is what gets tested.
+    older.masterFileName = nil
+    assert older.zipped?
+
+    assert_catalog_diff(older, newer)
+    assert File.file?(older.uploadFilePath)
+    assert_nil older.masterFileName, 'The diff should not change the archived submission'
+  end
+
+  # With several entries and no masterFileName there is no way to pick the file.
+  def test_submission_diff_multi_file_zip_without_master_file
+    older, newer = create_diff_pair('DIFFMULTI', :plain, :plain)
+    multi = File.join(older.data_folder, 'multi.zip')
+    Zip::File.open(multi, create: true) do |zip|
+      zip.add('BRO_v3.4.owl', older.uploadFilePath)
+      zip.add('BRO_v3.5.owl', newer.uploadFilePath)
+    end
+    older.uploadFilePath = multi
+    older.masterFileName = nil
+
+    Dir.mktmpdir do |dir|
+      assert_raises(LinkedData::Diff::InputFileNotFoundError) { older.diff_file_path(dir) }
+    end
+    assert_raises(ArgumentError) { older.diff_file_path }
+  end
+
+  # After processing, unzipped/ already holds the master file, so the diff uses
+  # it and extracts nothing.
+  def test_submission_diff_uses_existing_unzipped_copy
+    older, newer = create_diff_pair('DIFFUNZIP', :zip, :gz)
+    logger = Logger.new(TestLogFile.new)
+    older.unzip_submission(logger)
+    newer.unzip_submission(logger)
+    assert_equal older.master_file_path, older.diff_file_path
+    assert_equal newer.master_file_path, newer.diff_file_path
+
+    LinkedData::Utils::FileHelpers.expects(:unzip).never
+    assert_catalog_diff(older, newer, older_unzipped: true)
+  end
+
+  # Bubastis exits 0 when it cannot load an input, so the only failure signal is
+  # a missing report. A report left by an earlier run must not hide the failure.
+  def test_bubastis_diff_ignores_stale_report
+    LinkedData::Diff.logger = Logger.new(TestLogFile.new)
+    Dir.mktmpdir do |dir|
+      plain = File.join(dir, 'BRO_v3.2.owl')
+      FileUtils.cp('./test/data/ontology_files/BRO_v3.2.owl', plain)
+      gzipped = File.expand_path('./test/data/ontology_files/BRO_v3.2.owl.gz')
+      stale = File.join(dir, 'bubastis_diff.xml')
+      File.write(stale, '<diffReport>stale</diffReport>')
+
+      error = assert_raises(LinkedData::Diff::BubastisDiffException) do
+        LinkedData::Diff::BubastisDiffCommand.new(gzipped, plain, dir).diff
+      end
+      assert_match(/cannot be found/, error.message)
+      refute File.exist?(stale), 'The stale report should have been removed before running bubastis'
+
+      # Two arguments, as AgroPortal calls it: the report goes next to the new file.
+      report = LinkedData::Diff::BubastisDiffCommand.new(plain, plain).diff
+      assert_equal stale, report
+      assert_includes File.read(report), '<diffReport>'
+    end
+  end
+
   def test_index_properties
     submission_parse("BRO", "BRO Ontology",
                      "./test/data/ontology_files/BRO_v3.5.owl", 1,
@@ -1872,4 +1973,34 @@ eos
     assert_nil RequestStore.store[:requested_lang]
   end
 
+  private
+
+  # Creates BRO 3.4 (older) and BRO 3.5 (newer) submissions of one ontology,
+  # each uploaded as a plain, zipped (:zip) or gzipped (:gz) file.
+  def create_diff_pair(acronym, older_format, newer_format)
+    Dir.mktmpdir do |dir|
+      [['BRO_v3.4.owl', older_format], ['BRO_v3.5.owl', newer_format]].each_with_index do |(name, format), i|
+        file = File.join(dir, name)
+        FileUtils.cp("./test/data/ontology_files/#{name}", file)
+        file = LinkedData::Utils::FileHelpers.zip_file(file) if format == :zip
+        file = LinkedData::Utils::FileHelpers.gzip_file(file) if format == :gz
+        submission_parse(acronym, "#{acronym} diff", file, i + 1, process_rdf: false, delete: i.zero?)
+      end
+    end
+    subs = LinkedData::Models::Ontology.find(acronym).first.bring(submissions: [:submissionId]).submissions
+    subs.sort_by(&:submissionId).each(&:bring_remaining)
+  end
+
+  def assert_catalog_diff(older, newer, older_unzipped: false)
+    newer.diff(Logger.new(TestLogFile.new), older)
+
+    assert_equal File.join(File.expand_path(newer.data_folder), 'bubastis_diff.xml'), newer.diffFilePath
+    report = File.read(newer.diffFilePath)
+    assert_match %r{<numberNewClasses>\s*1\s*</numberNewClasses>}, report
+    assert_includes report, 'http://bioontology.org/ontologies/Activity.owl#Catalog'
+    assert_empty Dir.glob(File.join(newer.data_folder, 'diff-inputs-*')), 'Extracted diff inputs were not removed'
+    unless older_unzipped
+      refute Dir.exist?(older.zip_folder), 'The diff should not unpack into the older submission folder'
+    end
+  end
 end

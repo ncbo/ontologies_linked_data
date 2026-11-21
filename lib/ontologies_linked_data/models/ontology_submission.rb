@@ -892,6 +892,40 @@ module LinkedData
         parsable
       end
 
+      # The ontology file to hand to the diff tool. Bubastis cannot read zip or
+      # gzip archives: it exits 0 without writing a report. So a compressed
+      # upload resolves to its master file. That is the copy in unzipped/ when
+      # processing left one there. Otherwise the archive is extracted into
+      # extract_dir, which the caller owns and removes. Archiving deletes
+      # unzipped/, and re-extracting there would leave a full uncompressed copy
+      # in the archived submission's folder.
+      def diff_file_path(extract_dir = nil)
+        self.bring(:uploadFilePath) if self.bring?(:uploadFilePath)
+        self.bring(:masterFileName) if self.bring?(:masterFileName)
+        return File.expand_path(self.uploadFilePath.to_s) unless zipped?
+
+        unless self.masterFileName.nil?
+          unzipped = master_file_path
+          return unzipped if File.file?(unzipped)
+        end
+
+        raise ArgumentError, "#{self.uploadFilePath} is compressed; an extract_dir is required" if extract_dir.nil?
+
+        FileUtils.mkdir_p(extract_dir)
+        extracted = LinkedData::Utils::FileHelpers.unzip(self.uploadFilePath, extract_dir)
+        master = if self.masterFileName.nil?
+                   extracted.first if extracted.length == 1
+                 else
+                   File.join(extract_dir, archive_entry_name(self.masterFileName, extract_dir))
+                 end
+        if master.nil? || !File.file?(master)
+          raise LinkedData::Diff::InputFileNotFoundError,
+                "No master file for the diff in #{self.uploadFilePath} (masterFileName: #{self.masterFileName.inspect}, " \
+                "#{extracted.length} file(s) extracted)"
+        end
+        File.expand_path(master)
+      end
+
       private
 
       def owlapi_parser_input

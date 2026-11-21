@@ -7,20 +7,23 @@ module LinkedData
       end
 
       def diff(logger, older)
-        generate_diff(logger, init_diff_tool(older))
+        # Compressed inputs are extracted under the newer submission's folder:
+        # the repository has room for large ontologies, and /tmp may not.
+        data_folder = File.expand_path(@submission.data_folder.to_s)
+        FileUtils.mkdir_p(data_folder)
+        Dir.mktmpdir('diff-inputs-', data_folder) do |extract_dir|
+          generate_diff(logger, init_diff_tool(older, extract_dir, data_folder))
+        end
       end
 
       private
 
       # accepts another submission in 'older' (it should be an 'older' ontology version)
-      def init_diff_tool(older)
-        @submission.bring(:uploadFilePath)
-        older.bring(:uploadFilePath)
-
+      def init_diff_tool(older, extract_dir, output_folder)
         LinkedData::Diff::BubastisDiffCommand.new(
-          File.expand_path(older.uploadFilePath.to_s),
-          File.expand_path(@submission.uploadFilePath.to_s),
-          File.expand_path(@submission.data_folder.to_s))
+          older.diff_file_path(File.join(extract_dir, 'older')),
+          @submission.diff_file_path(File.join(extract_dir, 'newer')),
+          output_folder)
       end
 
       def process_diff(logger)
