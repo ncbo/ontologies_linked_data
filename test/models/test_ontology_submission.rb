@@ -589,26 +589,32 @@ SELECT DISTINCT * WHERE {
   end
 
   # Bubastis exits 0 when it cannot load an input, so the only failure signal is
-  # a missing report. A report left by an earlier run must not hide the failure.
-  def test_bubastis_diff_ignores_stale_report
+  # a missing report. Neither the report nor a partial file left by an earlier
+  # run may hide the failure, and a failed run must keep the earlier report,
+  # which the submission's diffFilePath still points to.
+  def test_bubastis_diff_failure_keeps_previous_report
     LinkedData::Diff.logger = Logger.new(TestLogFile.new)
     Dir.mktmpdir do |dir|
       plain = File.join(dir, 'BRO_v3.2.owl')
       FileUtils.cp('./test/data/ontology_files/BRO_v3.2.owl', plain)
       gzipped = File.expand_path('./test/data/ontology_files/BRO_v3.2.owl.gz')
-      stale = File.join(dir, 'bubastis_diff.xml')
-      File.write(stale, '<diffReport>stale</diffReport>')
+      previous = File.join(dir, 'bubastis_diff.xml')
+      File.write(previous, '<diffReport>previous</diffReport>')
+      partial = File.join(dir, 'bubastis_diff.partial.xml')
+      File.write(partial, '<diffReport>partial</diffReport>')
 
       error = assert_raises(LinkedData::Diff::BubastisDiffException) do
         LinkedData::Diff::BubastisDiffCommand.new(gzipped, plain, dir).diff
       end
       assert_match(/cannot be found/, error.message)
-      refute File.exist?(stale), 'The stale report should have been removed before running bubastis'
+      assert_equal '<diffReport>previous</diffReport>', File.read(previous),
+                   'A failed run should keep the previous report'
 
       # Two arguments, as AgroPortal calls it: the report goes next to the new file.
       report = LinkedData::Diff::BubastisDiffCommand.new(plain, plain).diff
-      assert_equal stale, report
-      assert_includes File.read(report), '<diffReport>'
+      assert_equal previous, report
+      assert_includes File.read(report), '<numberNewClasses>'
+      refute File.exist?(partial), 'The partial report should have been moved into place'
     end
   end
 
@@ -2012,13 +2018,16 @@ eos
   end
 
   def assert_catalog_diff(older, newer, older_unzipped: false)
+    scratch = -> { Dir.glob(File.join(Dir.tmpdir, 'diff-inputs-*')) }
+    scratch_before = scratch.call
     newer.diff(Logger.new(TestLogFile.new), older)
 
     assert_equal File.join(File.expand_path(newer.data_folder), 'bubastis_diff.xml'), newer.diffFilePath
     report = File.read(newer.diffFilePath)
     assert_match %r{<numberNewClasses>\s*1\s*</numberNewClasses>}, report
     assert_includes report, 'http://bioontology.org/ontologies/Activity.owl#Catalog'
-    assert_empty Dir.glob(File.join(newer.data_folder, 'diff-inputs-*')), 'Extracted diff inputs were not removed'
+    assert_empty scratch.call - scratch_before, 'Extracted diff inputs were not removed'
+    assert_empty Dir.glob(File.join(newer.data_folder, 'diff-inputs-*')), 'Diff inputs should not go to the data folder'
     unless older_unzipped
       refute Dir.exist?(older.zip_folder), 'The diff should not unpack into the older submission folder'
     end

@@ -111,7 +111,8 @@ module LinkedData
         if not @output_repo.nil?
           # Create output file in the repo for @input_fileNew.
           @file_diff_path = File.join(@output_repo, 'bubastis_diff.xml')
-          options << "-output #{Shellwords.escape(@file_diff_path)} -format xml"
+          partial_path = File.join(@output_repo, 'bubastis_diff.partial.xml')
+          options << "-output #{Shellwords.escape(partial_path)} -format xml"
           # TODO: Add xslt link for better HTML display; requires reliable xslt file URI.
         end
         if options.length == 0
@@ -119,10 +120,7 @@ module LinkedData
         end
         errors_log = File.join([@output_repo, "bubastis_diff_errors.log"])
         File.delete errors_log if File.exist? errors_log
-        # Bubastis exits 0 even when it fails, so a missing output file is the
-        # only failure signal. Remove the report from an earlier run, or a failed
-        # re-run would pass for a success.
-        File.delete @file_diff_path if @file_diff_path && File.exist?(@file_diff_path)
+        FileUtils.rm_f(partial_path)
         java_cmd = "java -DentityExpansionLimit=1500000 #{SKIP_MISSING_IMPORTS} -Xmx#{@java_heap_size} -jar #{Shellwords.escape(@bubastis_jar_path)} #{options.join(' ')}"
         Diff.logger.info("Java call [#{java_cmd}]")
         stdout,stderr,status = Open3.capture3(java_cmd)
@@ -130,22 +128,23 @@ module LinkedData
           Diff.logger.error("Bubastis diff error")
           Diff.logger.error(stderr)
           Diff.logger.error(stdout)
+          FileUtils.rm_f(partial_path)
           raise Diff::BubastisDiffException, "Bubastis java command exited with #{status.exitstatus}. Check diff logs."
         end
-        if not File.exist?(@file_diff_path)
+        if not File.exist?(partial_path)
           Diff.logger.error("Bubastis exited with status=#{status.exitstatus} but wrote no output")
           Diff.logger.error(stderr)
           Diff.logger.error(stdout)
           reason = "#{stdout}\n#{stderr}".lines.reject { |l| l.start_with?('SLF4J') }
                                       .grep(/fail|exception|error/i).first&.strip
           raise Diff::BubastisDiffException, "Bubastis diff command exited with status=#{status.exitstatus}. " +\
-          "Output file #{@file_diff_path} cannot be found.#{" Bubastis: #{reason}" if reason}"
-        else
-          Diff.logger.info("Bubastis diff finished OK.")
-          Diff.logger.info(stderr)
-          Diff.logger.info(stdout)
-          Diff.logger.info("Output size #{File.stat(@file_diff_path).size} in `#{@file_diff_path}`")
+          "Output file #{partial_path} cannot be found.#{" Bubastis: #{reason}" if reason}"
         end
+        File.rename(partial_path, @file_diff_path)
+        Diff.logger.info("Bubastis diff finished OK.")
+        Diff.logger.info(stderr)
+        Diff.logger.info(stdout)
+        Diff.logger.info("Output size #{File.stat(@file_diff_path).size} in `#{@file_diff_path}`")
         return @file_diff_path
       end
     end

@@ -7,12 +7,8 @@ module LinkedData
       end
 
       def diff(logger, older)
-        # Compressed inputs are extracted under the newer submission's folder:
-        # the repository has room for large ontologies, and /tmp may not.
-        data_folder = File.expand_path(@submission.data_folder.to_s)
-        FileUtils.mkdir_p(data_folder)
-        Dir.mktmpdir('diff-inputs-', data_folder) do |extract_dir|
-          generate_diff(logger, init_diff_tool(older, extract_dir, data_folder))
+        Dir.mktmpdir('diff-inputs-') do |extract_dir|
+          generate_diff(logger, init_diff_tool(older, extract_dir, File.expand_path(@submission.data_folder.to_s)))
         end
       end
 
