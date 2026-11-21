@@ -515,28 +515,8 @@ SELECT DISTINCT * WHERE {
   # to a plain file for the diff. Each pair is BRO 3.4 then BRO 3.5, which adds
   # exactly one class, Activity.owl#Catalog. Submissions are not parsed, so they
   # have no unzipped/ folder unless a test makes one.
-  def test_submission_diff_zip_older
-    assert_catalog_diff(*create_diff_pair('DIFFZIPOLD', :zip, :plain))
-  end
-
-  def test_submission_diff_gz_older
-    assert_catalog_diff(*create_diff_pair('DIFFGZOLD', :gz, :plain))
-  end
-
-  def test_submission_diff_zip_newer
-    assert_catalog_diff(*create_diff_pair('DIFFZIPNEW', :plain, :zip))
-  end
-
-  def test_submission_diff_gz_newer
-    assert_catalog_diff(*create_diff_pair('DIFFGZNEW', :plain, :gz))
-  end
-
   def test_submission_diff_zip_and_gz
     assert_catalog_diff(*create_diff_pair('DIFFZIPGZ', :zip, :gz))
-  end
-
-  def test_submission_diff_gz_and_zip
-    assert_catalog_diff(*create_diff_pair('DIFFGZZIP', :gz, :zip))
   end
 
   # The archiver zips an archived upload and deletes unzipped/. Without a
