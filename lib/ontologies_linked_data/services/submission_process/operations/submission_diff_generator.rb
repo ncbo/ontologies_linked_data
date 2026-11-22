@@ -7,20 +7,19 @@ module LinkedData
       end
 
       def diff(logger, older)
-        generate_diff(logger, init_diff_tool(older))
+        Dir.mktmpdir('diff-inputs-') do |extract_dir|
+          generate_diff(logger, init_diff_tool(older, extract_dir, File.expand_path(@submission.data_folder.to_s)))
+        end
       end
 
       private
 
       # accepts another submission in 'older' (it should be an 'older' ontology version)
-      def init_diff_tool(older)
-        @submission.bring(:uploadFilePath)
-        older.bring(:uploadFilePath)
-
+      def init_diff_tool(older, extract_dir, output_folder)
         LinkedData::Diff::BubastisDiffCommand.new(
-          File.expand_path(older.uploadFilePath.to_s),
-          File.expand_path(@submission.uploadFilePath.to_s),
-          File.expand_path(@submission.data_folder.to_s))
+          older.diff_file_path(File.join(extract_dir, 'older')),
+          @submission.diff_file_path(File.join(extract_dir, 'newer')),
+          output_folder)
       end
 
       def process_diff(logger)

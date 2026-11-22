@@ -511,6 +511,155 @@ SELECT DISTINCT * WHERE {
     assert(sub35.diffFilePath != nil, 'Failed to create submission diff file.')
   end
 
+  # Bubastis cannot read zip or gzip files, so compressed uploads are resolved
+  # to a plain file for the diff. Each pair is BRO 3.4 then BRO 3.5, which adds
+  # exactly one class, Activity.owl#Catalog. Submissions are not parsed, so they
+  # have no unzipped/ folder unless a test makes one.
+  def test_submission_diff_zip_and_gz
+    assert_catalog_diff(*create_diff_pair('DIFFZIPGZ', :zip, :gz))
+  end
+
+  # The archiver zips an archived upload and deletes unzipped/. Without a
+  # masterFileName, the single entry in the archive is the master file.
+  def test_submission_diff_archived_zip_without_master_file
+    older, newer = create_diff_pair('DIFFARCH', :plain, :gz)
+    plain_upload = older.uploadFilePath
+    older.uploadFilePath = LinkedData::Utils::FileHelpers.zip_file(plain_upload)
+    FileUtils.rm(plain_upload)
+    older.save
+    # Saving fills masterFileName in for a single-entry archive, but older data
+    # can lack it. Clear it so the single-entry fallback is what gets tested.
+    older.masterFileName = nil
+    assert older.zipped?
+
+    assert_catalog_diff(older, newer)
+    assert File.file?(older.uploadFilePath)
+    assert_nil older.masterFileName, 'The diff should not change the archived submission'
+  end
+
+  # With several entries and no masterFileName there is no way to pick the file.
+  def test_submission_diff_multi_file_zip_without_master_file
+    older, newer = create_diff_pair('DIFFMULTI', :plain, :plain)
+    multi = File.join(older.data_folder, 'multi.zip')
+    Zip::File.open(multi, create: true) do |zip|
+      zip.add('BRO_v3.4.owl', older.uploadFilePath)
+      zip.add('BRO_v3.5.owl', newer.uploadFilePath)
+    end
+    older.uploadFilePath = multi
+    older.masterFileName = nil
+
+    Dir.mktmpdir do |dir|
+      assert_raises(LinkedData::Diff::InputFileNotFoundError) { older.diff_file_path(dir) }
+    end
+    assert_raises(ArgumentError) { older.diff_file_path }
+  end
+
+  # After processing, unzipped/ already holds the master file, so the diff uses
+  # it and extracts nothing.
+  def test_submission_diff_uses_existing_unzipped_copy
+    older, newer = create_diff_pair('DIFFUNZIP', :zip, :gz)
+    logger = Logger.new(TestLogFile.new)
+    older.unzip_submission(logger)
+    newer.unzip_submission(logger)
+    assert_equal older.master_file_path, older.diff_file_path
+    assert_equal newer.master_file_path, newer.diff_file_path
+
+    LinkedData::Utils::FileHelpers.expects(:unzip).never
+    assert_catalog_diff(older, newer, older_unzipped: true)
+  end
+
+  # Bubastis exits 0 when it cannot load an input, so the only failure signal is
+  # a missing report. Neither the report nor a partial file left by an earlier
+  # run may hide the failure, and a failed run must keep the earlier report,
+  # which the submission's diffFilePath still points to.
+  def test_bubastis_diff_failure_keeps_previous_report
+    LinkedData::Diff.logger = Logger.new(TestLogFile.new)
+    Dir.mktmpdir do |dir|
+      plain = File.join(dir, 'BRO_v3.2.owl')
+      FileUtils.cp('./test/data/ontology_files/BRO_v3.2.owl', plain)
+      gzipped = File.expand_path('./test/data/ontology_files/BRO_v3.2.owl.gz')
+      previous = File.join(dir, 'bubastis_diff.xml')
+      File.write(previous, '<diffReport>previous</diffReport>')
+      partial = File.join(dir, 'bubastis_diff.partial.xml')
+      File.write(partial, '<diffReport>partial</diffReport>')
+
+      error = assert_raises(LinkedData::Diff::BubastisDiffException) do
+        LinkedData::Diff::BubastisDiffCommand.new(gzipped, plain, dir).diff
+      end
+      assert_equal "Bubastis wrote no report: it could not load #{gzipped}", error.message
+      error = assert_raises(LinkedData::Diff::BubastisDiffException) do
+        LinkedData::Diff::BubastisDiffCommand.new(plain, gzipped, dir).diff
+      end
+      assert_equal "Bubastis wrote no report: it could not load #{gzipped}", error.message
+      assert_equal '<diffReport>previous</diffReport>', File.read(previous),
+                   'A failed run should keep the previous report'
+
+      # With two arguments, the report goes next to the new file.
+      report = LinkedData::Diff::BubastisDiffCommand.new(plain, plain).diff
+      assert_equal previous, report
+      assert_includes File.read(report), '<numberNewClasses>'
+      refute File.exist?(partial), 'The partial report should have been moved into place'
+    end
+  end
+
+  # A diff that fails during processing marks the submission ERROR_DIFF and
+  # leaves diffFilePath unset.
+  def test_process_diff_failure_sets_error_status
+    _older, newer = create_diff_pair('DIFFFAIL', :plain, :plain)
+    LinkedData::Diff::BubastisDiffCommand.any_instance.stubs(:diff)
+                                         .raises(LinkedData::Diff::BubastisDiffException, 'no report')
+
+    newer.generate_diff(Logger.new(TestLogFile.new))
+
+    newer = LinkedData::Models::OntologySubmission.find(newer.id).include(:diffFilePath, submissionStatus: [:code]).first
+    codes = newer.submissionStatus.map { |status| status.get_code_from_id }
+    assert_includes codes, 'ERROR_DIFF'
+    refute_includes codes, 'DIFF'
+    assert_nil newer.diffFilePath
+  end
+
+  # When java itself fails, e.g. out of memory, a partial report it wrote must
+  # not replace the previous report.
+  def test_bubastis_diff_java_failure_discards_partial_report
+    LinkedData::Diff.logger = Logger.new(TestLogFile.new)
+    Dir.mktmpdir do |dir|
+      plain = File.join(dir, 'BRO_v3.2.owl')
+      FileUtils.cp('./test/data/ontology_files/BRO_v3.2.owl', plain)
+      previous = File.join(dir, 'bubastis_diff.xml')
+      File.write(previous, '<diffReport>previous</diffReport>')
+      partial = File.join(dir, 'bubastis_diff.partial.xml')
+      Open3.stubs(:capture3).with { File.write(partial, '<diffRep') }
+           .returns(['', 'java.lang.OutOfMemoryError', stub(success?: false, exitstatus: 1)])
+
+      error = assert_raises(LinkedData::Diff::BubastisDiffException) do
+        LinkedData::Diff::BubastisDiffCommand.new(plain, plain, dir).diff
+      end
+      assert_equal 'Bubastis java command exited with 1: java.lang.OutOfMemoryError', error.message
+      assert_equal '<diffReport>previous</diffReport>', File.read(previous)
+      refute File.exist?(partial), 'The partial report should have been removed'
+    end
+  end
+
+  # Bubastis 1.4 (OWLAPI 4.5) aborts the diff when an import cannot be loaded,
+  # e.g. HTTP 429 from www.w3.org. The command must tell OWLAPI to skip it.
+  def test_bubastis_diff_skips_missing_imports
+    LinkedData::Diff.logger = Logger.new(TestLogFile.new)
+    Dir.mktmpdir do |dir|
+      plain = File.join(dir, 'BRO_v3.2.owl')
+      FileUtils.cp('./test/data/ontology_files/BRO_v3.2.owl', plain)
+      command = nil
+      Open3.stubs(:capture3).with { |cmd| command = cmd }.returns(['', '', stub(success?: true, exitstatus: 0)])
+
+      assert_raises(LinkedData::Diff::BubastisDiffException) do
+        LinkedData::Diff::BubastisDiffCommand.new(plain, plain, dir).diff
+      end
+      assert_includes command,
+                      '-Dorg.semanticweb.owlapi.model.parameters.ConfigurationOptions.MISSING_IMPORT_HANDLING_STRATEGY=SILENT'
+      assert_operator command.index('MISSING_IMPORT_HANDLING_STRATEGY'), :<, command.index(' -jar '),
+                      'System properties must come before -jar'
+    end
+  end
+
   def test_index_properties
     submission_parse("BRO", "BRO Ontology",
                      "./test/data/ontology_files/BRO_v3.5.owl", 1,
@@ -1872,4 +2021,37 @@ eos
     assert_nil RequestStore.store[:requested_lang]
   end
 
+  private
+
+  # Creates BRO 3.4 (older) and BRO 3.5 (newer) submissions of one ontology,
+  # each uploaded as a plain, zipped (:zip) or gzipped (:gz) file.
+  def create_diff_pair(acronym, older_format, newer_format)
+    Dir.mktmpdir do |dir|
+      [['BRO_v3.4.owl', older_format], ['BRO_v3.5.owl', newer_format]].each_with_index do |(name, format), i|
+        file = File.join(dir, name)
+        FileUtils.cp("./test/data/ontology_files/#{name}", file)
+        file = LinkedData::Utils::FileHelpers.zip_file(file) if format == :zip
+        file = LinkedData::Utils::FileHelpers.gzip_file(file) if format == :gz
+        submission_parse(acronym, "#{acronym} diff", file, i + 1, process_rdf: false, delete: i.zero?)
+      end
+    end
+    subs = LinkedData::Models::Ontology.find(acronym).first.bring(submissions: [:submissionId]).submissions
+    subs.sort_by(&:submissionId).each(&:bring_remaining)
+  end
+
+  def assert_catalog_diff(older, newer, older_unzipped: false)
+    scratch = -> { Dir.glob(File.join(Dir.tmpdir, 'diff-inputs-*')) }
+    scratch_before = scratch.call
+    newer.diff(Logger.new(TestLogFile.new), older)
+
+    assert_equal File.join(File.expand_path(newer.data_folder), 'bubastis_diff.xml'), newer.diffFilePath
+    report = File.read(newer.diffFilePath)
+    assert_match %r{<numberNewClasses>\s*1\s*</numberNewClasses>}, report
+    assert_includes report, 'http://bioontology.org/ontologies/Activity.owl#Catalog'
+    assert_empty scratch.call - scratch_before, 'Extracted diff inputs were not removed'
+    assert_empty Dir.glob(File.join(newer.data_folder, 'diff-inputs-*')), 'Diff inputs should not go to the data folder'
+    unless older_unzipped
+      refute Dir.exist?(older.zip_folder), 'The diff should not unpack into the older submission folder'
+    end
+  end
 end
