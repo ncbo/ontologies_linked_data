@@ -159,6 +159,39 @@ module LinkedData
         @intlHasChildren = has_c
       end
 
+      # Uses a children count or loaded children when present (both match
+      # has_children_query), otherwise one query for the rest. The query
+      # fetches all subPropertyOf objects in the graph rather than filtering by
+      # model ids, since 4store ignores VALUES.
+      def self.load_has_children_batch(models, submission)
+        models = models.to_a.compact.select { |m| m.instance_variable_get("@intlHasChildren").nil? }
+        models = models.reject do |m|
+          agg = m.aggregates&.find { |x| x.attribute == :children && x.aggregate == :count }
+          has_c = if agg
+                    agg.value > 0
+                  elsif m.loaded_attributes.include?(:children)
+                    !m.children.empty?
+                  end
+          m.instance_variable_set("@intlHasChildren", has_c) unless has_c.nil?
+          !has_c.nil?
+        end
+        return if models.empty?
+
+        graph = submission.id.to_s
+        query = <<~EOS
+          SELECT DISTINCT ?parent WHERE {
+            GRAPH <#{graph}> {
+              ?c <#{RDF::RDFS[:subPropertyOf]}> ?parent .
+            }
+          }
+        EOS
+        with_children = Set.new
+        Goo.sparql_query_client.query(query, query_options: { rules: :NONE }, graphs: [graph])
+           .each { |sol| with_children << sol[:parent].to_s }
+
+        models.each { |m| m.instance_variable_set("@intlHasChildren", with_children.include?(m.id.to_s)) }
+      end
+
       def has_children_query(class_id, submission_id)
         property_tree = RDF::RDFS[:subPropertyOf]
         safe_class_id_uri = class_id.to_s.gsub(' ', '%20').gsub('<', '%3C').gsub('>', '%3E').gsub('[', '%5B').gsub(']', '%5D')
@@ -379,12 +412,34 @@ eos
       end
 
       def self.sort_properties(props)
-        props.sort { |prop_a, prop_b| self.compare_properties(prop_a, prop_b) }
+        props.sort_by { |prop| self.property_sort_key(prop) }
       end
 
       def self.sort_properties!(props)
-        props.sort! { |prop_a, prop_b| self.compare_properties(prop_a, prop_b) }
+        props.sort_by! { |prop| self.property_sort_key(prop) }
         props
+      end
+
+      def self.property_sort_key(prop)
+        prop.bring(:label) if prop.bring?(:label)
+        label_full = []
+        label = ""
+        begin
+          if !prop.label.nil? && !prop.label.empty?
+            label = prop.label[0]
+            label_full = prop.label
+          end
+        rescue Goo::Base::AttributeNotLoaded
+          label = ""
+          label_full = []
+        end
+
+        if label.empty?
+          generated = LinkedData::Utils::Triples.generated_label(prop.id, label_full)
+          label = generated.empty? ? "" : generated[0]
+        end
+
+        label.downcase
       end
 
       def self.compare_properties(prop_a, prop_b)
