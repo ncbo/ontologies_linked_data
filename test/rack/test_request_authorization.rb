@@ -13,6 +13,9 @@ ENV["rack.test"] = "true"
 class TestRackAuthorization < Minitest::Test
   include Rack::Test::Methods
 
+  # Listed as a keyless request in authorization.ru
+  KEYLESS_URL = "/current_user?example=melanoma&page=1".freeze
+
   def app
     eval "Rack::Builder.new {( " + File.read(File.dirname(__FILE__) + '/authorization.ru') + "\n )}"
   end
@@ -134,13 +137,11 @@ class TestRackAuthorization < Minitest::Test
 
   # A request without an apikey that bypass? lets through must run with no
   # user, not with one left over from an earlier request on this thread.
-  def test_bypassed_request_runs_without_a_user
-    referer = { "HTTP_REFERER" => LinkedData.settings.rest_url_prefix }
-
+  def test_keyless_request_runs_without_a_user
     get "/current_user?apikey=#{@admin.apikey}"
     assert_equal "test_admin", MultiJson.load(last_response.body)["thread"]
 
-    get "/current_user", {}, referer
+    get KEYLESS_URL
     assert_equal 200, last_response.status
     body = MultiJson.load(last_response.body)
     assert_nil body["env"]
@@ -148,12 +149,11 @@ class TestRackAuthorization < Minitest::Test
 
     # Also when a stale user is already on the thread when the request starts
     Thread.current[:remote_user] = @admin
-    get "/current_user", {}, referer
+    get KEYLESS_URL
     assert_nil MultiJson.load(last_response.body)["thread"]
   end
 
-  def test_bypassed_request_cannot_write_as_an_earlier_user
-    referer = { "HTTP_REFERER" => LinkedData.settings.rest_url_prefix }
+  def test_keyless_request_cannot_write_as_an_earlier_user
     original_apikey = LinkedData::Models::User.find("user2").include(:apikey).first.apikey
 
     # An admin can change another user's apikey
@@ -163,13 +163,76 @@ class TestRackAuthorization < Minitest::Test
     refute_equal original_apikey, changed_apikey
 
     # The next request on the thread has no apikey and must be denied
-    get "/change_apikey", { "username" => "user2" }, referer
+    get "/change_apikey?username=user2"
     assert_equal 403, last_response.status
 
     Thread.current[:remote_user] = @admin
-    get "/change_apikey", { "username" => "user2" }, referer
+    get "/change_apikey?username=user2"
     assert_equal 403, last_response.status
 
     assert_equal changed_apikey, LinkedData::Models::User.find("user2").include(:apikey).first.apikey
+  end
+
+  # Regression: ncbo/bioportal-internal-tracker#33. Referer is set by the
+  # client, so it must not stand in for an API key.
+  def test_referer_does_not_bypass_apikey
+    prefix = LinkedData.settings.rest_url_prefix
+    [prefix, "#{prefix}documentation", "#{prefix}ontologies"].each do |referer|
+      get "/ontologies", {}, { "HTTP_REFERER" => referer }
+      assert_equal 401, last_response.status, "Referer #{referer} bypassed the API key"
+
+      post "/ontologies", {}, { "HTTP_REFERER" => referer }
+      assert_equal 401, last_response.status, "Referer #{referer} bypassed the API key"
+    end
+  end
+
+  def test_keyless_request_is_served_without_apikey
+    get KEYLESS_URL
+    assert_equal 200, last_response.status
+
+    head KEYLESS_URL
+    assert_equal 200, last_response.status
+
+    # Parameter order and the encoding of a value don't matter
+    get "/current_user?page=1&example=%6delanoma"
+    assert_equal 200, last_response.status
+
+    # A valid apikey still identifies the user
+    get "#{KEYLESS_URL}&apikey=#{@apikey}"
+    assert_equal 200, last_response.status
+    assert_equal "test_username", MultiJson.load(last_response.body)["env"]
+  end
+
+  def test_keyless_request_must_match_exactly
+    [
+      "/current_user",                                   # no parameters
+      "/current_user?example=melanoma",                  # missing parameter
+      "/current_user?example=melanoma&page=2",           # different value
+      "/current_user?example=melanoma&page=1&page=2",    # repeated parameter
+      "/current_user?example=melanoma&page=1&extra=1",   # extra parameter
+      "/current_user/?example=melanoma&page=1",          # different path
+      "/ontologies?example=melanoma&page=1"              # different path
+    ].each do |url|
+      get url
+      assert_equal 401, last_response.status, "#{url} was served without an API key"
+    end
+
+    # An apikey that isn't valid is an extra parameter like any other
+    get "#{KEYLESS_URL}&apikey=not-a-real-apikey"
+    assert_equal 401, last_response.status
+  end
+
+  def test_keyless_request_must_be_a_read_without_a_body
+    %i[post put patch delete].each do |verb|
+      send(verb, KEYLESS_URL)
+      assert_equal 401, last_response.status, "#{verb.upcase} was served without an API key"
+    end
+
+    # Form parameters sent in the body of a GET
+    get KEYLESS_URL, {}, {
+      "CONTENT_TYPE" => "application/x-www-form-urlencoded",
+      :input => "extra=1"
+    }
+    assert_equal 401, last_response.status
   end
 end

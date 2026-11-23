@@ -1,7 +1,10 @@
 # This is a test rack app for use with the linked data serializer tests
 
 require 'json'
-use LinkedData::Security::Authorization
+use LinkedData::Security::Authorization, keyless_requests: [
+  "/current_user?example=melanoma&page=1",
+  "/change_apikey?username=user2"
+]
 
 map '/ontologies' do
   run Proc.new { |env|

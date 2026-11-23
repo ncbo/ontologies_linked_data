@@ -7,8 +7,21 @@ module LinkedData
       USER_APIKEY_PARAM = 'userapikey'.freeze
       API_KEY_PARAM = 'apikey'.freeze
 
-      def initialize(app = nil)
+      KEYLESS_METHODS = %w[GET HEAD].freeze
+
+      # keyless_requests: requests that are served without an API key, each
+      # given as a path with an optional query string ("/search?q=melanoma").
+      # A request qualifies only if it is a GET or HEAD for exactly that path
+      # with exactly those query parameters and no body parameters. It runs
+      # with no user, like any other request that carries no API key.
+      def initialize(app = nil, keyless_requests: [])
         @app = app
+        @keyless_requests = Set.new(keyless_requests.map { |url| self.class.parse_keyless_request(url) })
+      end
+
+      def self.parse_keyless_request(url)
+        path, query = url.split('?', 2)
+        [path, Rack::Utils.parse_query(query.to_s)]
       end
 
       ROUTES_THAT_BYPASS_SECURITY = Set.new([
@@ -64,9 +77,22 @@ module LinkedData
 
       # Skip auth unless security is enabled or for routes we know should be allowed
       def bypass?(env)
-        return !LinkedData.settings.enable_security \
+        !LinkedData.settings.enable_security \
           || ROUTES_THAT_BYPASS_SECURITY.include?(env["REQUEST_PATH"]) \
-          || env["HTTP_REFERER"] && env["HTTP_REFERER"].start_with?(LinkedData.settings.rest_url_prefix)
+          || keyless_request?(env)
+      end
+
+      def keyless_request?(env)
+        return false if @keyless_requests.empty?
+        return false unless KEYLESS_METHODS.include?(env["REQUEST_METHOD"])
+
+        req = Rack::Request.new(env)
+        # Middleware that runs earlier may add to the parsed query parameters
+        # or turn a request body into parameters, so compare the query string
+        # as it was sent and refuse anything that carries body parameters.
+        return false unless req.POST.empty?
+
+        @keyless_requests.include?([req.path, Rack::Utils.parse_query(env["QUERY_STRING"].to_s)])
       end
 
       ##
