@@ -657,16 +657,23 @@ module LinkedData
         return ready?(status: [:archived])
       end
 
-      # Override delete to add removal from the search index
-      #TODO: revise this with a better process
+      # Override delete to also remove this submission's entries from the search
+      # indexes. Only entries tagged with this submission's id are removed: Solr
+      # holds the terms of whichever submission was indexed last (normally the
+      # latest), so deleting an older or archived submission must leave them alone.
       def delete(*args)
         options = {}
         args.each {|e| options.merge!(e) if e.is_a?(Hash)}
         remove_index = options[:remove_index] ? true : false
         index_commit = options[:index_commit] == false ? false : true
 
+        # The unindex query needs these; load them while the record still exists.
+        self.bring(:submissionId) if self.bring?(:submissionId)
+        self.bring(:ontology) if self.bring?(:ontology)
+        self.ontology.bring(:acronym) if self.ontology.bring?(:acronym)
+
         super(*args)
-        self.ontology.unindex_all_data(index_commit)
+        unindex_submission_data(index_commit)
 
         self.bring(:metrics) if self.bring?(:metrics)
         self.metrics.delete if self.metrics
@@ -687,6 +694,17 @@ module LinkedData
 
         # delete the folder and files
         FileUtils.remove_dir(self.data_folder) if Dir.exist?(self.data_folder)
+      end
+
+      # Remove this submission's terms and properties from the search indexes.
+      # Entries belonging to other submissions of the same ontology are kept;
+      # use Ontology#unindex_all_data to clear everything for an ontology.
+      def unindex_submission_data(commit = true)
+        query = "submissionAcronym:#{self.ontology.acronym} AND submissionId:#{self.submissionId}"
+        [LinkedData::Models::Class, LinkedData::Models::OntologyProperty].each do |model|
+          model.unindexByQuery(query)
+          model.indexCommit(nil) if commit
+        end
       end
 
       def roots(extra_include = [], page = nil, pagesize = nil, concept_schemes: [], concept_collections: [])
