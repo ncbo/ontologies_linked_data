@@ -657,8 +657,8 @@ module LinkedData
         return ready?(status: [:archived])
       end
 
-      # Override delete to add removal from the search index
-      #TODO: revise this with a better process
+      # Override delete to also remove this submission's search index entries
+      # (see unindex_submission_data), metrics and data folder.
       def delete(*args)
         options = {}
         args.each {|e| options.merge!(e) if e.is_a?(Hash)}
@@ -666,7 +666,7 @@ module LinkedData
         index_commit = options[:index_commit] == false ? false : true
 
         super(*args)
-        self.ontology.unindex_all_data(index_commit)
+        unindex_submission_data(index_commit)
 
         self.bring(:metrics) if self.bring?(:metrics)
         self.metrics.delete if self.metrics
@@ -687,6 +687,22 @@ module LinkedData
 
         # delete the folder and files
         FileUtils.remove_dir(self.data_folder) if Dir.exist?(self.data_folder)
+      end
+
+      # Remove this submission's terms and properties from the search indexes,
+      # matching on submissionId. Solr normally holds only the latest indexed
+      # submission, so for an archived or older submission this removes nothing
+      # and the current one stays searchable. Ontology#unindex_all_data clears
+      # every submission of an ontology.
+      def unindex_submission_data(commit = true)
+        self.bring(:submissionId) if self.bring?(:submissionId)
+        self.bring(:ontology) if self.bring?(:ontology)
+        self.ontology.bring(:acronym) if self.ontology.bring?(:acronym)
+        query = "submissionAcronym:#{self.ontology.acronym} AND submissionId:#{self.submissionId}"
+        [LinkedData::Models::Class, LinkedData::Models::OntologyProperty].each do |model|
+          model.unindexByQuery(query)
+          model.indexCommit(nil) if commit
+        end
       end
 
       def roots(extra_include = [], page = nil, pagesize = nil, concept_schemes: [], concept_collections: [])

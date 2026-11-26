@@ -1710,6 +1710,40 @@ eos
     assert !Dir.exist?(data_folder)
   end
 
+  # Deleting an archived submission must leave the latest submission's search
+  # entries in place; deleting a submission removes only its own entries.
+  def test_submission_delete_keeps_other_submissions_index
+    acronym = "DELIDXTEST"
+    options = { process_rdf: true, extract_metadata: false, index_search: true, index_properties: true }
+    submission_parse(acronym, "Delete index test", "./test/data/ontology_files/BRO_v3.4.owl", 1, options.dup)
+    submission_parse(acronym, "Delete index test", "./test/data/ontology_files/BRO_v3.5.owl", 2,
+                     options.merge(delete: false))
+
+    count = lambda do |model, submission_id|
+      model.search("*:*", fq: "submissionAcronym:#{acronym} AND submissionId:#{submission_id}",
+                          rows: 0)["response"]["numFound"]
+    end
+    terms = count.call(LinkedData::Models::Class, 2)
+    props = count.call(LinkedData::Models::OntologyProperty, 2)
+    assert_operator terms, :>, 0
+    assert_operator props, :>, 0
+    # Indexing submission 2 replaced submission 1's entries.
+    assert_equal 0, count.call(LinkedData::Models::Class, 1)
+    assert_equal 0, count.call(LinkedData::Models::OntologyProperty, 1)
+
+    old_sub = LinkedData::Models::OntologySubmission.where(ontology: [acronym: acronym], submissionId: 1).first
+    old_sub.process_submission(Logger.new(old_sub.parsing_log_path), { archive: true })
+    assert old_sub.archived?
+
+    old_sub.delete
+    assert_equal terms, count.call(LinkedData::Models::Class, 2), "deleting submission 1 removed submission 2's terms"
+    assert_equal props, count.call(LinkedData::Models::OntologyProperty, 2), "deleting submission 1 removed submission 2's properties"
+
+    LinkedData::Models::OntologySubmission.where(ontology: [acronym: acronym], submissionId: 2).first.delete
+    assert_equal 0, count.call(LinkedData::Models::Class, 2)
+    assert_equal 0, count.call(LinkedData::Models::OntologyProperty, 2)
+  end
+
   def test_copy_file_repository_from_tempfile
     # Simulate a Rack Tempfile upload from tmpdir;
     # tmpfile get 0600 permission and we need 660 for the copy to repository
