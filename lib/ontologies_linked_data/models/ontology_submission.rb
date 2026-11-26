@@ -657,20 +657,13 @@ module LinkedData
         return ready?(status: [:archived])
       end
 
-      # Override delete to also remove this submission's entries from the search
-      # indexes. Only entries tagged with this submission's id are removed: Solr
-      # holds the terms of whichever submission was indexed last (normally the
-      # latest), so deleting an older or archived submission must leave them alone.
+      # Override delete to also remove this submission's search index entries
+      # (see unindex_submission_data), metrics and data folder.
       def delete(*args)
         options = {}
         args.each {|e| options.merge!(e) if e.is_a?(Hash)}
         remove_index = options[:remove_index] ? true : false
         index_commit = options[:index_commit] == false ? false : true
-
-        # The unindex query needs these; load them while the record still exists.
-        self.bring(:submissionId) if self.bring?(:submissionId)
-        self.bring(:ontology) if self.bring?(:ontology)
-        self.ontology.bring(:acronym) if self.ontology.bring?(:acronym)
 
         super(*args)
         unindex_submission_data(index_commit)
@@ -696,10 +689,15 @@ module LinkedData
         FileUtils.remove_dir(self.data_folder) if Dir.exist?(self.data_folder)
       end
 
-      # Remove this submission's terms and properties from the search indexes.
-      # Entries belonging to other submissions of the same ontology are kept;
-      # use Ontology#unindex_all_data to clear everything for an ontology.
+      # Remove this submission's terms and properties from the search indexes,
+      # matching on submissionId. Solr normally holds only the latest indexed
+      # submission, so for an archived or older submission this removes nothing
+      # and the current one stays searchable. Ontology#unindex_all_data clears
+      # every submission of an ontology.
       def unindex_submission_data(commit = true)
+        self.bring(:submissionId) if self.bring?(:submissionId)
+        self.bring(:ontology) if self.bring?(:ontology)
+        self.ontology.bring(:acronym) if self.ontology.bring?(:acronym)
         query = "submissionAcronym:#{self.ontology.acronym} AND submissionId:#{self.submissionId}"
         [LinkedData::Models::Class, LinkedData::Models::OntologyProperty].each do |model|
           model.unindexByQuery(query)
